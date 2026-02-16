@@ -260,12 +260,15 @@ public function activeIntern(Request $request){
 
     public function exportCSVAllInterns(Request $request)
 {
-    // Generate dynamic filename
+    // English comments: Set infinite execution time and high memory for large exports
+    set_time_limit(0); 
+    ini_set('memory_limit', '1024M');
+
     $fileName = 'all_interns_data_' . date('d-m-Y_His') . '.csv';
 
+    // 1. Query build karein (Lekin get() nahi karna)
     $query = Intern::query();
 
-    // 1. Apply Search Filter (Exactly like your list methods)
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
@@ -276,14 +279,11 @@ public function activeIntern(Request $request){
         });
     }
 
-    // 2. Apply Status Filter
     if ($request->filled('status')) {
         $query->where('status', strtolower($request->status));
     }
 
-    $interns = $query->latest()->get();
-
-    // 3. Define CSV Headers
+    // 2. CSV Headers
     $headers = [
         "Content-type"        => "text/csv",
         "Content-Disposition" => "attachment; filename=$fileName",
@@ -292,36 +292,39 @@ public function activeIntern(Request $request){
         "Expires"             => "0"
     ];
 
-    $columns = ['ID', 'Name', 'Email', 'Country', 'City', 'Phone', 'CNIC', 'Gender', 'DOB', 'Interview Type', 'University', 'Technology', 'Duration', 'Intern Type', 'Join Date', 'Status'];
+    $columns = ['ID', 'Name', 'Email', 'Country', 'City', 'Phone', 'CNIC', 'Gender', 'DOB', 'University', 'Technology', 'Join Date', 'Status'];
 
-$callback = function() use ($interns, $columns) {
-    $file = fopen('php://output', 'w');
-    fputcsv($file, $columns);
+    // 3. Streaming Callback
+    $callback = function() use ($query, $columns) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, $columns);
 
-    foreach ($interns as $intern) {
-        fputcsv($file, [
-            $intern->id,
-            $intern->name,
-            $intern->email,
-            $intern->country,
-            $intern->city,
+        // English comments: cursor() is the key change. It fetches 1 row at a time.
+        foreach ($query->latest()->cursor() as $intern) {
+            fputcsv($file, [
+                $intern->id,
+                $intern->name,
+                $intern->email,
+                $intern->country,
+                $intern->city,
+                ' ' . $intern->phone, // Force string for Excel
+                ' ' . $intern->cnic,
+                $intern->gender,
+                $intern->birth_date,
+                $intern->university,
+                $intern->technology,
+                $intern->join_date ? date('Y-m-d', strtotime($intern->join_date)) : '',
+                ucfirst($intern->status),
+            ]);
             
-            ' ' . $intern->phone, 
-            ' ' . $intern->cnic,
-            $intern->gender,
-            $intern->birth_date,
-            $intern->interview_type,
-            $intern->university,
-            $intern->technology,
-            $intern->duration,
-            $intern->intern_type,
-            
-            $intern->join_date ? date('Y-m-d', strtotime($intern->join_date)) : '',
-            ucfirst($intern->status),
-        ]);
-    }
-    fclose($file);
-};
+            // English comments: Every 1000 rows, flush the buffer to keep memory low
+            // Flush helps sending data to the browser in chunks
+            if (connection_aborted()) {
+                break;
+            }
+        }
+        fclose($file);
+    };
 
     return response()->stream($callback, 200, $headers);
 }
