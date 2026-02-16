@@ -1,0 +1,165 @@
+{
+  "menu": [
+    {
+      "name": "Dashboard",
+      "icon": "menu-icon icon-base ti tabler-smart-home",
+      "slug": "/admin/dashboard",
+      "url": "/admin/dashboard"
+    },
+    {
+      "menuHeader": "Management"
+    },
+    {
+      "name": "All Interns",
+      "icon": "menu-icon icon-base ti tabler-users",
+      "slug": "/admin/all-interns",
+      "url": "/admin/all-interns",
+       "submenu": [
+
+        {
+
+          "url": "/admin/all-interns/interview",
+
+          "name": "Interview",
+
+          "slug": "/admin/all-interns/interview"
+
+        },
+
+        {
+
+          "url": "/admin/all-interns/contact",
+
+          "name": "Contact",
+
+          "slug": "/admin/all-interns/contact"
+
+        },
+
+        {
+
+          "url": "/admin/all-interns/test",
+
+          "name": "Test",
+
+          "slug": "/admin/all-interns/test"
+
+        },
+
+        {
+
+          "url": "/admin/all-interns/completed",
+
+          "name": "Completed",
+
+          "slug": "/admin/all-interns/completed"
+
+        },
+
+        {
+
+          "url": "/admin/all-interns/active",
+
+          "name": "Active",
+
+          "slug": "/admin/all-interns/active"
+
+        }
+
+      ]
+    },
+    {
+      "url": "admin/intern-accounts",
+      "name": "Intern Accounts",
+      "icon": "menu-icon icon-base ti tabler-id", 
+      "slug": "admin/intern-accounts"
+    },
+    {
+      "url": "admin/intern-projects",
+      "name": "Intern Projects",
+      "icon": "menu-icon icon-base ti tabler-briefcase", 
+      "slug": "admin/intern-projects"
+    },
+    {
+      "url": "admin/project-tasks",
+      "name": "Project Tasks",
+      "icon": "menu-icon icon-base ti tabler-layout-grid",
+      "slug": "admin/project-tasks"
+    },
+    {
+      "url": "admin/intern-tasks",
+      "name": "Intern Tasks",
+      "icon": "menu-icon icon-base ti tabler-checkbox",
+      "slug": "admin/intern-tasks"
+    },
+    {
+      "url": "admin/invoice",
+      "name": "Invoice",
+      "icon": "menu-icon icon-base ti tabler-file-invoice",
+      "slug": "admin/invoice"
+    },
+    {
+      "url": "admin/leave",
+      "name": "Leave",
+      "icon": "menu-icon icon-base ti tabler-calendar-off",
+      "slug": "admin/leave"
+    },
+    {
+      "url": "admin/accounts",
+      "name": "Accounts",
+      "icon": "menu-icon icon-base ti tabler-building-bank",
+      "slug": "admin/accounts"
+    },
+    {
+      "url": "admin/withdraw",
+      "name": "Withdraw",
+      "icon": "menu-icon icon-base ti tabler-cash-banknote",
+      "slug": "admin/withdraw"
+    },
+    {
+      "url": "admin/managers",
+      "name": "Managers",
+      "icon": "menu-icon icon-base ti tabler-user",
+      "slug": "admin/managers"
+    },
+    {
+      "url": "admin/supervisors",
+      "name": "Supervisors",
+      "icon": "menu-icon icon-base ti tabler-user-check",
+      "slug": "admin/supervisors"
+    },
+    {
+      "url": "admin/knowledge-base",
+      "name": "Knowledge Base",
+      "icon": "menu-icon icon-base ti tabler-book",
+      "slug": "admin/knowledge-base"
+    },
+    {
+      "url": "admin/technology",
+      "name": "Technology",
+      "icon": "menu-icon icon-base ti tabler-cpu",
+      "slug": "admin/technology"
+    },
+    {
+      "url": "admin/university",
+      "name": "University",
+      "icon": "menu-icon icon-base ti tabler-school",
+      "slug": "admin/university"
+    },
+    {
+      "menuHeader": "System Settings"
+    },
+    {
+      "url": "admin/settings",
+      "name": "Settings",
+      "icon": "menu-icon icon-base ti tabler-settings",
+      "slug": "admin/settings"
+    },
+    {
+      "url": "admin/feedback",
+      "name": "Feedback",
+      "icon": "menu-icon icon-base ti tabler-message-star",
+      "slug": "admin/feedback"
+    }
+  ]
+}

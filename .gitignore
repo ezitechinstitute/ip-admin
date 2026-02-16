@@ -1,0 +1,50 @@
+# Laravel / PHP
+/vendor
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+.phpunit.result.cache
+/.phpunit.cache
+/auth.json
+
+# Environment files (VERY IMPORTANT)
+.env*
+!.env.example
+
+# Logs
+npm-debug.log
+yarn-error.log
+
+# Docker
+docker-compose.override.yml
+
+# Homestead
+Homestead.json
+Homestead.yaml
+
+# IDEs / Editors
+/.idea
+/.vscode
+/.fleet
+/.nova
+/.zed
+.phpactor.json
+
+# Public compiled assets
+/public/css
+/public/js
+/public/mix-manifest.json
+
+# Fonts (ignored)
+ /resources/assets/vendor/fonts/flags/**
+ /resources/assets/vendor/fonts/fontawesome/**
+
+# Allow public assets
+!/public/assets
+!/public/assets/*
+
+# Allow specific vendor JS file
+!/resources/assets/vendor/js/template-customizer.js
