@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 @php
 $configData = Helper::appClasses();
 @endphp
@@ -87,13 +86,13 @@ $configData = Helper::appClasses();
         </div>
         <div class="col-5 text-center text-sm-left">
           <div class="card-body pb-0 px-0 px-md-4">
-            <img src="{{ asset('assets/img/illustrations/card-advance-sale.png')}}" height="140" alt="view sales" />
+            <img src="{{ asset('assets/img/illustrations/card-advance-manager.png')}}" height="140" alt="view sales" />
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="col-xl-8 col--12">
+  <div class="col-xl-8 col-md-12">
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between">
         <h5 class="card-title mb-0">Manager Statistics</h5>
@@ -153,7 +152,7 @@ $configData = Helper::appClasses();
   </div>
 <div class="col-xl-6 col-xl-6">
   <div class="card h-100">
-    <div class="card-header d-flex justify-content-between">
+    <div class="card-header d-flex justify-content-between ">
       <h5 class="card-title mb-0">Manager KPI Overview</h5>
     </div>
 
@@ -231,7 +230,7 @@ $configData = Helper::appClasses();
           <div class="col-md-6 col-6">
             <div class="d-flex align-items-center">
               <div class="badge rounded bg-label-dark me-4 p-2">
-                <i class="ti tabler-currency-rupee icon-lg"></i>
+                <i class="ti tabler-currency-dollar icon-lg"></i>
               </div>
               <div class="card-info">
                 <h5 class="mb-0 counter">{{ $monthlyRevenue ?? 0 }}</h5>
@@ -618,6 +617,3 @@ $('#communicationForm').on('submit', function(e) {
 });
 </script>
 @endpush
-=======
-<h1>My manager dashborad!</h1>
->>>>>>> Stashed changes
