@@ -7,6 +7,7 @@ use App\Models\EmployeeLeave;
 use App\Models\Leave;
 use App\Models\SupervisorLeave;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
 
 class AdminLeaveController extends Controller
@@ -94,9 +95,23 @@ if ($search) {
             str_contains((string)($leave->leave_id ?? ''), $s);
     });
 }
+$page = request()->get('page', 1);
+$perPage = $perPage ?? 15;
 
+// collection ko array slice karo
+$items = $leaves->values();
+$currentPageItems = $items->slice(($page - 1) * $perPage, $perPage)->values();
 
-        return view('pages.admin.leave.leave', ['leave' => $leaves],compact('perPage'));
+$leave = new LengthAwarePaginator(
+    $currentPageItems,
+    $items->count(),
+    $perPage,
+    $page,
+    ['path' => request()->url(), 'query' => request()->query()]
+);
+
+        return view('pages.admin.leave.leave', compact('leave','perPage'));
+
     }
 
     // -------- ACTION METHODS --------

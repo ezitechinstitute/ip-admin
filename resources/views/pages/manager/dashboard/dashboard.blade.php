@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 @php
 $configData = Helper::appClasses();
 @endphp
@@ -617,3 +618,6 @@ $('#communicationForm').on('submit', function(e) {
 });
 </script>
 @endpush
+=======
+<h1>My manager dashborad!</h1>
+>>>>>>> Stashed changes
