@@ -71,6 +71,14 @@
         <input type="search" name="search" id="searchInput" class="form-control" 
                placeholder="Search leave..." value="{{ request('search') }}">
 
+               <style>
+              input[type="search"]::-webkit-search-cancel-button,
+              input[type="search"]::-webkit-search-decoration {
+                -webkit-appearance: none;
+                appearance: none;
+              }
+            </style>
+
         <input type="date" name="filter_date" id="filterDate" class="form-control" 
                value="{{ request('filter_date') }}">
 
@@ -393,12 +401,12 @@
         </div>
         <div class="row mx-3 justify-content-between">
           {{-- Info --}}
-          {{-- <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
+          <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
             <div class="dt-info" aria-live="polite">
-              Showing {{ $leavesAccounts->firstItem() ?? 0 }} to {{ $leavesAccounts->lastItem() ?? 0 }} of {{ $leavesAccounts->total() ??
+              Showing {{ $leave->firstItem() ?? 0 }} to {{ $leave->lastItem() ?? 0 }} of {{ $leave->total() ??
               0 }} entries
             </div>
-          </div> --}}
+          </div>
 
           {{-- Pagination --}}
           <div
@@ -407,42 +415,44 @@
               <nav aria-label="pagination">
                 <ul class="pagination">
                   {{-- First Page --}}
-                  {{-- <li class="dt-paging-button page-item {{ $leavesAccounts->onFirstPage() ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ $leavesAccounts->url(1) }}" aria-label="First">
+                  <li class="dt-paging-button page-item {{ $leave->onFirstPage() ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ $leave->url(1) }}" aria-label="First">
                       <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                     </a>
-                  </li> --}}
+                  </li>
 
                   {{-- Previous Page --}}
-                  {{-- <li class="dt-paging-button page-item {{ $leavesAccounts->onFirstPage() ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ $leavesAccounts->previousPageUrl() }}" aria-label="Previous">
+                  <li class="dt-paging-button page-item {{ $leave->onFirstPage() ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ $leave->previousPageUrl() }}" aria-label="Previous">
                       <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                     </a>
-                  </li> --}}
+                  </li>
 
                   {{-- Page Numbers --}}
-                  {{-- @foreach ($leavesAccounts->getUrlRange(max(1, $leavesAccounts->currentPage() - 2), min($leavesAccounts->lastPage(),
-                  $leavesAccounts->currentPage() + 2)) as $page => $url) --}}
-                  {{-- <li class="dt-paging-button page-item {{ $page == $leavesAccounts->currentPage() ? 'active' : '' }}">
+                  @foreach ($leave->getUrlRange(max(1, $leave->currentPage() - 2), min($leave->lastPage(),
+                  $leave->currentPage() + 2)) as $page => $url)
+                  <li class="dt-paging-button page-item {{ $page == $leave->currentPage() ? 'active' : '' }}">
                     <a class="page-link" href="{{ $url }}">{{ $page }}</a>
-                  </li> --}}
-                  {{-- @endforeach --}}
+                  </li>
+                  @endforeach
 
                   {{-- Next Page --}}
-                  {{-- <li
-                    class="dt-paging-button page-item {{ $leavesAccounts->currentPage() == $leavesAccounts->lastPage() ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ $leavesAccounts->nextPageUrl() }}" aria-label="Next">
+                  <li
+                    class="dt-paging-button page-item {{ $leave->currentPage() == $leave->lastPage() ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ $leave->nextPageUrl() }}" aria-label="Next">
                       <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
                     </a>
-                  </li> --}}
+                  </li>
 
                   {{-- Last Page --}}
-                  {{-- <li
-                    class="dt-paging-button page-item {{ $leavesAccounts->currentPage() == $leavesAccounts->lastPage() ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ $leavesAccounts->url($leavesAccounts->lastPage()) }}" aria-label="Last">
+                  <li
+                    class="dt-paging-button page-item {{ $leave->currentPage() == $leave->lastPage() ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ $leave->url($leave->lastPage()) }}" aria-label="Last">
                       <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
                     </a>
-                  </li> --}}
+                  </li>
+
+                  
                 </ul>
               </nav>
             </div>
