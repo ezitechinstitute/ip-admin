@@ -578,7 +578,10 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/all-interns', [AllManagerInternController::class, 'index']) ->name('manager.allInterns');
-
+    // Active Interns submenu page
+    Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])
+        ->name('manager.activeInterns');});
     Route::get('/international-interns', [InternalInternsManagerController::class, 'index'])->name('manager.international.interns');
-    
 });
+
+   
