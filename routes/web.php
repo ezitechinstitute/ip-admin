@@ -185,7 +185,7 @@ use App\Http\Controllers\wizard_example\PropertyListing;
 use App\Http\Middleware\ValidUser;
 use App\Http\Middleware\validManager;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\manager_controllers\AllManagerInternController;
 
 // Main Page Route
 // Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
@@ -576,5 +576,5 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
-    
+ Route::get('/all-interns', [AllManagerInternController::class, 'index']) ->name('manager.allInterns');
 });
