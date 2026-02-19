@@ -43,6 +43,12 @@
       ]
     },
     {
+      "name": "International Interns",
+      "icon": "menu-icon icon-base ti tabler-world",
+      "slug": "manager/international-interns",
+      "url": "manager/international-interns"
+    },
+    {
       "menuHeader": "Reports & Logs"
     },
     {
