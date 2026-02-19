@@ -11,7 +11,7 @@
     },
     {
       "name": "My Interns",
-      "icon": "menu-icon icon-base ti tabler-users",
+      "icon": "menu-icon icon-base ti tabler-users-group",
       "slug": "manager/all-interns",
       "url": "manager/all-interns",
       "submenu": [
@@ -22,26 +22,23 @@
         },
         {
           "url": "manager/all-interns/interview",
-          "name": "Interviews",
+          "name": "New Interns",
           "slug": "manager/all-interns/interview"
-        }
-      ]
-    },
-    {
-      "name": "Projects & Tasks",
-      "icon": "menu-icon icon-base ti tabler-layout-grid",
-      "slug": "manager/projects",
-      "url": "manager/projects",
-      "submenu": [
-        {
-          "url": "manager/intern-projects",
-          "name": "View Projects",
-          "slug": "manager/intern-projects"
         },
         {
-          "url": "manager/intern-tasks",
-          "name": "Assigned Tasks",
-          "slug": "manager/intern-tasks"
+          "url": "manager/all-interns/interview",
+          "name": "Contact With",
+          "slug": "manager/all-interns/interview"
+        },
+        {
+          "url": "manager/all-interns/interview",
+          "name": "Interview Test",
+          "slug": "manager/all-interns/interview"
+        },
+        {
+          "url": "manager/all-interns/interview",
+          "name": "Test Completed",
+          "slug": "manager/all-interns/interview"
         }
       ]
     },
@@ -49,22 +46,22 @@
       "menuHeader": "Reports & Logs"
     },
     {
+      "name": "Remaining Amount",
+      "icon": "menu-icon icon-base ti tabler-cash",
+      "slug": "manager/projects",
+      "url": "manager/projects"
+    },
+    {
       "url": "manager/leave",
-      "name": "Leave Requests",
-      "icon": "menu-icon icon-base ti tabler-calendar-off",
+      "name": "Offer Letter Request",
+      "icon": "menu-icon icon-base ti tabler-file-certificate",
       "slug": "manager/leave"
     },
     {
       "url": "manager/feedback",
-      "name": "Intern Feedback",
-      "icon": "menu-icon icon-base ti tabler-message-star",
+      "name": "Payment Receipt",
+      "icon": "menu-icon icon-base ti tabler-receipt-2",
       "slug": "manager/feedback"
-    },
-    {
-      "url": "manager/knowledge-base",
-      "name": "Resources",
-      "icon": "menu-icon icon-base ti tabler-book",
-      "slug": "manager/knowledge-base"
     }
   ]
 }
