@@ -14,10 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // English comments: Register both Admin and Manager middleware aliases
+       
         $middleware->alias([
             'validUser' => ValidUser::class,
-            'validManager' => ValidManager::class, // English comments: This line was missing
+            'validManager' => ValidManager::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
