@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ValidUser;
+use App\Http\Middleware\ValidManager; // English comments: Import the Manager middleware
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\LocaleMiddleware;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -13,8 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // $middleware->web(LocaleMiddleware::class);
-        $middleware->alias(['validUser' => ValidUser::class]);
+        // English comments: Register both Admin and Manager middleware aliases
+        $middleware->alias([
+            'validUser' => ValidUser::class,
+            'validManager' => ValidManager::class, // English comments: This line was missing
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

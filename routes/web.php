@@ -183,6 +183,7 @@ use App\Http\Controllers\wizard_example\Checkout as WizardCheckout;
 use App\Http\Controllers\wizard_example\CreateDeal;
 use App\Http\Controllers\wizard_example\PropertyListing;
 use App\Http\Middleware\ValidUser;
+use App\Http\Middleware\validManager;
 use Illuminate\Support\Facades\Route;
 
 
@@ -572,6 +573,8 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 
 
 
-Route::prefix('/manager')->group(function(){
+Route::prefix('/manager')->middleware(['validManager'])->group(function(){
+    // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
+    
 });
