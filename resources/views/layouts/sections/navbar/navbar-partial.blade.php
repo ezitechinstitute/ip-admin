@@ -445,8 +445,7 @@ use Illuminate\Support\Facades\Route;
   
   if ($account && $account->image) {
       $dynamicImage = asset($account->image);
-  } elseif ($settings && $settings->system_logo) {
-      $dynamicImage = asset($settings->system_logo);
+  
   } else {
       $dynamicImage = asset('assets/img/branding/ezitech.png');
   }

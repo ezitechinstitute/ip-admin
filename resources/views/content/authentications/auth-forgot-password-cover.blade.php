@@ -59,14 +59,23 @@ $configData = Helper::appClasses();
     <!-- Forgot Password -->
     <div class="d-flex col-12 col-xl-4 align-items-center authentication-bg p-sm-12 p-6">
       <div class="w-px-400 mx-auto mt-12 mt-5">
-        {{-- Error Messages --}}
+{{-- Error Messages (Top Alert Box) --}}
 @if($errors->any())
-@foreach($errors->all() as $error)
+    @foreach($errors->all() as $error)
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ $error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endforeach
+@endif
+
+{{-- English comments: Catch manual session errors --}}
+@if(session('error'))
 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-  {{ $error }}
-  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    {{ session('error') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
-@endforeach
+@endifach
 @endif
 
 {{-- Success Message --}}

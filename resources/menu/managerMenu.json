@@ -1,0 +1,70 @@
+{
+  "menu": [
+    {
+      "name": "Manager Dashboard",
+      "icon": "menu-icon icon-base ti tabler-smart-home",
+      "slug": "manager/dashboard",
+      "url": "manager/dashboard"
+    },
+    {
+      "menuHeader": "Intern Management"
+    },
+    {
+      "name": "My Interns",
+      "icon": "menu-icon icon-base ti tabler-users",
+      "slug": "manager/all-interns",
+      "url": "manager/all-interns",
+      "submenu": [
+        {
+          "url": "manager/all-interns/active",
+          "name": "Active Interns",
+          "slug": "manager/all-interns/active"
+        },
+        {
+          "url": "manager/all-interns/interview",
+          "name": "Interviews",
+          "slug": "manager/all-interns/interview"
+        }
+      ]
+    },
+    {
+      "name": "Projects & Tasks",
+      "icon": "menu-icon icon-base ti tabler-layout-grid",
+      "slug": "manager/projects",
+      "url": "manager/projects",
+      "submenu": [
+        {
+          "url": "manager/intern-projects",
+          "name": "View Projects",
+          "slug": "manager/intern-projects"
+        },
+        {
+          "url": "manager/intern-tasks",
+          "name": "Assigned Tasks",
+          "slug": "manager/intern-tasks"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Reports & Logs"
+    },
+    {
+      "url": "manager/leave",
+      "name": "Leave Requests",
+      "icon": "menu-icon icon-base ti tabler-calendar-off",
+      "slug": "manager/leave"
+    },
+    {
+      "url": "manager/feedback",
+      "name": "Intern Feedback",
+      "icon": "menu-icon icon-base ti tabler-message-star",
+      "slug": "manager/feedback"
+    },
+    {
+      "url": "manager/knowledge-base",
+      "name": "Resources",
+      "icon": "menu-icon icon-base ti tabler-book",
+      "slug": "manager/knowledge-base"
+    }
+  ]
+}

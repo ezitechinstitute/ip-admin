@@ -13,35 +13,44 @@ use App\Mail\ForgetPasswordMail;
 class OTPVerifyController extends Controller
 {
     public function sendOtp(Request $request)
-    {
-        // English comments: Validate that the email exists in the admin_accounts table
-        $request->validate([
-            'email' => 'required|email|exists:admin_accounts,email',
-        ], [
-            'email.exists' => 'We could not find an account with that email address.'
+{
+    // English comments: Validate email format
+    $request->validate([
+        'email' => 'required|email',
+    ]);
+
+    $email = $request->email;
+
+    $isAdmin = DB::table('admin_accounts')->where('email', $email)->exists();
+    
+    $manager = DB::table('manager_accounts')->where('email', $email)->first();
+
+    if (!$isAdmin && (!$manager || $manager->status != 1)) {
+    $msg = (!$manager) ? 'Account not found.' : 'Your account is deactivated.';
+    
+    return back()->withErrors(['email' => $msg])->withInput();
+}
+
+    $otp = rand(100000, 999999);
+
+    try {
+        DB::table('password_otp_resets')->where('email', $email)->delete();
+
+        DB::table('password_otp_resets')->insert([
+            'email' => $email,
+            'otp' => $otp,
+            'created_at' => now()
         ]);
 
-        $email = $request->email;
-        $otp = rand(100000, 999999);
+        Mail::to($email)->send(new ForgetPasswordMail($otp));
 
-        try {
-            DB::table('password_otp_resets')->where('email', $email)->delete();
+        return redirect()->route('auth.otp.verify', ['email' => $email])
+                         ->with('success', 'A 6-digit verification code has been sent to your email.');
 
-            DB::table('password_otp_resets')->insert([
-                'email' => $email,
-                'otp' => $otp,
-                'created_at' => now()
-            ]);
-
-            Mail::to($email)->send(new ForgetPasswordMail($otp));
-
-            return redirect()->route('auth.otp.verify', ['email' => $email])
-                             ->with('success', 'A 6-digit verification code has been sent to your email.');
-
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to send OTP. Error: ' . $e->getMessage());
-        }
+    } catch (\Exception $e) {
+        return back()->with('error', 'Failed to send OTP.');
     }
+}
 
     public function showVerifyForm(Request $request)
     {
@@ -99,10 +108,11 @@ class OTPVerifyController extends Controller
     /**
      * Step 5: Update the actual password in database
      */
-    public function updatePassword(Request $request)
+   public function updatePassword(Request $request)
     {
+        // English comments: Validate password with minimum 5 characters
         $request->validate([
-            'password' => 'required|min:6|confirmed',
+            'password' => 'required|min:5|confirmed',
         ]);
 
         $email = session('reset_password_email');
@@ -112,10 +122,21 @@ class OTPVerifyController extends Controller
         }
 
         try {
-            DB::table('admin_accounts')->where('email', $email)->update([
-                'password' => $request->password
-            ]);
+            // English comments: Identify which table needs to be updated
+            $isAdmin = DB::table('admin_accounts')->where('email', $email)->exists();
+            $isManager = DB::table('manager_accounts')->where('email', $email)->exists();
 
+            if ($isAdmin) {
+                DB::table('admin_accounts')->where('email', $email)->update([
+                    'password' => $request->password
+                ]);
+            } elseif ($isManager) {
+                DB::table('manager_accounts')->where('email', $email)->update([
+                    'password' => $request->password
+                ]);
+            }
+
+            // English comments: Clean up OTP and Session
             DB::table('password_otp_resets')->where('email', $email)->delete();
             session()->forget('reset_password_email');
 
