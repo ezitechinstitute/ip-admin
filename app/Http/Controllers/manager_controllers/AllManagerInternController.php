@@ -4,7 +4,7 @@ namespace App\Http\Controllers\manager_controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // <--- Add this line
+use Illuminate\Support\Facades\DB; 
 use App\Models\InternAccount;
 use App\Models\AdminSetting;
 
@@ -13,6 +13,18 @@ class AllManagerInternController extends Controller
     public function index(){
         return view('pages.manager.all-interns.allinterns');
     }
+public function newInterns()
+{
+    return view('pages.manager.all-interns.newInterns');
+}
+public function contactWith()
+{
+    return view('pages.manager.all-interns.contactWith');
+}
+public function interview()
+{
+    return view('pages.manager.all-interns.interview');
+}
      public function active(Request $request)
     {
         // 1. Authentication & Guard Check

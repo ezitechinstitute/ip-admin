@@ -21,14 +21,14 @@
           "slug": "manager/all-interns/active"
         },
         {
-          "url": "manager/all-interns/interview",
+          "url": "manager/all-interns/newInterns",
           "name": "New Interns",
-          "slug": "manager/all-interns/interview"
+          "slug": "manager/all-interns/newInterns"
         },
         {
-          "url": "manager/all-interns/interview",
+          "url": "manager/all-interns/contact",
           "name": "Contact With",
-          "slug": "manager/all-interns/interview"
+          "slug": "manager/all-interns/contact"
         },
         {
           "url": "manager/all-interns/interview",
@@ -36,9 +36,9 @@
           "slug": "manager/all-interns/interview"
         },
         {
-          "url": "manager/all-interns/interview",
+          "url": "manager/all-interns/test",
           "name": "Test Completed",
-          "slug": "manager/all-interns/interview"
+          "slug": "manager/all-interns/test"
         }
       ]
     },
