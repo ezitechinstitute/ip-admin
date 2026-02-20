@@ -182,7 +182,7 @@ use App\Http\Controllers\WithdrawManagerController;
 use App\Http\Controllers\wizard_example\Checkout as WizardCheckout;
 use App\Http\Controllers\wizard_example\CreateDeal;
 use App\Http\Controllers\wizard_example\PropertyListing;
-use App\Http\Controllers\manager_controllers\InternalInternsManagerController;
+use App\Http\Controllers\manager_controllers\InternationalInternsManagerController;
 use App\Http\Middleware\ValidUser;
 use App\Http\Middleware\validManager;
 use Illuminate\Support\Facades\Route;
@@ -580,8 +580,10 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     Route::get('/all-interns', [AllManagerInternController::class, 'index']) ->name('manager.allInterns');
     // Active Interns submenu page
     Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])
-        ->name('manager.activeInterns');});
-    Route::get('/international-interns', [InternalInternsManagerController::class, 'index'])->name('manager.international.interns');
+        ->name('manager.activeInterns');
+    Route::get('/international-interns', [InternationalInternsManagerController::class, 'index'])->name('manager.international.interns');
+
+    
 });
 
    

@@ -28,6 +28,63 @@
 
 <!-- Users List Table -->
 <div class="col-12 mb-6">
+  <div class="col-xl-12 col-md-12">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between">
+        <h5 class="card-title mb-0">Statistics</h5>
+      </div>
+      <div class="card-body d-flex align-items-end">
+        <div class="w-100">
+          <div class="row gy-3">
+
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="badge rounded bg-label-primary me-4 p-2">
+                  <i class="icon-base ti tabler-user-check icon-lg"></i>
+                </div>
+                <div class="card-info">
+                  <h5 class="mb-0">{{ $stats['interview'] ?? 0 }}</h5>
+                  <small>Interview</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="badge rounded bg-label-info me-4 p-2"><i class="icon-base ti tabler-users icon-lg"></i>
+                </div>
+                <div class="card-info">
+                  <h5 class="mb-0">{{$stats['contacted'] ?? 0}}</h5>
+                  <small>Contacted</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="badge rounded bg-label-danger me-4 p-2">
+                  <i class="icon-base ti tabler-list-check icon-lg"></i>
+                </div>
+                <div class="card-info">
+                  <h5 class="mb-0">{{$stats['test_attempt'] ?? 0}}</h5>
+                  <small>Test Attempts</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="badge rounded bg-label-success me-4 p-2">
+                  <i class="icon-base ti tabler-certificate icon-lg"></i>
+                </div>
+                <div class="card-info">
+                  <h5 class="mb-0">{{$stats['test_completed'] ?? 0}}</h5>
+                  <small>Test Completed</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
     <h4 class="mt-6 mb-1">Active Interns</h4>
   </div>
   {{-- Error Messages --}}
@@ -59,6 +116,7 @@
         });
     }, 5000); // 5 seconds
 </script>
+
 <div class="card">
  
   <div class="card-datatable">
@@ -89,9 +147,9 @@
 
         <div
           class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
-          <form method="GET" action="{{ route('active-admin') }}" id="filterForm" class="d-flex gap-2">
+          <form method="GET" action="{{ route('manager.activeInterns') }}" id="filterForm" class="d-flex gap-2">
 
-            <input type="search" name="search" id="searchInput" class="form-control" placeholder="Search Internee"
+            <input type="search" name="search" id="searchInput" class="form-control" placeholder="Search by Name or ETI ID"
               value="{{ request('search') }}">
 <style>
   input[type="search"]::-webkit-search-cancel-button,
@@ -101,7 +159,7 @@
   }
 </style>
              <select name="status" id="statusFilter" class="form-select text-capitalize">
-              <option value="">Select Status</option>
+              <option value="">Select Technology</option>
 
               @foreach (['Technology','Status','Date range','Internship type'] as $status)
               @php $slug = strtolower($status); @endphp
@@ -111,6 +169,20 @@
               </option>
               @endforeach
             </select> 
+            
+            <select name="status" id="statusFilter" class="form-select text-capitalize">
+              <option value="">Internship Type</option>
+
+              @foreach (['Technology','Status','Date range','Internship type'] as $status)
+              @php $slug = strtolower($status); @endphp
+
+              <option value="{{ $slug }}" {{ request('status')==$slug ? 'selected' : '' }}>
+                {{ $status }}
+              </option>
+              @endforeach
+            </select> 
+
+            
 
            
 
@@ -153,21 +225,17 @@
         <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto" style="max-height: 500px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
-            <colgroup>
-              <col data-dt-column="1" style="width: 63.5375px;">
-              <col data-dt-column="2" style="width: 326.863px;">
-              <col data-dt-column="3" style="width: 170.125px;">
-              <col data-dt-column="4" style="width: 131.825px;">
-              <col data-dt-column="5" style="width: 212.475px;">
-              <col data-dt-column="6" style="width: 126.662px;">
-            </colgroup>
+           
             <thead class="border-top sticky-top bg-card">
               <tr>
                 <th data-dt-column="0" class="control dt-orderable-none dtr-hidden" rowspan="1" colspan="1"
                   aria-label="" style="display: none;"><span class="dt-column-title"></span><span
                     class="dt-column-order"></span></th>
+                    
                 <th data-dt-column="2" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Profile Picture" tabindex="0"><span class="dt-column-title" role="button">ETI-ID</span><span class="dt-column-order"></span></th>
+                  <th data-dt-column="2" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                  aria-label="Profile Picture" tabindex="0"><span class="dt-column-title" role="button">Image</span><span class="dt-column-order"></span></th>
                 <th data-dt-column="3" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Full Name" tabindex="0"><span class="dt-column-title" role="button">Name</span><span
                     class="dt-column-order"></span></th>
@@ -196,19 +264,71 @@
               </tr>
             </thead>
             <tbody>
-              {{--@forelse ($active as $intern)--}}
+              @forelse ($internAccounts as $internAccount)
               <tr class="">
-                <td class="control dtr-hidden" tabindex="0" style="display: none;"></td>
-                {{-- <td class="dt-select"><input aria-label="Select row" class="form-check-input" type="checkbox"></td> --}}
+                 <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$internAccount->eti_id}}</span></td>
+                <td class="">
+                  <div class="d-flex justify-content-start align-items-center user-name">
+                    <div class="avatar-wrapper">
+                      @if ($internAccount->profile_image)
+                      <div class="avatar avatar-md me-4">
+                        <img src="{{ 
+    $internAccount->profile_image 
+        ? (str_starts_with($internAccount->iprofile_imagee, 'data:image')
+            ? $internAccount->iprofile_imagee
+            : asset($internAccount->profile_image)) 
+        : '' 
+    }}" alt="{{ $internAccount->name }}" class="rounded-circle" />
+                      </div>
+                      @else
+                      <div class="avatar avatar-md me-4">
+                        <span class="avatar-initial rounded-circle bg-label-warning">
+                          {{ strtoupper(substr($internAccount->name, 0, 2)) }}
+                        </span>
+                      </div>
+                      @endif
+                    </div>
+
+                  </div>
+                </td>
                 
-                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap"></span>EZI-26-5-24/2055</td>
-                <td><span class="text-heading text-nowrap"><small></small>afzaal</span></td>
-                <td><span class="text-heading text-nowrap"></span>ezi@gmail.com</td>
-                <td><span class="text-heading text-nowrap"></span>+92 300000</td>
-                <td><span class="text-heading text-nowrap"></span>Frontend Development</td>
+               
+                <td><span class="text-heading text-nowrap">{{$internAccount->name}}</span></td>
+                <td><i
+                      class="icon-base ti tabler-mail me-1 text-danger icon-22px"></i><span class="text-heading text-nowrap"><small>{{$internAccount->email}}</small></span></td>
+                <td><span class="text-heading text-nowrap d-flex items-center"><i
+                      class="icon-base ti tabler-phone me-1 text-success icon-22px"></i>{{$internAccount->phone}}</span></td>
+                <td><span class="text-heading text-nowrap"><i
+                      class="icon-base ti tabler-cpu me-1 text-primary icon-22px"></i> Frontend Development</span></td>
 <td>
-        <button class="btn btn-sm btn-warning">Freeze</button>
-        <button class="btn btn-sm btn-success">Activate</button>
+       <div class="dropdown">
+                      <a href="javascript:;"
+                        class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
+                      </a>
+
+                      <div class="dropdown-menu dropdown-menu-end m-0">
+
+                        <a href=""
+                          class="dropdown-item permission-btn">
+                          View Profile
+                        </a>
+                        <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal" data-bs-target="#editInternModal" 
+                        {{-- data-id="{{ $intern->int_id }}"
+                      data-name="{{ $intern->name }}" data-email="{{ $intern->email }}"
+                      data-technology="{{ $intern->int_technology }}"
+                      data-status="{{ strtolower($intern->int_status) }}" --}}
+                      >
+                          Edit
+                        </a>
+
+                       
+
+
+
+                      </div>
+                    </div>
       </td>                {{--<td><span class="text-heading text-nowrap"></span>3rd June</td>--}}
                                 {{--<td><span class="text-heading text-nowrap"></span>Completed</td>--
 
@@ -280,10 +400,10 @@
 
 
 
-              {{--@empty--}}
-              {{--<tr><td colspan="11">
-                <p class="text-center mb-0">No data available!</p></td></tr>--}}
-              {{--@endforelse--}}
+              @empty
+              <tr><td colspan="11">
+                <p class="text-center mb-0">No data available!</p></td></tr>
+              @endforelse
 
 
 
@@ -365,52 +485,52 @@
       <div class="row mx-3 justify-content-between">
         {{-- Info --}}
         <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
-         {{-- <div class="dt-info" aria-live="polite">
-            Showing {{ $active->firstItem() ?? 0 }} to {{ $active->lastItem() ?? 0 }} of {{ $active->total() ??
+         <div class="dt-info" aria-live="polite">
+            Showing {{ $internAccounts->firstItem() ?? 0 }} to {{ $internAccounts->lastItem() ?? 0 }} of {{ $internAccounts->total() ??
             0 }} entries
-          </div>--}}
+          </div>
         </div>
 
         {{-- Pagination --}}
-       {{-- <div
+       <div
           class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
           <div class="dt-paging">
             <nav aria-label="pagination">
               <ul class="pagination">
-                 First Page 
-                <li class="dt-paging-button page-item {{ $active->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $active->url(1) }}" aria-label="First">
+                 {{-- First Page  --}}
+                <li class="dt-paging-button page-item {{ $internAccounts->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" href="{{ $internAccounts->url(1) }}" aria-label="First">
                     <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
-                Previous Page 
-                <li class="dt-paging-button page-item {{ $active->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $active->previousPageUrl() }}" aria-label="Previous">
+                {{-- Previous Page  --}}
+                <li class="dt-paging-button page-item {{ $internAccounts->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" href="{{ $internAccounts->previousPageUrl() }}" aria-label="Previous">
                     <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
-                Page Numbers 
-                @foreach ($active->getUrlRange(max(1, $active->currentPage() - 2), min($active->lastPage(),
-                $active->currentPage() + 2)) as $page => $url)
-                <li class="dt-paging-button page-item {{ $page == $active->currentPage() ? 'active' : '' }}">
+                {{-- Page Numbers  --}}
+                @foreach ($internAccounts->getUrlRange(max(1, $internAccounts->currentPage() - 2), min($internAccounts->lastPage(),
+                $internAccounts->currentPage() + 2)) as $page => $url)
+                <li class="dt-paging-button page-item {{ $page == $internAccounts->currentPage() ? 'active' : '' }}">
                   <a class="page-link" href="{{ $url }}">{{ $page }}</a>
                 </li>
                 @endforeach
 
-                Next Page 
+                {{-- Next Page  --}}
                 <li
-                  class="dt-paging-button page-item {{ $active->currentPage() == $active->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $active->nextPageUrl() }}" aria-label="Next">
+                  class="dt-paging-button page-item {{ $internAccounts->currentPage() == $internAccounts->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" href="{{ $internAccounts->nextPageUrl() }}" aria-label="Next">
                     <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
-                Last Page 
+                {{-- Last Page  --}}
                 <li
-                  class="dt-paging-button page-item {{ $active->currentPage() == $active->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $active->url($active->lastPage()) }}" aria-label="Last">
+                  class="dt-paging-button page-item {{ $internAccounts->currentPage() == $internAccounts->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" href="{{ $internAccounts->url($internAccounts->lastPage()) }}" aria-label="Last">
                     <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
@@ -418,7 +538,7 @@
             </nav>
           </div>
         </div>
-      </div>--}}
+      </div>
 
     </div>
   </div>
