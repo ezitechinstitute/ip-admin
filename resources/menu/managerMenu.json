@@ -54,14 +54,14 @@
     {
       "name": "Remaining Amount",
       "icon": "menu-icon icon-base ti tabler-cash",
-      "slug": "manager/projects",
-      "url": "manager/projects"
+      "slug": "manager/remainingamount",
+      "url": "manager/remainingamount"
     },
     {
-      "url": "manager/leave",
+      "url": "manager/offerletter",
       "name": "Offer Letter Request",
       "icon": "menu-icon icon-base ti tabler-file-certificate",
-      "slug": "manager/leave"
+      "slug": "manager/offerletter"
     },
     {
       "url": "manager/feedback",
