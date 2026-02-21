@@ -1,91 +1,29 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Active-Interns')
+@section('title', 'Test Completed')
 
 @section('vendor-style')
-@vite(['resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
-'resources/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.scss',
-'resources/assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.scss',
-'resources/assets/vendor/libs/select2/select2.scss',
-'resources/assets/vendor/libs/@form-validation/form-validation.scss',
-'resources/assets/vendor/libs/animate-css/animate.scss', 'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
-'resources/assets/vendor/libs/flatpickr/flatpickr.scss',])
+<link rel="stylesheet" href="path-to/datatables.bootstrap5.css">
+<link rel="stylesheet" href="path-to/responsive.bootstrap5.css">
+<link rel="stylesheet" href="path-to/buttons.bootstrap5.css">
+<link rel="stylesheet" href="path-to/select2.css">
+<link rel="stylesheet" href="path-to/form-validation.css">
+<link rel="stylesheet" href="path-to/animate.css">
+<link rel="stylesheet" href="path-to/sweetalert2.css">
 @endsection
 
 @section('vendor-script')
-@vite(['resources/assets/vendor/libs/moment/moment.js',
-'resources/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js',
-'resources/assets/vendor/libs/select2/select2.js', 'resources/assets/vendor/libs/@form-validation/popular.js',
-'resources/assets/vendor/libs/@form-validation/bootstrap5.js',
-'resources/assets/vendor/libs/@form-validation/auto-focus.js', 'resources/assets/vendor/libs/cleave-zen/cleave-zen.js',
-'resources/assets/vendor/libs/sweetalert2/sweetalert2.js', 'resources/assets/vendor/libs/flatpickr/flatpickr.js',])
-@endsection
-
-@section('page-script')
-{{-- @vite(['resources/assets/js/extended-ui-sweetalert2.js']) --}}
+<script src="path-to/moment.js"></script>
+<script src="path-to/datatables-bootstrap5.js"></script>
+<script src="path-to/select2.js"></script>
+<script src="path-to/form-validation.js"></script>
+<script src="path-to/cleave-zen.js"></script>
+<script src="path-to/sweetalert2.js"></script>
 @endsection
 
 @section('content')
-
 <!-- Users List Table -->
 <div class="col-12 mb-6">
-  <div class="col-xl-12 col-md-12">
-    <div class="card h-100">
-      <div class="card-header d-flex justify-content-between">
-        <h5 class="card-title mb-0">Statistics</h5>
-      </div>
-      <div class="card-body d-flex align-items-end">
-        <div class="w-100">
-          <div class="row gy-3">
-
-            <div class="col-md-3 col-6">
-              <div class="d-flex align-items-center">
-                <div class="badge rounded bg-label-primary me-4 p-2">
-                  <i class="icon-base ti tabler-user-check icon-lg"></i>
-                </div>
-                <div class="card-info">
-                  <h5 class="mb-0">{{ $stats['interview'] ?? 0 }}</h5>
-                  <small>Interview</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 col-6">
-              <div class="d-flex align-items-center">
-                <div class="badge rounded bg-label-info me-4 p-2"><i class="icon-base ti tabler-users icon-lg"></i>
-                </div>
-                <div class="card-info">
-                  <h5 class="mb-0">{{$stats['contacted'] ?? 0}}</h5>
-                  <small>Contacted</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 col-6">
-              <div class="d-flex align-items-center">
-                <div class="badge rounded bg-label-danger me-4 p-2">
-                  <i class="icon-base ti tabler-list-check icon-lg"></i>
-                </div>
-                <div class="card-info">
-                  <h5 class="mb-0">{{$stats['test_attempt'] ?? 0}}</h5>
-                  <small>Test Attempts</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 col-6">
-              <div class="d-flex align-items-center">
-                <div class="badge rounded bg-label-success me-4 p-2">
-                  <i class="icon-base ti tabler-certificate icon-lg"></i>
-                </div>
-                <div class="card-info">
-                  <h5 class="mb-0">{{$stats['test_completed'] ?? 0}}</h5>
-                  <small>Test Completed</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
   <h4 class="mt-6 mb-1">Active Interns</h4>
 </div>
 {{-- Error Messages --}}
@@ -117,19 +55,18 @@
         });
     }, 5000); // 5 seconds
 </script>
-
 <div class="card">
 
   <div class="card-datatable">
     <div id="DataTables_Table_0_wrapper" class="dt-container dt-bootstrap5 dt-empty-footer">
       <div class="row m-3 my-0 justify-content-between">
         <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
-          <div class="dt-length mb-md-6 mb-0 d-flex">
+          <div class="dt-length mb-md-6 mb-0 d-flex items-center mt-5">
 
             <form id="perPageForm" method="GET">
               <select name="per_page" class="form-select" onchange="this.form.submit()">
                 @foreach([15, 25, 50, 100] as $val)
-                <option value="{{ $val }}" {{ request('per_page')==$val ? 'selected' : '' }}>{{ $val }}</option>
+                <option value="{{ $val }}" {{ $perPage==$val ? 'selected' : '' }}>{{ $val }}</option>
                 @endforeach
               </select>
               <input type="hidden" name="search" value="{{ request('search') }}">
@@ -149,7 +86,7 @@
           <form method="GET" action="{{ route('manager.activeInterns') }}" id="filterForm" class="d-flex gap-2">
 
             <input type="search" name="search" id="searchInput" class="form-control"
-              placeholder="Search by Name or ETI ID" value="{{ request('search') }}">
+              placeholder="Search by Name or Email" value="{{ request('search') }}">
             <style>
               input[type="search"]::-webkit-search-cancel-button,
               input[type="search"]::-webkit-search-decoration {
@@ -157,19 +94,17 @@
                 appearance: none;
               }
             </style>
-            <input type="text" id="dateRangePicker" name="date_range" class="form-control"
-              placeholder="Select Date Range" value="{{ request('date_range') }}" style="min-width: 200px;">
             <select name="status" id="statusFilter" class="form-select text-capitalize" onchange="this.form.submit()">
               <option value="">Select Technology</option>
 
-              @foreach ($activeTechnologies as $tech)
+              @foreach ($allowedTechNames as $techName) {{-- $tech ki jagah $techName --}}
               @php
-              // English comments: Create slug by replacing spaces with hyphens
-              $techSlug = strtolower(str_replace(' ', '-', $tech->technology));
+              // English comments: Since $techName is now a string, use it directly
+              $techSlug = strtolower(str_replace(' ', '-', $techName));
               @endphp
 
               <option value="{{ $techSlug }}" {{ request('status')==$techSlug ? 'selected' : '' }}>
-                {{ $tech->technology }}
+                {{ $techName }} {{-- Object property hatayein, direct variable use karein --}}
               </option>
               @endforeach
             </select>
@@ -223,17 +158,16 @@
           </form>
         </div>
       </div>
+
       <div class="justify-content-between dt-layout-table">
         <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto"
-          style="max-height: 700px;">
+          style="max-height: 500px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
 
             <thead class="border-top sticky-top bg-card">
               <tr>
-                
 
-                
                 <th data-dt-column="2" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Profile Picture" tabindex="0"><span class="dt-column-title"
                     role="button">Image</span><span class="dt-column-order"></span></th>
@@ -243,52 +177,54 @@
                 <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Email</span><span
                     class="dt-column-order"></span></th>
-                <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">City</span><span
+                <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Contact</span><span
+                    class="dt-column-order"></span></th>
+                    <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">City</span><span
                     class="dt-column-order"></span></th>
                     <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Internship Type</span><span
                     class="dt-column-order"></span></th>
-                
                 <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
                   aria-label="Join Date"><span class="dt-column-title">Technology</span><span
                     class="dt-column-order"></span></th>
-                
-                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
-                  aria-label="Join Date"><span class="dt-column-title">Join Date</span><span
+                    <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Join Date</span><span
                     class="dt-column-order"></span></th>
-              
-                  <th data-dt-column="6" rowspan="1" colspan="1"
-                  class="dt-orderable-asc dt-orderable-desc text-nowrap" aria-label="Internship Duration" tabindex="0">
-                  <span class="dt-column-title" role="button">Status
-                    </span><span class="dt-column-order"></span></th>
-                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap" aria-label="Join Date"><span
+                
+
+
+
+
+                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
+                    class="dt-column-title">Status</span><span class="dt-column-order"></span></th>
+                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
                     class="dt-column-title">Action</span><span class="dt-column-order"></span></th>
 
 
               </tr>
             </thead>
             <tbody>
-              @forelse ($internAccounts as $internAccount)
+              @forelse ($interns as $intern)
               <tr class="">
-               
                 <td class="">
                   <div class="d-flex justify-content-start align-items-center user-name">
                     <div class="avatar-wrapper">
-                      @if ($internAccount->profile_image)
+                      @if ($intern->image)
                       <div class="avatar avatar-md me-4">
                         <img src="{{ 
-    $internAccount->profile_image 
-        ? (str_starts_with($internAccount->iprofile_imagee, 'data:image')
-            ? $internAccount->iprofile_imagee
-            : asset($internAccount->profile_image)) 
+    $intern->image
+        ? (str_starts_with($intern->image, 'data:image')
+            ? $intern->image
+            : asset($intern->image)) 
         : '' 
-    }}" alt="{{ $internAccount->name }}" class="rounded-circle" />
+    }}" alt="{{ $intern->name }}" class="rounded-circle" />
                       </div>
                       @else
                       <div class="avatar avatar-md me-4">
                         <span class="avatar-initial rounded-circle bg-label-warning">
-                          {{ strtoupper(substr($internAccount->name, 0, 2)) }}
+                          {{ strtoupper(substr($intern->name, 0, 2)) }}
                         </span>
                       </div>
                       @endif
@@ -296,30 +232,26 @@
 
                   </div>
                 </td>
-
-
-                <td><span class="text-heading text-nowrap">{{$internAccount->name}}</span></td>
-                <td><i class="icon-base ti tabler-mail me-1 text-danger icon-22px"></i><span
-                    class="text-heading text-nowrap"><small>{{$internAccount->email}}</small></span></td>
-                <td><span class="text-heading text-nowrap d-flex items-center">{{$internAccount->city}}</span>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$intern->name}}</span></td>
+                <td><span class="text-heading text-nowrap"><small><i
+                        class="icon-base ti tabler-mail me-1 text-danger icon-22px"></i>{{$intern->email}}</small></span></td>
+                <td>@if ($intern->phone)
+                  <span class="text-heading text-nowrap"><i
+                      class="icon-base ti tabler-phone me-1 text-success icon-22px"></i>{{$intern->phone}}</span>
+                  @else
+                  N/A
+                  @endif
                 </td>
-                <td><span class="text-heading text-nowrap d-flex items-center">{{$internAccount->intern_type}}</span>
-                </td>
-                <td><span class="text-heading text-nowrap"><i
-                      class="icon-base ti tabler-cpu me-1 text-primary icon-22px"></i>
-                    {{$internAccount->int_technology}}</span></td>
-                
-                  <td><span class="text-heading text-nowrap">
-                    @if ($internAccount->joining_date)
-                      {{$internAccount->joining_date}}
-                    @else
-                      N/A
-                    @endif</span></td>
-
-                    
-                
-                  <td>
-                  @php
+                <td><span class="text-heading text-nowrap">{{$intern->city}}</span></td>
+                <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td>
+                <td><span class="text-heading text-nowrap">{{$intern->technology}}</span></td>
+                <td><span class="text-heading text-nowrap">@if ($intern->join_date)
+                  <span class="text-heading text-nowrap"><i
+                      class="icon-base ti tabler-phone me-1 text-success icon-22px"></i>{{$intern->join_date}}</span>
+                  @else
+                  N/A
+                  @endif</span></td>
+                <td>@php
                   // Map statuses to Bootstrap badge classes
                   $statusClasses = [
                   'interview' => 'bg-label-primary',
@@ -331,13 +263,12 @@
                   'freeze' => 'bg-label-danger',
                   ];
 
-                  $status = strtolower($internAccount->int_status); // ensure lowercase
+                  $status = strtolower($intern->status); // ensure lowercase
                   $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
                   @endphp
 
-                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span>
-                </td>
-                <td>
+                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span></td>
+                  <td>
                   <div class="dropdown">
                     <a href="javascript:;"
                       class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
@@ -347,36 +278,32 @@
 
                     <div class="dropdown-menu dropdown-menu-end m-0">
 
-                      
-                      <a href="javascript:;" 
-   class="dropdown-item edit-intern" 
-   data-bs-toggle="modal" 
-   data-bs-target="#editInternModal" 
-   data-id="{{ $internAccount->int_id }}"
-   data-status="{{ $internAccount->int_status }}"
-   data-review="{{ $internAccount->review }}"> Edit Status
-</a>
-                      <a href="javascript:void(0);" 
-   class="dropdown-item text-danger delete-record" 
-   data-id="{{ $internAccount->int_id }}" 
-   data-name="{{ $internAccount->name }}">
-   Remove
-</a>
 
-{{-- Hidden Form for Security --}}
-<form id="delete-form-{{ $internAccount->int_id }}" 
-      action="{{ route('manager.interns.remove', $internAccount->int_id) }}" 
-      method="POST" style="display: none;">
-    @csrf
-    @method('PATCH') {{-- Status update ke liye PATCH best hai --}}
-</form>
+                      <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal"
+                        data-bs-target="#editInternModal" data-id="{{ $intern->id }}"
+                        data-status="{{ $intern->status }}"> Edit
+                        Status
+                      </a>
+                      <a href="javascript:void(0);" class="dropdown-item text-danger delete-record"
+                        data-id="{{ $intern->id }}" data-name="{{ $intern->name }}">
+                        Remove
+                      </a>
+
+                      {{-- Hidden Form for Security --}}
+                      <form id="delete-form-{{ $intern->id }}"
+                        action="{{ route('manager.interns.remove', $intern->id) }}" method="POST"
+                        style="display: none;">
+                        @csrf
+                        @method('PATCH') {{-- Status update ke liye PATCH best hai --}}
+                      </form>
 
 
 
 
                     </div>
                   </div>
-                </td> {{--<td><span class="text-heading text-nowrap"></span>3rd June</td>--}}
+                </td>
+
                 {{--<td><span class="text-heading text-nowrap"></span>Completed</td>--
 
 
@@ -465,48 +392,42 @@
             <tfoot></tfoot>
           </table>
 
-          {{-- Change Status - Start --}}
-          <div class="modal fade" id="editInternModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-sm modal-simple modal-dialog-centered">
+           {{-- Edit Status Modal --}}
+<div class="modal fade" id="editInternModal" tabindex="-1" aria-hidden="true" style="z-index: 9999 !important;">
+  <div class="modal-dialog modal-md modal-simple modal-dialog-centered">
     <div class="modal-content p-2">
       <div class="modal-body">
-        <button type="button" class="btn-close" style="inset-block-start: 0rem !important; inset-inline-end: 0rem !important;" data-bs-dismiss="modal" aria-label="Close"></button>
-
-        <div class="text-start mb-4">
-          <h5 class="role-title">Update Intern Status</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="text-start mb-6">
+          <h4 class="role-title">Edit Intern Status</h4>
         </div>
 
-        <form id="editInternForm" novalidate class="row g-3" action="{{ route('update.intern.manager') }}" method="POST">
+        <form id="editInternForm" action="{{ route('update.intern.manager') }}" method="POST">
           @csrf
-          <input type="hidden" id="id" name="id">
-
-          <div class="col-12 mb-2">
-            <label class="form-label" for="status">Status</label>
-            <select name="status" id="status" required class="form-select text-capitalize">
-              <option value="Active">Active</option>
-              <option value="Freeze">Freeze</option>
-              <option value="Test">Test</option>
-              <option value="Completed">Completed</option>
-            </select>
-            <small class="text-danger error-status"></small>
-          </div>
+          {{-- English comments: Hidden input to store the intern ID --}}
+          <input type="hidden" id="edit_intern_id" name="id">
 
           <div class="col-12 mb-3">
-            <label class="form-label" for="review">Review / Remarks</label>
-            <textarea name="review" id="review" class="form-control" rows="3" placeholder="Add notes here..."></textarea>
-            <small class="text-danger error-review"></small>
+            <label class="form-label" for="edit_status">Status</label>
+            <select name="status" id="edit_status" required class="form-select text-capitalize">
+              <option value="Interview">Interview</option>
+              <option value="Contact">Contact</option>
+              <option value="Test">Test</option>
+              <option value="Completed">Completed</option>
+              <option value="Active">Active</option>
+              <option value="Removed">Removed</option>
+            </select>
           </div>
 
           <div class="col-12 text-end">
             <button type="button" class="btn btn-label-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Update</button>
+            <button type="submit" class="btn btn-primary">Update Status</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
-          {{-- Change Status - End --}}
 
 
         </div>
@@ -515,53 +436,56 @@
         {{-- Info --}}
         <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
           <div class="dt-info" aria-live="polite">
-            Showing {{ $internAccounts->firstItem() ?? 0 }} to {{ $internAccounts->lastItem() ?? 0 }} of {{
-            $internAccounts->total() ??
+            Showing {{ $interns->firstItem() ?? 0 }} to {{ $interns->lastItem() ?? 0 }} of {{
+            $interns->total() ??
             0 }} entries
           </div>
         </div>
 
         {{-- Pagination --}}
         <div
-          class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
+          class="d-md-flex align-items-center dt-layout-end mt-4 col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
           <div class="dt-paging">
             <nav aria-label="pagination">
               <ul class="pagination">
                 {{-- First Page --}}
-                <li class="dt-paging-button page-item {{ $internAccounts->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $internAccounts->url(1) }}" aria-label="First">
+                <li class="dt-paging-button page-item {{ $interns->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->url(1) }}" aria-label="First">
                     <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
                 {{-- Previous Page --}}
-                <li class="dt-paging-button page-item {{ $internAccounts->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $internAccounts->previousPageUrl() }}" aria-label="Previous">
+                <li class="dt-paging-button page-item {{ $interns->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->previousPageUrl() }}"
+                    aria-label="Previous">
                     <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
                 {{-- Page Numbers --}}
-                @foreach ($internAccounts->getUrlRange(max(1, $internAccounts->currentPage() - 2),
-                min($internAccounts->lastPage(),
-                $internAccounts->currentPage() + 2)) as $page => $url)
-                <li class="dt-paging-button page-item {{ $page == $internAccounts->currentPage() ? 'active' : '' }}">
-                  <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                @foreach ($interns->getUrlRange(max(1, $interns->currentPage() - 2),
+                min($interns->lastPage(),
+                $interns->currentPage() + 2)) as $page => $url)
+                <li class="dt-paging-button page-item {{ $page == $interns->currentPage() ? 'active' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $url }}">{{ $page }}</a>
                 </li>
                 @endforeach
 
                 {{-- Next Page --}}
                 <li
-                  class="dt-paging-button page-item {{ $internAccounts->currentPage() == $internAccounts->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $internAccounts->nextPageUrl() }}" aria-label="Next">
+                  class="dt-paging-button page-item {{ $interns->currentPage() == $interns->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->nextPageUrl() }}"
+                    aria-label="Next">
                     <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
                 {{-- Last Page --}}
                 <li
-                  class="dt-paging-button page-item {{ $internAccounts->currentPage() == $internAccounts->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $internAccounts->url($internAccounts->lastPage()) }}" aria-label="Last">
+                  class="dt-paging-button page-item {{ $interns->currentPage() == $interns->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->url($interns->lastPage()) }}"
+                    aria-label="Last">
                     <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
@@ -575,7 +499,6 @@
   </div>
 
 </div>
-
 
 <script>
   let timer;
@@ -592,237 +515,75 @@
   });
 </script>
 
-
-
-@push('scripts')
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-
-  document.querySelectorAll('.delete-record').forEach(button => {
-    button.addEventListener('click', function () {
-
-      const id = this.dataset.id;
-
-      Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, remove it!',
-        cancelButtonText: 'Cancel',
-        customClass: {
-          confirmButton: 'btn btn-danger',
-          cancelButton: 'btn btn-secondary'
-        },
-        buttonsStyling: false
-      }).then((result) => {
-        if (result.isConfirmed) {
-          document.getElementById('delete-form-' + id).submit();
-        }
-      });
-
-    });
-  });
-
-});
-</script>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-
-    const editModal = document.getElementById('editInternModal');
-    const form = document.getElementById('editInternForm');
-
-    // Populate modal
-    editModal.addEventListener('show.bs.modal', function (event) {
-        const btn = event.relatedTarget;
-
-        form.querySelector('#id').value = btn.dataset.id || '';
-        form.querySelector('#name').value = btn.dataset.name || '';
-        form.querySelector('#email').value = btn.dataset.email || '';
-        form.querySelector('#technology').value = btn.dataset.technology || '';
-        form.querySelector('#status').value = btn.dataset.status || '';
-
-        clearErrors();
-    });
-
-    // Live validation
-    ['name', 'email', 'technology'].forEach(field => {
-        form[field].addEventListener('input', () => validateField(field));
-    });
-
-    form.status.addEventListener('change', () => validateField('status'));
-
-    // Submit validation (IMPORTANT FIX)
-    form.addEventListener('submit', function (e) {
-
-        let valid = true;
-
-        ['name', 'email', 'technology', 'status'].forEach(field => {
-            if (!validateField(field)) valid = false;
-        });
-
-        if (!valid) {
-            e.preventDefault(); // ❗ only prevent when invalid
-        }
-    });
-
-    function validateField(field) {
-        const value = form[field].value.trim();
-
-        switch (field) {
-            case 'name':
-                if (!value) return showError(field, 'Name is required');
-                break;
-
-            case 'email':
-                if (!value) return showError(field, 'Email is required');
-                if (!isValidEmail(value)) return showError(field, 'Invalid email format');
-                break;
-
-            case 'technology':
-                if (!value) return showError(field, 'Technology is required');
-                break;
-
-            case 'status':
-                if (!value) return showError(field, 'Please select a status');
-                break;
-        }
-
-        clearError(field);
-        return true;
-    }
-
-    function showError(field, message) {
-        const el = form.querySelector('.error-' + field);
-        if (el) el.textContent = message;
-        return false;
-    }
-
-    function clearError(field) {
-        const el = form.querySelector('.error-' + field);
-        if (el) el.textContent = '';
-    }
-
-    function clearErrors() {
-        form.querySelectorAll('small.text-danger').forEach(el => el.textContent = '');
-    }
-
-    function isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-});
-</script>
-
-<script>
-  function downloadActiveCSV() {
-    // English comments: Get all current filter values from the UI
-    const search = document.getElementById('searchInput')?.value || '';
-    const status = document.getElementById('statusFilter')?.value || '';
-    const dateRange = document.getElementById('dateRangePicker')?.value || '';
-    const internType = document.getElementById('typeFilter')?.value || '';
+function downloadActiveCSV() {
+    const form = document.getElementById('filterForm');
+    const formData = new FormData(form);
     
-    let url = "{{ route('active.interns.export.csv.manager') }}";
+    const params = new URLSearchParams(formData).toString();
     
-    // English comments: Append all filters to the export URL
-    const params = new URLSearchParams({
-        search: search,
-        status: status,
-        date_range: dateRange,
-        intern_type: internType
-    });
-
-    window.location.href = url + "?" + params.toString();
+    window.location.href = "{{ route('manager.active.export') }}?" + params;
 }
 </script>
 
-
-@endpush
-
 @push('scripts')
+
 <script>
-  // English comments: Wait for the DOM and libraries to be fully loaded
-  document.addEventListener('DOMContentLoaded', function () {
-    const datePicker = document.querySelector('#dateRangePicker');
-    
-    if (datePicker) {
-        // English comments: Initialize flatpickr with range mode
-        flatpickr(datePicker, {
-            mode: 'range',
-            dateFormat: 'Y-m-d',
-            // English comments: Show calendar as a dropdown
-            static: true, 
-            allowInput: true,
-            onClose: function(selectedDates, dateStr) {
-                // English comments: Submit form only if 2 dates are selected or input is cleared
-                if (selectedDates.length === 2 || dateStr === "") {
-                    document.getElementById('filterForm').submit();
-                }
+document.addEventListener('DOMContentLoaded', function () {
+    // English comments: Handle data loading into the Edit Modal
+    const editInternModal = document.getElementById('editInternModal');
+    if (editInternModal) {
+        editInternModal.addEventListener('show.bs.modal', function (event) {
+            // English comments: Button that triggered the modal
+            const button = event.relatedTarget;
+            
+            // English comments: Extract info from data-* attributes
+            const internId = button.getAttribute('data-id');
+            const currentStatus = button.getAttribute('data-status');
+
+            // English comments: Update the modal's content
+            const idInput = editInternModal.querySelector('#edit_intern_id');
+            const statusSelect = editInternModal.querySelector('#edit_status');
+
+            idInput.value = internId;
+            statusSelect.value = currentStatus;
+        });
+    }
+});
+</script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.querySelectorAll('.delete-record').forEach(button => {
+    button.addEventListener('click', function() {
+        const internId = this.getAttribute('data-id');
+        const internName = this.getAttribute('data-name');
+
+        // English comments: Show a confirmation dialog before proceeding with removal
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You want to remove ${internName}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // English comments: Submit the specific hidden form for this intern
+                document.getElementById(`delete-form-${internId}`).submit();
             }
         });
-    }
-  });
-</script>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const deleteButtons = document.querySelectorAll('.delete-record');
-
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            const id = this.dataset.id;
-            const name = this.dataset.name;
-
-            Swal.fire({
-                title: 'Are you sure?',
-                text: `You want to remove ${name} from active interns?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, remove it!',
-                customClass: {
-                    confirmButton: 'btn btn-danger me-3',
-                    cancelButton: 'btn btn-label-secondary'
-                },
-                buttonsStyling: false
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // English comments: Submit the specific hidden form
-                    document.getElementById('delete-form-' + id).submit();
-                }
-            });
-        });
     });
 });
 </script>
-<script>
- // English comments: Get the modal element
-const editInternModal = document.getElementById('editInternModal');
-
-if (editInternModal) {
-    editInternModal.addEventListener('show.bs.modal', function (event) {
-        // English comments: Button that triggered the modal
-        const button = event.relatedTarget;
-        
-        // English comments: Extract info from data attributes
-        const id = button.getAttribute('data-id');
-        const status = button.getAttribute('data-status');
-        const review = button.getAttribute('data-review'); // <--- Ye line check karein
-
-        // English comments: Update the modal's content
-        const modalForm = document.getElementById('editInternForm');
-        
-        modalForm.querySelector('#id').value = id;
-        modalForm.querySelector('#status').value = status;
-        
-        // English comments: Populate the review/remarks textarea
-        // Use .value for textarea to ensure content is displayed
-        const reviewField = modalForm.querySelector('#review');
-        if (reviewField) {
-            reviewField.value = review || ''; 
-        }
-    });
-}
-</script>
+<style>
+  /* English comments: Force the SweetAlert2 container to be on top of everything */
+  .swal2-container {
+    z-index: 9999 !important;
+  }
+</style>
 @endpush
 
 @endsection

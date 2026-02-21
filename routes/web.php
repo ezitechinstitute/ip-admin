@@ -581,6 +581,11 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
+    Route::get('/my-interns', [AllManagerInternController::class, 'myInterns']) ->name('manager.myInterns');
+    Route::get('/my-interns/export', [AllManagerInternController::class, 'exportMyInternsCSV'])->name('manager.myInterns.export');
+
+    
+    // Active Interns submenu page
     Route::get('/all-interns', [AllManagerInternController::class, 'index']) ->name('manager.allInterns');
     Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])->name('manager.activeInterns');
     Route::get('/international-interns', [InternationalInternsManagerController::class, 'index'])->name('manager.international.interns');
@@ -593,19 +598,27 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     Route::get('/remainingamount', [RemainingAmountController::class, 'index'])->name('manager.remainingamount');
 
 
-    Route::get('/all-interns/active/export', [AllManagerInternController::class, 'exportActiveCSV'])
-         ->name('active.interns.export.csv.manager');
+    Route::get('/active-interns/export', [AllManagerInternController::class, 'exportActiveInternsCSV'])->name('manager.active.export');
 
 
-    Route::patch('/interns/remove/{id}', [AllManagerInternController::class, 'removeIntern'])
-     ->name('manager.interns.remove');
 
-     Route::post('/all-interns/update', [AllManagerInternController::class, 'updateInternStatus'])
-         ->name('update.intern.manager');
+    Route::patch('/manager/interns/remove/{id}', [AllManagerInternController::class, 'remove'])->name('manager.interns.remove');
+
+     Route::post('/interns/update', [AllManagerInternController::class, 'updateStatus'])->name('update.intern.manager');
     
-Route::get('/all-interns/newInterns', [AllManagerInternController::class, 'newInterns'])->name('manager.newInterns');    
-Route::get('/all-interns/contact', [AllManagerInternController::class, 'contactWith'])->name('manager.contactWith');    
-Route::get('/all-interns/interview', [AllManagerInternController::class, 'interview'])->name('manager.interview');    
+Route::get('/all-interns/newInterns', [AllManagerInternController::class, 'newInterns'])->name('manager.newInterns');  
+Route::get('/newInterns/export', [AllManagerInternController::class, 'exportNewInternsCSV'])->name('manager.newInterns.export');
+
+
+Route::get('/all-interns/contact', [AllManagerInternController::class, 'contactWith'])->name('manager.contactWith');   
+Route::get('/contact-with/export', [AllManagerInternController::class, 'exportContactWith'])->name('manager.contactWith.export');
+
+Route::get('/all-interns/test', [AllManagerInternController::class, 'test'])->name('manager.test'); 
+Route::get('/test-interns/export', [AllManagerInternController::class, 'exportTestCSV'])->name('manager.test.export');
+
+
+Route::get('/all-interns/completed', [AllManagerInternController::class, 'completed'])->name('manager.completed'); 
+Route::get('/completed-interns/export', [AllManagerInternController::class, 'exportCompletedCSV'])->name('manager.completed.export');
 
 });
 

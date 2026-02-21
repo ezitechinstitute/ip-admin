@@ -8,6 +8,6 @@ use Illuminate\Http\Request;
 class InternationalInternsManagerController extends Controller
 {
     public function index(){
-        return 'internal interns';
+        return view('pages.manager.international-interns.internationalInterns');
     }
 }
