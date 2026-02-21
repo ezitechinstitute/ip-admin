@@ -2,13 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+// English comments: Crucial change! Extend Authenticatable instead of base Model
+use Illuminate\Foundation\Auth\User as Authenticatable; 
+use Illuminate\Notifications\Notifiable;
 
-class ManagersAccount extends Model
+class ManagersAccount extends Authenticatable
 {
-    protected $table = 'manager_accounts';
+    use Notifiable;
+
+    protected $table = 'manager_accounts'; 
 
     protected $primaryKey = 'manager_id';
+
+    public $incrementing = true; 
 
     protected $fillable = [
         'eti_id',
@@ -23,5 +29,10 @@ class ManagersAccount extends Model
         'status',
         'loginas',
         'emergency_contact',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 }
