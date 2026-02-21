@@ -12,8 +12,8 @@
     {
       "name": "My Interns",
       "icon": "menu-icon icon-base ti tabler-users-group",
-      "slug": "manager/all-interns",
-      "url": "manager/all-interns",
+      "slug": "manager/my-interns",
+      "url": "manager/my-interns",
       "submenu": [
         {
           "url": "manager/all-interns/active",
@@ -31,14 +31,14 @@
           "slug": "manager/all-interns/contact"
         },
         {
-          "url": "manager/all-interns/interview",
+          "url": "manager/all-interns/test",
           "name": "Interview Test",
-          "slug": "manager/all-interns/interview"
+          "slug": "manager/all-interns/test"
         },
         {
-          "url": "manager/all-interns/test",
+          "url": "manager/all-interns/completed",
           "name": "Test Completed",
-          "slug": "manager/all-interns/test"
+          "slug": "manager/all-interns/completed"
         }
       ]
     },

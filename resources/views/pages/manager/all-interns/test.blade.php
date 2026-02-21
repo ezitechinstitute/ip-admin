@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Contact With')
+@section('title', 'New-Interns')
 
 @section('vendor-style')
 <link rel="stylesheet" href="path-to/datatables.bootstrap5.css">
@@ -24,7 +24,7 @@
 @section('content')
 <!-- Users List Table -->
 <div class="col-12 mb-6">
-  <h4 class="mt-6 mb-1">Contact With</h4>
+  <h4 class="mt-6 mb-1">Interview Test</h4>
 </div>
 {{-- Error Messages --}}
 @if($errors->any())
@@ -83,7 +83,7 @@
 
         <div
           class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
-          <form method="GET" action="{{ route('manager.contactWith') }}" id="filterForm" class="d-flex gap-2">
+          <form method="GET" action="{{ route('manager.test') }}" id="filterForm" class="d-flex gap-2">
 
             <input type="search" name="search" id="searchInput" class="form-control"
               placeholder="Search by Name or Email" value="{{ request('search') }}">
@@ -145,7 +145,7 @@
                 <span class="d-none d-sm-block">Export</span>
               </button>
               <div class="dropdown-menu" style="z-index: 1021" aria-labelledby="btnGroupDrop1">
-                <a class="dt-button dropdown-item" href="javascript:void(0);" onclick="downloadContactWithCSV()">
+                <a class="dt-button dropdown-item" href="javascript:void(0);" onclick="downloadTestCSV()">
                   <span>
                     <span class="d-flex align-items-center">
                       <i class="icon-base ti tabler-file-spreadsheet me-1"></i>CSV / Excel
@@ -161,11 +161,11 @@
 
       <div class="justify-content-between dt-layout-table">
         <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto"
-          style="max-height: 700px;">
+          style="max-height: 500px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
 
-           <thead class="border-top sticky-top bg-card">
+            <thead class="border-top sticky-top bg-card">
               <tr>
 
                 <th data-dt-column="2" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
@@ -304,7 +304,70 @@
                   </div>
                 </td>
 
-              
+                {{--<td><span class="text-heading text-nowrap"></span>Completed</td>--
+
+
+                {{--<td>
+                  @php
+                  // Map statuses to Bootstrap badge classes
+                  $statusClasses = [
+                  'interview' => 'bg-label-primary',
+                  'contact' => 'bg-label-info',
+                  'test' => 'bg-label-warning',
+                  'completed' => 'bg-label-success',
+                  'active' => 'bg-label-success',
+                  'removed' => 'bg-label-danger',
+                  ];
+
+                  $status = strtolower($intern->status); // ensure lowercase
+                  $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
+                  @endphp
+
+                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span>
+                </td>--}}
+
+                {{-- <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td> --}}
+                {{--<td>
+                  <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                      <a href="javascript:;"
+                        class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
+                      </a>
+
+                      <div class="dropdown-menu dropdown-menu-end m-0">
+
+                        <a href="{{route('view.profile.internee.admin', $intern->id)}}"
+                          class="dropdown-item permission-btn">
+                          View Profile
+                        </a>
+                        <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal"
+                          data-bs-target="#editInternModal" data-id="{{ $intern->id }}" data-name="{{ $intern->name }}"
+                          data-email="{{ $intern->email }}" data-technology="{{ $intern->technology }}"
+                          data-status="{{ $intern->status }}">
+                          Edit
+                        </a>
+
+                        @if (strtolower($intern->status) != 'removed')
+                        <a href="javascript:;" class="dropdown-item permission-btn delete-record"
+                          data-id="{{ $intern->id }}">
+                          Remove
+                        </a>
+                        <form id="delete-form-{{ $intern->id }}" action="{{ route('interns.destroy', $intern->id) }}"
+                          method="POST" style="display: none;">
+                          @csrf
+                          @method('DELETE')
+                        </form>
+                        @endif
+
+
+
+                      </div>
+                    </div>
+                  </div>
+
+                </td>--}}
 
 
               </tr>
@@ -452,19 +515,21 @@
   });
 </script>
 
-@push('scripts')
 <script>
-  // Collects all current filters and redirects to the export route
-function downloadContactWithCSV() {
+// English comments: Function to handle CSV export for 'Test' status interns
+function downloadTestCSV() {
+    // Get the main filter form
     const form = document.getElementById('filterForm');
     const formData = new FormData(form);
+    
+    // English comments: Convert form data to URL parameters
     const params = new URLSearchParams(formData).toString();
     
-    // Redirecting to the export route with current filters
-    window.location.href = "{{ route('manager.contactWith.export') }}?" + params;
+    // Redirect to the export route with current filters
+    window.location.href = "{{ route('manager.test.export') }}?" + params;
 }
 </script>
-@endpush
+
 
 
 @push('scripts')
