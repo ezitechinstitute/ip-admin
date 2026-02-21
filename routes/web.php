@@ -187,6 +187,10 @@ use App\Http\Middleware\ValidUser;
 use App\Http\Middleware\validManager;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\manager_controllers\AllManagerInternController;
+use App\Http\Controllers\manager_controllers\OfferLetterController;
+use App\Http\Controllers\manager_controllers\RemainingAmountController;
+
+
 
 // Main Page Route
 // Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
@@ -578,9 +582,15 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/all-interns', [AllManagerInternController::class, 'index']) ->name('manager.allInterns');
-    // Active Interns submenu page
     Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])->name('manager.activeInterns');
     Route::get('/international-interns', [InternationalInternsManagerController::class, 'index'])->name('manager.international.interns');
+    Route::get('/all-interns/newInterns', [AllManagerInternController::class, 'newInterns'])->name('manager.newInterns');    
+    Route::get('/all-interns/contact', [AllManagerInternController::class, 'contactWith'])->name('manager.contactWith');    
+    Route::get('/all-interns/interview', [AllManagerInternController::class, 'interview'])->name('manager.interview');    
+
+    // Offer Letter Route (corrected)
+    Route::get('/offerletter', [OfferLetterController::class, 'index'])->name('manager.offerletter');
+    Route::get('/remainingamount', [RemainingAmountController::class, 'index'])->name('manager.remainingamount');
 
 
     Route::get('/all-interns/active/export', [AllManagerInternController::class, 'exportActiveCSV'])
@@ -598,5 +608,6 @@ Route::get('/all-interns/contact', [AllManagerInternController::class, 'contactW
 Route::get('/all-interns/interview', [AllManagerInternController::class, 'interview'])->name('manager.interview');    
 
 });
+
 
    
