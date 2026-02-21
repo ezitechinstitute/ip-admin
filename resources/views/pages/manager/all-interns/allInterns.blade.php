@@ -103,8 +103,8 @@
              <select name="status" id="statusFilter" class="form-select text-capitalize">
               <option value="">Select Status</option>
 
-              @foreach (['Technology','Status','Date range','Internship type'] as $status)
-              @php $slug = strtolower($status); @endphp
+              @foreach ($activeTechnologies as $activeTechnology)
+              
 
               <option value="{{ $slug }}" {{ request('status')==$slug ? 'selected' : '' }}>
                 {{ $status }}
