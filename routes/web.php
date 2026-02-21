@@ -581,6 +581,18 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     // Active Interns submenu page
     Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])->name('manager.activeInterns');
     Route::get('/international-interns', [InternationalInternsManagerController::class, 'index'])->name('manager.international.interns');
+
+
+    Route::get('/all-interns/active/export', [AllManagerInternController::class, 'exportActiveCSV'])
+         ->name('active.interns.export.csv.manager');
+
+
+    Route::patch('/interns/remove/{id}', [AllManagerInternController::class, 'removeIntern'])
+     ->name('manager.interns.remove');
+
+     Route::post('/all-interns/update', [AllManagerInternController::class, 'updateInternStatus'])
+         ->name('update.intern.manager');
+    
 Route::get('/all-interns/newInterns', [AllManagerInternController::class, 'newInterns'])->name('manager.newInterns');    
 Route::get('/all-interns/contact', [AllManagerInternController::class, 'contactWith'])->name('manager.contactWith');    
 Route::get('/all-interns/interview', [AllManagerInternController::class, 'interview'])->name('manager.interview');    
