@@ -579,11 +579,12 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/all-interns', [AllManagerInternController::class, 'index']) ->name('manager.allInterns');
     // Active Interns submenu page
-    Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])
-        ->name('manager.activeInterns');
+    Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])->name('manager.activeInterns');
     Route::get('/international-interns', [InternationalInternsManagerController::class, 'index'])->name('manager.international.interns');
+Route::get('/all-interns/newInterns', [AllManagerInternController::class, 'newInterns'])->name('manager.newInterns');    
+Route::get('/all-interns/contact', [AllManagerInternController::class, 'contactWith'])->name('manager.contactWith');    
+Route::get('/all-interns/interview', [AllManagerInternController::class, 'interview'])->name('manager.interview');    
 
-    
 });
 
    
