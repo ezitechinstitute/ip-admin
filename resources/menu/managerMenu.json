@@ -64,10 +64,10 @@
       "slug": "manager/offerletter"
     },
     {
-      "url": "manager/feedback",
+      "url": "manager/payment-receipt",
       "name": "Payment Receipt",
       "icon": "menu-icon icon-base ti tabler-receipt-2",
-      "slug": "manager/feedback"
+      "slug": "manager/payment-receipt"
     }
   ]
 }
