@@ -189,6 +189,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\manager_controllers\AllManagerInternController;
 use App\Http\Controllers\manager_controllers\OfferLetterController;
 use App\Http\Controllers\manager_controllers\RemainingAmountController;
+use App\Http\Controllers\manager_controllers\PaymentReceiptController;
+
 
 
 
@@ -620,7 +622,17 @@ Route::get('/test-interns/export', [AllManagerInternController::class, 'exportTe
 Route::get('/all-interns/completed', [AllManagerInternController::class, 'completed'])->name('manager.completed'); 
 Route::get('/completed-interns/export', [AllManagerInternController::class, 'exportCompletedCSV'])->name('manager.completed.export');
 
+
+
+
+
+//Payment Receipt Routes
+
+Route::get('/payment-receipt',[PaymentReceiptController::class,'index'])->name('manager.payment-receipt');
 });
+
+
+
 
 
    
