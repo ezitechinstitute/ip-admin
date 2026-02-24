@@ -58,10 +58,16 @@
       "url": "manager/remainingamount"
     },
     {
-      "url": "manager/offerletter",
+      "url": "manager/offer-letter-request",
       "name": "Offer Letter Request",
       "icon": "menu-icon icon-base ti tabler-file-certificate",
-      "slug": "manager/offerletter"
+      "slug": "manager/offer-letter-request"
+    },
+    {
+      "url": "manager/offer-letter-template",
+      "name": "Offer Letter Template",
+      "icon": "menu-icon icon-base ti tabler-certificate",
+      "slug": "manager/offer-letter-template"
     },
     {
       "url": "manager/payment-receipt",
