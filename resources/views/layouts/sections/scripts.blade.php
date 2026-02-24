@@ -12,7 +12,13 @@
 <!-- END: Page Vendor JS-->
 
 <!-- BEGIN: Theme JS-->
-@vite(['resources/assets/js/main.js'])
+@if(request()->is('manager/*') || request()->is('manager'))
+    {{-- English comments: Load manager-specific JS for manager routes --}}
+    @vite(['resources/assets/js/main-manager-navbar.js'])
+@else
+    {{-- English comments: Load default main JS for admin and others --}}
+    @vite(['resources/assets/js/main.js'])
+@endif
 <!-- END: Theme JS-->
 
 <!-- Pricing Modal JS-->

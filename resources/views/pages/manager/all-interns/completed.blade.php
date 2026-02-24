@@ -160,8 +160,8 @@
       </div>
 
       <div class="justify-content-between dt-layout-table">
-        <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto"
-          style="max-height: 500px;">
+        <div class="table-responsive overflow-auto"
+          style="max-height: 700px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
 
@@ -334,7 +334,7 @@
   <div class="modal-dialog modal-md modal-simple modal-dialog-centered">
     <div class="modal-content p-2">
       <div class="modal-body">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" style="inset-block-start: 0rem !important; inset-inline-end: 0rem !important;" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         <div class="text-start mb-6">
           <h4 class="role-title">Edit Intern Status</h4>
         </div>

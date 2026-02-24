@@ -62,10 +62,23 @@ if ($manager) {
     ])->onlyInput('email');
 }
 
-  public function logoutAuth(Request $request){
+  public function logoutAuth(Request $request)
+{
     Auth::guard('admin')->logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+
+    $request->session()->forget('admin'); // optional
+    $request->session()->regenerate();
+
     return redirect()->route('login');
-  }
+}
+
+  public function managerLogout(Request $request)
+{
+    Auth::guard('manager')->logout();
+
+    $request->session()->forget('manager'); // optional
+    $request->session()->regenerate();
+
+    return redirect()->route('login'); 
+}
 }

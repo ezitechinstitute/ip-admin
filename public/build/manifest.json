@@ -782,8 +782,14 @@
     "src": "resources/assets/js/front-page-pricing.js",
     "isEntry": true
   },
+  "resources/assets/js/main-manager-navbar.js": {
+    "file": "assets/main-manager-navbar-CtnZ_dcL.js",
+    "name": "main-manager-navbar",
+    "src": "resources/assets/js/main-manager-navbar.js",
+    "isEntry": true
+  },
   "resources/assets/js/main.js": {
-    "file": "assets/main-Ccsc20-B.js",
+    "file": "assets/main-CCTDTyA3.js",
     "name": "main",
     "src": "resources/assets/js/main.js",
     "isEntry": true
@@ -903,7 +909,7 @@
     "isEntry": true
   },
   "resources/assets/js/pages-auth.js": {
-    "file": "assets/pages-auth-D0KVgRoL.js",
+    "file": "assets/pages-auth-CE0bBK-u.js",
     "name": "pages-auth",
     "src": "resources/assets/js/pages-auth.js",
     "isEntry": true

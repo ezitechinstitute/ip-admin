@@ -160,8 +160,8 @@
       </div>
 
       <div class="justify-content-between dt-layout-table">
-        <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto"
-          style="max-height: 500px;">
+        <div class="table-responsive overflow-auto"
+          style="max-height: 700px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
 
@@ -284,7 +284,7 @@
                         data-status="{{ $intern->status }}"> Edit
                         Status
                       </a>
-                      <a href="javascript:void(0);" class="dropdown-item text-danger delete-record"
+                      <a href="javascript:void(0);" class="dropdown-item delete-record"
                         data-id="{{ $intern->id }}" data-name="{{ $intern->name }}">
                         Remove
                       </a>
@@ -304,70 +304,7 @@
                   </div>
                 </td>
 
-                {{--<td><span class="text-heading text-nowrap"></span>Completed</td>--
-
-
-                {{--<td>
-                  @php
-                  // Map statuses to Bootstrap badge classes
-                  $statusClasses = [
-                  'interview' => 'bg-label-primary',
-                  'contact' => 'bg-label-info',
-                  'test' => 'bg-label-warning',
-                  'completed' => 'bg-label-success',
-                  'active' => 'bg-label-success',
-                  'removed' => 'bg-label-danger',
-                  ];
-
-                  $status = strtolower($intern->status); // ensure lowercase
-                  $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
-                  @endphp
-
-                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span>
-                </td>--}}
-
-                {{-- <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td> --}}
-                {{--<td>
-                  <div class="d-flex align-items-center">
-                    <div class="dropdown">
-                      <a href="javascript:;"
-                        class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
-                      </a>
-
-                      <div class="dropdown-menu dropdown-menu-end m-0">
-
-                        <a href="{{route('view.profile.internee.admin', $intern->id)}}"
-                          class="dropdown-item permission-btn">
-                          View Profile
-                        </a>
-                        <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal"
-                          data-bs-target="#editInternModal" data-id="{{ $intern->id }}" data-name="{{ $intern->name }}"
-                          data-email="{{ $intern->email }}" data-technology="{{ $intern->technology }}"
-                          data-status="{{ $intern->status }}">
-                          Edit
-                        </a>
-
-                        @if (strtolower($intern->status) != 'removed')
-                        <a href="javascript:;" class="dropdown-item permission-btn delete-record"
-                          data-id="{{ $intern->id }}">
-                          Remove
-                        </a>
-                        <form id="delete-form-{{ $intern->id }}" action="{{ route('interns.destroy', $intern->id) }}"
-                          method="POST" style="display: none;">
-                          @csrf
-                          @method('DELETE')
-                        </form>
-                        @endif
-
-
-
-                      </div>
-                    </div>
-                  </div>
-
-                </td>--}}
+            
 
 
               </tr>
@@ -397,7 +334,7 @@
   <div class="modal-dialog modal-md modal-simple modal-dialog-centered">
     <div class="modal-content p-2">
       <div class="modal-body">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" style="inset-block-start: 0rem !important; inset-inline-end: 0rem !important;" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         <div class="text-start mb-6">
           <h4 class="role-title">Edit Intern Status</h4>
         </div>

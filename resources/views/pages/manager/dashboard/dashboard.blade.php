@@ -76,7 +76,7 @@ $configData = Helper::appClasses();
       <div class="d-flex align-items-end row">
         <div class="col-7">
           <div class="card-body text-nowrap">
-            <h5 class="card-title mb-0">Congratulations 🎉 Kashif Saeed !</h5>
+            <h5 class="card-title mb-0">Congratulations 🎉 {{$manager->name}}!</h5>
             <p class="mb-2 text-success">You have earned in Feb</p>
             <div style="display: flex; flex-direction: column" class="mb-1">
               <h3 class="mb-0">PKR : 40,000</h3>
@@ -96,7 +96,7 @@ $configData = Helper::appClasses();
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between">
         <h5 class="card-title mb-0">Manager Statistics</h5>
-        <a href="{{route('managers')}}" class="btn btn-outline-primary rounded-pill btn-xs p-0!">View</a>
+        {{-- <a href="{{route('managers')}}" class="btn btn-outline-primary rounded-pill btn-xs p-0!">View</a> --}}
       </div>
       <div class="card-body d-flex align-items-end">
         <div class="w-100">
@@ -108,7 +108,7 @@ $configData = Helper::appClasses();
                   <i class="icon-base ti tabler-user-check icon-lg"></i>
                 </div>
                 <div class="card-info">
-                  <h5 class="mb-0">35</h5>
+                  <h5 class="mb-0">{{ $statusCounts['Interview'] }}</h5>
                   <small>Interview</small>
                 </div>
               </div>
@@ -118,7 +118,7 @@ $configData = Helper::appClasses();
                 <div class="badge rounded bg-label-info me-4 p-2"><i class="icon-base ti tabler-users icon-lg"></i>
                 </div>
                 <div class="card-info">
-                  <h5 class="mb-0">20</h5>
+                  <h5 class="mb-0">{{ $statusCounts['Contact'] }}</h5>
                   <small>Contacted</small>
                 </div>
               </div>
@@ -129,7 +129,7 @@ $configData = Helper::appClasses();
                   <i class="icon-base ti tabler-list-check icon-lg"></i>
                 </div>
                 <div class="card-info">
-                  <h5 class="mb-0">15</h5>
+                  <h5 class="mb-0">{{ $statusCounts['Test'] }}</h5>
                   <small>Test Attempts</small>
                 </div>
               </div>
@@ -140,7 +140,7 @@ $configData = Helper::appClasses();
                   <i class="icon-base ti tabler-certificate icon-lg"></i>
                 </div>
                 <div class="card-info">
-                  <h5 class="mb-0">10</h5>
+                  <h5 class="mb-0">{{ $statusCounts['Completed'] }}</h5>
                   <small>Test Completed</small>
                 </div>
               </div>
