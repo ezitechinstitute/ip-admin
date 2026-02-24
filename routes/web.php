@@ -130,7 +130,8 @@ use App\Http\Controllers\manager_controllers\AllManagerInternController;
 use App\Http\Controllers\manager_controllers\DashboardManagerController;
 use App\Http\Controllers\manager_controllers\InternationalInternsManagerController;
 use App\Http\Controllers\manager_controllers\ManagerKnowledgeBaseController;
-use App\Http\Controllers\manager_controllers\OfferLetterController;
+use App\Http\Controllers\manager_controllers\OfferLetterRequestController;
+use App\Http\Controllers\manager_controllers\OfferLetterTemplateController;
 use App\Http\Controllers\manager_controllers\PaymentReceiptController;
 use App\Http\Controllers\manager_controllers\ProfileSettingsController;
 use App\Http\Controllers\manager_controllers\RemainingAmountController;
@@ -605,7 +606,8 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     Route::get('/all-interns/interview', [AllManagerInternController::class, 'interview'])->name('manager.interview');    
 
     // Offer Letter Route (corrected)
-    Route::get('/offerletter', [OfferLetterController::class, 'index'])->name('manager.offerletter');
+    Route::get('/offer-letter-template', [OfferLetterTemplateController::class, 'index'])->name('manager.offer.letter.template');
+        Route::get('/offer-letter-request', [OfferLetterRequestController::class, 'index'])->name('manager.offer.letter.request');
     Route::get('/remainingamount', [RemainingAmountController::class, 'index'])->name('manager.remainingamount');
 
 
