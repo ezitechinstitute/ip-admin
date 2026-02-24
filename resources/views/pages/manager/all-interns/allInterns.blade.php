@@ -24,6 +24,64 @@
 @section('content')
 <!-- Users List Table -->
 <div class="col-12 mb-6">
+  <div class="col-12">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between">
+        <h5 class="card-title mb-0">Statistics</h5>
+        {{-- <a href="{{route('managers')}}" class="btn btn-outline-primary rounded-pill btn-xs p-0!">View</a> --}}
+      </div>
+      <div class="card-body d-flex align-items-end">
+        <div class="w-100">
+          <div class="row gy-3">
+
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="badge rounded bg-label-primary me-4 p-2">
+                  <i class="icon-base ti tabler-user-check icon-lg"></i>
+                </div>
+                <div class="card-info">
+                  <h5 class="mb-0">{{$statusCounts['Interview']}}</h5>
+                  <small>Interview</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="badge rounded bg-label-info me-4 p-2"><i class="icon-base ti tabler-users icon-lg"></i>
+                </div>
+                <div class="card-info">
+                  <h5 class="mb-0">{{$statusCounts['Contact']}}</h5>
+                  <small>Contacted</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="badge rounded bg-label-danger me-4 p-2">
+                  <i class="icon-base ti tabler-list-check icon-lg"></i>
+                </div>
+                <div class="card-info">
+                  <h5 class="mb-0">{{$statusCounts['Test']}}</h5>
+                  <small>Test Attempts</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="badge rounded bg-label-success me-4 p-2">
+                  <i class="icon-base ti tabler-certificate icon-lg"></i>
+                </div>
+                <div class="card-info">
+                  <h5 class="mb-0">{{$statusCounts['Completed']}}</h5>
+                  <small>Test Completed</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <h4 class="mt-6 mb-1">All Interns</h4>
 </div>
 {{-- Error Messages --}}
@@ -55,6 +113,7 @@
         });
     }, 5000); // 5 seconds
 </script>
+
 <div class="card">
 
   <div class="card-datatable">
@@ -95,14 +154,14 @@
               }
             </style>
             <select name="tech" class="form-select" onchange="this.form.submit()">
-    <option value="">Select Technology</option>
-    @foreach ($allowedTechNames as $techName)
-        @php $slug = strtolower(str_replace(' ', '-', $techName)); @endphp
-        <option value="{{ $slug }}" {{ request('tech') == $slug ? 'selected' : '' }}>
-            {{ $techName }}
-        </option>
-    @endforeach
-</select>
+              <option value="">Select Technology</option>
+              @foreach ($allowedTechNames as $techName)
+              @php $slug = strtolower(str_replace(' ', '-', $techName)); @endphp
+              <option value="{{ $slug }}" {{ request('tech')==$slug ? 'selected' : '' }}>
+                {{ $techName }}
+              </option>
+              @endforeach
+            </select>
 
             <select name="intern_type" id="typeFilter" class="form-select text-capitalize"
               onchange="this.form.submit()">
@@ -114,13 +173,13 @@
               @endforeach
             </select>
 
-           <select name="status" id="statusFilter" class="form-select text-capitalize" onchange="this.form.submit()">
-  <option value="">Select Status</option>
-  @foreach (['Active', 'Interview', 'Contact', 'Test', 'Completed'] as $statusName) 
-    <option value="{{ $statusName }}" {{ request('status') == $statusName ? 'selected' : '' }}>
-      {{ $statusName }} </option>
-  @endforeach
-</select>
+            <select name="status" id="statusFilter" class="form-select text-capitalize" onchange="this.form.submit()">
+              <option value="">Select Status</option>
+              @foreach (['Active', 'Interview', 'Contact', 'Test', 'Completed'] as $statusName)
+              <option value="{{ $statusName }}" {{ request('status')==$statusName ? 'selected' : '' }}>
+                {{ $statusName }} </option>
+              @endforeach
+            </select>
 
 
 
@@ -163,8 +222,7 @@
       </div>
 
       <div class="justify-content-between dt-layout-table">
-        <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto"
-          style="max-height: 700px;">
+        <div class="table-responsive overflow-auto" style="max-height: 700px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
 
@@ -183,19 +241,19 @@
                 <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Contact</span><span
                     class="dt-column-order"></span></th>
-                    <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">City</span><span
                     class="dt-column-order"></span></th>
-                    <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Internship Type</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
                   aria-label="Join Date"><span class="dt-column-title">Technology</span><span
                     class="dt-column-order"></span></th>
-                    <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Join Date</span><span
                     class="dt-column-order"></span></th>
-                
+
 
 
 
@@ -235,9 +293,12 @@
 
                   </div>
                 </td>
-                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$intern->name}}</span></td>
+                <td><span
+                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$intern->name}}</span>
+                </td>
                 <td><span class="text-heading text-nowrap"><small><i
-                        class="icon-base ti tabler-mail me-1 text-danger icon-22px"></i>{{$intern->email}}</small></span></td>
+                        class="icon-base ti tabler-mail me-1 text-danger icon-22px"></i>{{$intern->email}}</small></span>
+                </td>
                 <td>@if ($intern->phone)
                   <span class="text-heading text-nowrap"><i
                       class="icon-base ti tabler-phone me-1 text-success icon-22px"></i>{{$intern->phone}}</span>
@@ -249,11 +310,11 @@
                 <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td>
                 <td><span class="text-heading text-nowrap">{{$intern->technology}}</span></td>
                 <td><span class="text-heading text-nowrap">@if ($intern->join_date)
-                  <span class="text-heading text-nowrap"><i
-                      class="icon-base ti tabler-phone me-1 text-success icon-22px"></i>{{$intern->join_date}}</span>
-                  @else
-                  N/A
-                  @endif</span></td>
+                    <span class="text-heading text-nowrap"><i
+                        class="icon-base ti tabler-phone me-1 text-success icon-22px"></i>{{$intern->join_date}}</span>
+                    @else
+                    N/A
+                    @endif</span></td>
                 <td>@php
                   // Map statuses to Bootstrap badge classes
                   $statusClasses = [
@@ -270,8 +331,9 @@
                   $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
                   @endphp
 
-                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span></td>
-                  <td>
+                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span>
+                </td>
+                <td>
                   <div class="dropdown">
                     <a href="javascript:;"
                       class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
@@ -287,8 +349,8 @@
                         data-status="{{ $intern->status }}"> Edit
                         Status
                       </a>
-                      <a href="javascript:void(0);" class="dropdown-item delete-record"
-                        data-id="{{ $intern->id }}" data-name="{{ $intern->name }}">
+                      <a href="javascript:void(0);" class="dropdown-item delete-record" data-id="{{ $intern->id }}"
+                        data-name="{{ $intern->name }}">
                         Remove
                       </a>
 
@@ -307,7 +369,7 @@
                   </div>
                 </td>
 
-       
+
 
 
               </tr>
@@ -332,42 +394,44 @@
             <tfoot></tfoot>
           </table>
 
-         {{-- Edit Status Modal --}}
-<div class="modal fade" id="editInternModal" tabindex="-1" aria-hidden="true" style="z-index: 9999 !important;">
-  <div class="modal-dialog modal-md modal-simple modal-dialog-centered">
-    <div class="modal-content p-2">
-      <div class="modal-body">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        <div class="text-start mb-6">
-          <h4 class="role-title">Edit Intern Status</h4>
-        </div>
+          {{-- Edit Status Modal --}}
+          <div class="modal fade" id="editInternModal" tabindex="-1" aria-hidden="true"
+            style="z-index: 9999 !important;">
+            <div class="modal-dialog modal-md modal-simple modal-dialog-centered">
+              <div class="modal-content p-2">
+                <div class="modal-body">
+                  <button type="button" style="inset-block-start: 0rem !important; inset-inline-end: 0rem !important;"
+                    class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  <div class="text-start mb-6">
+                    <h4 class="role-title">Edit Intern Status</h4>
+                  </div>
 
-        <form id="editInternForm" action="{{ route('update.intern.manager') }}" method="POST">
-          @csrf
-          {{-- English comments: Hidden input to store the intern ID --}}
-          <input type="hidden" id="edit_intern_id" name="id">
+                  <form id="editInternForm" action="{{ route('update.intern.manager') }}" method="POST">
+                    @csrf
+                    {{-- English comments: Hidden input to store the intern ID --}}
+                    <input type="hidden" id="edit_intern_id" name="id">
 
-          <div class="col-12 mb-3">
-            <label class="form-label" for="edit_status">Status</label>
-            <select name="status" id="edit_status" required class="form-select text-capitalize">
-              <option value="Interview">Interview</option>
-              <option value="Contact">Contact</option>
-              <option value="Test">Test</option>
-              <option value="Completed">Completed</option>
-              <option value="Active">Active</option>
-              <option value="Removed">Removed</option>
-            </select>
+                    <div class="col-12 mb-3">
+                      <label class="form-label" for="edit_status">Status</label>
+                      <select name="status" id="edit_status" required class="form-select text-capitalize">
+                        <option value="Interview">Interview</option>
+                        <option value="Contact">Contact</option>
+                        <option value="Test">Test</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Active">Active</option>
+                        <option value="Removed">Removed</option>
+                      </select>
+                    </div>
+
+                    <div class="col-12 text-end">
+                      <button type="button" class="btn btn-label-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-primary">Update Status</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <div class="col-12 text-end">
-            <button type="button" class="btn btn-label-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Update Status</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
 
 
         </div>
@@ -456,7 +520,7 @@
 </script>
 
 <script>
-function downloadCompletedCSV() {
+  function downloadCompletedCSV() {
     const form = document.getElementById('filterForm');
     const formData = new FormData(form);
     
@@ -470,7 +534,7 @@ function downloadCompletedCSV() {
 @push('scripts')
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function () {
     // English comments: Handle data loading into the Edit Modal
     const editInternModal = document.getElementById('editInternModal');
     if (editInternModal) {
@@ -494,9 +558,9 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.querySelectorAll('.delete-record').forEach(button => {
+  document.querySelectorAll('.delete-record').forEach(button => {
     button.addEventListener('click', function() {
         const internId = this.getAttribute('data-id');
         const internName = this.getAttribute('data-name');

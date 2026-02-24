@@ -68,6 +68,21 @@
       "name": "Payment Receipt",
       "icon": "menu-icon icon-base ti tabler-receipt-2",
       "slug": "manager/payment-receipt"
+    },
+    {
+      "menuHeader": "Manager Settings"
+    },
+    {
+      "url": "manager/profile-settings",
+      "name": "Profile Settings",
+      "icon": "menu-icon icon-base ti tabler-user",
+      "slug": "manager/profile-settings"
+    },
+    {
+      "url": "manager/knowledge-base",
+      "name": "Knowledge Base",
+      "icon": "menu-icon icon-base ti tabler-book",
+      "slug": "manager/knowledge-base"
     }
   ]
 }

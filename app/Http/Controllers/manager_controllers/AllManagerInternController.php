@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\manager_controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminSetting;
+use App\Models\InternAccount;
+use App\Models\Technologies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; 
-use App\Models\InternAccount;
-use App\Models\AdminSetting;
-use App\Models\Technologies;
+use Illuminate\Support\Facades\Response;
 
 class AllManagerInternController extends Controller
 {
@@ -17,7 +18,6 @@ class AllManagerInternController extends Controller
     if (!$manager) return redirect()->route('login');
 
     // 1. Fetching Manager Permissions
-    // English comments: Get technologies and types this manager is allowed to oversee
     $allowedTechs = DB::table('manager_permissions')
         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
         ->where('manager_permissions.manager_id', $manager->manager_id)
@@ -31,8 +31,9 @@ class AllManagerInternController extends Controller
         ->unique()
         ->toArray();
 
-    // 2. Base Query for 'Interview' Status
-    $query = DB::table('intern_table')->whereIn('status', ['Interview', 'Test', 'Contact', 'Completed', 'Active']);
+    // 2. Base Query for all statuses
+    $query = DB::table('intern_table')
+        ->whereIn('status', ['Interview', 'Test', 'Contact', 'Completed', 'Active']);
 
     // 3. Security Filter
     $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
@@ -48,21 +49,35 @@ class AllManagerInternController extends Controller
         });
     }
 
-    
-
     if ($request->filled('intern_type')) {
-    $query->where('intern_type', $request->intern_type);
-}
-    if ($request->filled('status')) {
-    $query->where('status', $request->status);
-}
+        $query->where('intern_type', $request->intern_type);
+    }
 
-// English comments: Filtering by Technology (Renamed to 'tech' to avoid conflict)
-if ($request->filled('tech')) {
-    $techFilter = str_replace('-', ' ', $request->tech);
-    $query->where('technology', 'LIKE', $techFilter);
-}
-    // 5. Pagination Logic
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    if ($request->filled('tech')) {
+        $techFilter = str_replace('-', ' ', $request->tech);
+        $query->where('technology', 'LIKE', $techFilter);
+    }
+
+    // 5. Clone query to get counts before pagination
+    $countsQuery = clone $query;
+
+    $statusCounts = $countsQuery
+        ->select('status', DB::raw('count(*) as total'))
+        ->groupBy('status')
+        ->pluck('total', 'status') // returns: ['Interview' => 10, 'Contact' => 5, ...]
+        ->toArray();
+
+    // Ensure all keys exist even if 0
+    $statuses = ['Interview', 'Contact', 'Test', 'Completed'];
+    foreach ($statuses as $status) {
+        if (!isset($statusCounts[$status])) $statusCounts[$status] = 0;
+    }
+
+    // 6. Pagination Logic
     $pageLimitSet = AdminSetting::first();
     $defaultLimit = $pageLimitSet->pagination_limit ?? 15;
     $perPage = $request->input('per_page', $defaultLimit);
@@ -71,7 +86,7 @@ if ($request->filled('tech')) {
                      ->paginate($perPage)
                      ->withQueryString();
 
-    return view('pages.manager.all-interns.allInterns', compact('interns', 'allowedTechNames', 'perPage'));
+    return view('pages.manager.all-interns.allInterns', compact('interns', 'allowedTechNames', 'perPage', 'statusCounts'));
 }
 
 
@@ -766,70 +781,218 @@ public function exportCompletedCSV(Request $request)
 
 
 
-
-
-
-
-
-
-
-     
-    public function active(Request $request)
+public function active(Request $request)
 {
-    $manager = auth()->guard('manager')->user();
+    $manager = auth('manager')->user();
     if (!$manager) return redirect()->route('login');
 
-    // 1. Fetching Manager Permissions
-    // English comments: Get technologies and types this manager is allowed to oversee
-    $allowedTechs = DB::table('manager_permissions')
+    $managerId = $manager->manager_id;
+
+    // Allowed techs for this manager
+    $allowedTechsData = DB::table('manager_permissions')
         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
-        ->where('manager_permissions.manager_id', $manager->manager_id)
-        ->where('technologies.status', 1) 
-        ->select('technologies.technology', 'manager_permissions.interview_type')
+        ->where('manager_permissions.manager_id', $managerId)
+        ->where('technologies.status', 1)
+        ->select('technologies.technology')
         ->get();
 
-    $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
-    $allowedInternTypes = $allowedTechs->pluck('interview_type')
-        ->map(fn($type) => strtolower(trim($type)))
-        ->unique()
-        ->toArray();
+    $allowedTechNames = $allowedTechsData->pluck('technology')->unique()->toArray();
 
-    // 2. Base Query for 'Active' Status
-    $query = DB::table('intern_table')->where('status', 'Active');
+    // Pagination limit
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    // 3. Security Filter
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
-    });
+    // Base query: join intern_accounts with intern_table
+    $query = DB::table('intern_accounts')
+        ->leftJoin('intern_table', 'intern_accounts.email', '=', 'intern_table.email')
+        ->select(
+            'intern_accounts.int_id',
+            'intern_accounts.eti_id',
+            'intern_accounts.name',
+            'intern_accounts.email',
+            'intern_accounts.phone',
+            'intern_accounts.review',
+            'intern_accounts.int_status as status', // aliased to avoid errors
+            'intern_accounts.int_technology',
+            'intern_table.image as profile_image',
+            'intern_table.city',
+            'intern_table.intern_type',
+            'intern_accounts.start_date as join_date'
+        )
+        ->where('intern_accounts.int_status', 'Active');
 
-    // 4. Search & Dropdown Filters
+    // Filter only allowed technologies
+    if (!empty($allowedTechNames)) {
+        $query->whereIn('intern_accounts.int_technology', $allowedTechNames);
+    } else {
+        $query->whereRaw('1 = 0'); // no allowed techs
+    }
+
+    // Search filter
     if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('name', 'LIKE', "%{$request->search}%")
-              ->orWhere('email', 'LIKE', "%{$request->search}%");
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('intern_accounts.name', 'like', "%{$search}%")
+              ->orWhere('intern_accounts.email', 'like', "%{$search}%")
+              ->orWhere('intern_accounts.eti_id', 'like', "%{$search}%");
         });
     }
 
+    // Technology filter
     if ($request->filled('status')) {
-        $query->where('technology', str_replace('-', ' ', $request->status));
+        $tech = str_replace('-', ' ', $request->status);
+        $query->where('intern_accounts.int_technology', $tech);
     }
 
+    // Internship type filter (Onsite/Remote)
     if ($request->filled('intern_type')) {
-    $query->where('intern_type', $request->intern_type);
+        $query->where('intern_table.intern_type', $request->intern_type);
+    }
+
+    // Pagination
+    $internAccounts = $query->orderBy('intern_accounts.int_id', 'desc')
+        ->paginate($perPage)
+        ->withQueryString();
+
+    return view('pages.manager.all-interns.managerActiveInterns', compact(
+        'internAccounts', 'allowedTechNames', 'perPage'
+    ));
 }
 
-    // 5. Pagination Logic
-    $pageLimitSet = AdminSetting::first();
-    $defaultLimit = $pageLimitSet->pagination_limit ?? 15;
-    $perPage = $request->input('per_page', $defaultLimit);
 
-    $interns = $query->orderBy('id', 'desc')
-                     ->paginate($perPage)
-                     ->withQueryString();
 
-    return view('pages.manager.all-interns.managerActiveInterns', compact('interns', 'allowedTechNames', 'perPage'));
+
+
+
+public function removeInternAccActive($id)
+{
+    DB::table('intern_accounts')
+        ->where('int_id', $id)
+        ->update([
+            'int_status' => 'Removed'
+        ]);
+
+    return back()->with('success', 'Intern removed successfully!');
 }
+
+
+public function updateInternActive(Request $request)
+{
+    // Validate request
+    $request->validate([
+        'id' => 'required|exists:intern_accounts,int_id',
+        'status' => 'required|string',
+        'review' => 'nullable|string'
+    ]);
+
+    // Update intern
+    DB::table('intern_accounts')
+        ->where('int_id', $request->id)
+        ->update([
+            'int_status' => $request->status,
+            'review' => $request->review,
+        ]);
+
+    return redirect()->back()->with('success', 'Intern updated successfully!');
+}
+
+
+
+public function exportActiveInterns(Request $request)
+{
+    $columns = ['ID', 'ETI ID', 'Name', 'Email', 'Phone', 'Technology', 'Status', 'Review'];
+    $filename = "active_interns.csv";
+
+    $callback = function() use ($columns) {
+        $handle = fopen('php://output', 'w');
+        // Add CSV header
+        fputcsv($handle, $columns);
+
+        // Use cursor() to stream data row by row
+        InternAccount::where('int_status', 'Active')
+            ->select('int_id', 'eti_id', 'name', 'email', 'phone', 'int_technology', 'int_status', 'review')
+            ->orderBy('int_id', 'asc')
+            ->cursor() // ⚡ streams instead of loading all at once
+            ->each(function($intern) use ($handle) {
+                fputcsv($handle, [
+                    $intern->int_id,
+                    $intern->eti_id,
+                    $intern->name,
+                    $intern->email,
+                    $intern->phone,
+                    $intern->int_technology,
+                    $intern->int_status,
+                    $intern->review,
+                ]);
+            });
+
+        fclose($handle);
+    };
+
+    return Response::stream($callback, 200, [
+        "Content-Type" => "text/csv",
+        "Content-Disposition" => "attachment; filename={$filename}",
+    ]);
+}
+
+
+     
+//     public function active(Request $request)
+// {
+//     $manager = auth()->guard('manager')->user();
+//     if (!$manager) return redirect()->route('login');
+
+//     // 1. Fetching Manager Permissions
+//     // English comments: Get technologies and types this manager is allowed to oversee
+//     $allowedTechs = DB::table('manager_permissions')
+//         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
+//         ->where('manager_permissions.manager_id', $manager->manager_id)
+//         ->where('technologies.status', 1) 
+//         ->select('technologies.technology', 'manager_permissions.interview_type')
+//         ->get();
+
+//     $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
+//     $allowedInternTypes = $allowedTechs->pluck('interview_type')
+//         ->map(fn($type) => strtolower(trim($type)))
+//         ->unique()
+//         ->toArray();
+
+//     // 2. Base Query for 'Active' Status
+//     $query = DB::table('intern_table')->where('status', 'Active');
+
+//     // 3. Security Filter
+//     $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
+//         $q->whereIn('technology', $allowedTechNames)
+//           ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
+//     });
+
+//     // 4. Search & Dropdown Filters
+//     if ($request->filled('search')) {
+//         $query->where(function($q) use ($request) {
+//             $q->where('name', 'LIKE', "%{$request->search}%")
+//               ->orWhere('email', 'LIKE', "%{$request->search}%");
+//         });
+//     }
+
+//     if ($request->filled('status')) {
+//         $query->where('technology', str_replace('-', ' ', $request->status));
+//     }
+
+//     if ($request->filled('intern_type')) {
+//     $query->where('intern_type', $request->intern_type);
+// }
+
+//     // 5. Pagination Logic
+//     $pageLimitSet = AdminSetting::first();
+//     $defaultLimit = $pageLimitSet->pagination_limit ?? 15;
+//     $perPage = $request->input('per_page', $defaultLimit);
+
+//     $interns = $query->orderBy('id', 'desc')
+//                      ->paginate($perPage)
+//                      ->withQueryString();
+
+//     return view('pages.manager.all-interns.managerActiveInterns', compact('interns', 'allowedTechNames', 'perPage'));
+// }
 
 
 

@@ -160,16 +160,15 @@
       </div>
 
       <div class="justify-content-between dt-layout-table">
-        <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto"
-          style="max-height: 500px;">
+       <div class="table-responsive overflow-auto"
+     style="max-height: 700px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
 
             <thead class="border-top sticky-top bg-card">
               <tr>
 
-                <th data-dt-column="2" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Profile Picture" tabindex="0"><span class="dt-column-title"
+                <th class="text-nowrap" aria-label="Profile Picture" tabindex="0"><span class="dt-column-title"
                     role="button">Image</span><span class="dt-column-order"></span></th>
                 <th data-dt-column="3" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Full Name" tabindex="0"><span class="dt-column-title" role="button">Name</span><span
@@ -180,19 +179,19 @@
                 <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Contact</span><span
                     class="dt-column-order"></span></th>
-                    <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">City</span><span
                     class="dt-column-order"></span></th>
-                    <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Internship Type</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
                   aria-label="Join Date"><span class="dt-column-title">Technology</span><span
                     class="dt-column-order"></span></th>
-                    <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Join Date</span><span
                     class="dt-column-order"></span></th>
-                
+
 
 
 
@@ -206,18 +205,18 @@
               </tr>
             </thead>
             <tbody>
-              @forelse ($interns as $intern)
-              <tr class="">
+              @forelse ($internAccounts as $intern)
+              <tr>
                 <td class="">
                   <div class="d-flex justify-content-start align-items-center user-name">
                     <div class="avatar-wrapper">
-                      @if ($intern->image)
+                      @if ($intern->profile_image)
                       <div class="avatar avatar-md me-4">
                         <img src="{{ 
-    $intern->image
-        ? (str_starts_with($intern->image, 'data:image')
-            ? $intern->image
-            : asset($intern->image)) 
+    $intern->profile_image
+        ? (str_starts_with($intern->profile_image, 'data:image')
+            ? $intern->profile_image
+            : asset($intern->profile_image)) 
         : '' 
     }}" alt="{{ $intern->name }}" class="rounded-circle" />
                       </div>
@@ -232,9 +231,10 @@
 
                   </div>
                 </td>
-                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$intern->name}}</span></td>
+                <td class="text-nowrap">{{ $intern->name }}</td>
                 <td><span class="text-heading text-nowrap"><small><i
-                        class="icon-base ti tabler-mail me-1 text-danger icon-22px"></i>{{$intern->email}}</small></span></td>
+                        class="icon-base ti tabler-mail me-1 text-danger icon-22px"></i>{{$intern->email}}</small></span>
+                </td>
                 <td>@if ($intern->phone)
                   <span class="text-heading text-nowrap"><i
                       class="icon-base ti tabler-phone me-1 text-success icon-22px"></i>{{$intern->phone}}</span>
@@ -242,143 +242,53 @@
                   N/A
                   @endif
                 </td>
-                <td><span class="text-heading text-nowrap">{{$intern->city}}</span></td>
-                <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td>
-                <td><span class="text-heading text-nowrap">{{$intern->technology}}</span></td>
-                <td><span class="text-heading text-nowrap">@if ($intern->join_date)
-                  <span class="text-heading text-nowrap"><i
-                      class="icon-base ti tabler-phone me-1 text-success icon-22px"></i>{{$intern->join_date}}</span>
-                  @else
-                  N/A
-                  @endif</span></td>
-                <td>@php
-                  // Map statuses to Bootstrap badge classes
+                <td>{{ $intern->city }}</td>
+                <td>{{ $intern->intern_type }}</td>
+                <td>{{ $intern->int_technology }}</td>
+                <td>{{ $intern->join_date ?? 'N/A' }}</td>
+                <td>
+                  @php
                   $statusClasses = [
-                  'interview' => 'bg-label-primary',
-                  'contact' => 'bg-label-info',
-                  'test' => 'bg-label-warning',
-                  'completed' => 'bg-label-success',
-                  'active' => 'bg-label-success',
-                  'removed' => 'bg-label-danger',
-                  'freeze' => 'bg-label-danger',
+                  'interview'=>'bg-label-primary',
+                  'contact'=>'bg-label-info',
+                  'test'=>'bg-label-warning',
+                  'completed'=>'bg-label-success',
+                  'active'=>'bg-label-success',
+                  'removed'=>'bg-label-danger',
+                  'freeze'=>'bg-label-danger',
                   ];
-
-                  $status = strtolower($intern->status); // ensure lowercase
-                  $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
+                  $badgeClass = $statusClasses[strtolower($intern->status)] ?? 'bg-label-secondary';
                   @endphp
-
-                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span></td>
-                  <td>
+                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $intern->status }}</span>
+                </td>
+                <td>
                   <div class="dropdown">
                     <a href="javascript:;"
                       class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
                       data-bs-toggle="dropdown" aria-expanded="false">
                       <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
                     </a>
-
-                    <div class="dropdown-menu dropdown-menu-end m-0">
-
-
-                      <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal"
-                        data-bs-target="#editInternModal" data-id="{{ $intern->id }}"
-                        data-status="{{ $intern->status }}"> Edit
-                        Status
+                    <div class="dropdown-menu dropdown-menu-end">
+                      <a href="#" class="dropdown-item edit-intern" data-bs-toggle="modal"
+                        data-bs-target="#editInternModal" data-id="{{ $intern->int_id }}"
+                        data-status="{{ $intern->status }}" data-review="{{ $intern->review }}">
+                        Edit Status
                       </a>
-                      <a href="javascript:void(0);" class="dropdown-item text-danger delete-record"
-                        data-id="{{ $intern->id }}" data-name="{{ $intern->name }}">
-                        Remove
-                      </a>
-
-                      {{-- Hidden Form for Security --}}
-                      <form id="delete-form-{{ $intern->id }}"
-                        action="{{ route('manager.interns.remove', $intern->id) }}" method="POST"
-                        style="display: none;">
+                      <a href="#" class="dropdown-item delete-record" data-id="{{ $intern->int_id }}"
+                        data-name="{{ $intern->name }}">Remove</a>
+                      <form id="delete-form-{{ $intern->int_id }}"
+                        action="{{ route('remove.internActiveAcc.manager', $intern->int_id) }}" method="POST"
+                        style="display:none;">
                         @csrf
-                        @method('PATCH') {{-- Status update ke liye PATCH best hai --}}
+                        @method('PATCH')
                       </form>
-
-
-
-
                     </div>
                   </div>
                 </td>
-
-                {{--<td><span class="text-heading text-nowrap"></span>Completed</td>--
-
-
-                {{--<td>
-                  @php
-                  // Map statuses to Bootstrap badge classes
-                  $statusClasses = [
-                  'interview' => 'bg-label-primary',
-                  'contact' => 'bg-label-info',
-                  'test' => 'bg-label-warning',
-                  'completed' => 'bg-label-success',
-                  'active' => 'bg-label-success',
-                  'removed' => 'bg-label-danger',
-                  ];
-
-                  $status = strtolower($intern->status); // ensure lowercase
-                  $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
-                  @endphp
-
-                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span>
-                </td>--}}
-
-                {{-- <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td> --}}
-                {{--<td>
-                  <div class="d-flex align-items-center">
-                    <div class="dropdown">
-                      <a href="javascript:;"
-                        class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
-                      </a>
-
-                      <div class="dropdown-menu dropdown-menu-end m-0">
-
-                        <a href="{{route('view.profile.internee.admin', $intern->id)}}"
-                          class="dropdown-item permission-btn">
-                          View Profile
-                        </a>
-                        <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal"
-                          data-bs-target="#editInternModal" data-id="{{ $intern->id }}" data-name="{{ $intern->name }}"
-                          data-email="{{ $intern->email }}" data-technology="{{ $intern->technology }}"
-                          data-status="{{ $intern->status }}">
-                          Edit
-                        </a>
-
-                        @if (strtolower($intern->status) != 'removed')
-                        <a href="javascript:;" class="dropdown-item permission-btn delete-record"
-                          data-id="{{ $intern->id }}">
-                          Remove
-                        </a>
-                        <form id="delete-form-{{ $intern->id }}" action="{{ route('interns.destroy', $intern->id) }}"
-                          method="POST" style="display: none;">
-                          @csrf
-                          @method('DELETE')
-                        </form>
-                        @endif
-
-
-
-                      </div>
-                    </div>
-                  </div>
-
-                </td>--}}
-
-
               </tr>
-
-
-
               @empty
               <tr>
-                <td colspan="11">
-                  <p class="text-center mb-0">No data available!</p>
-                </td>
+                <td colspan="11" class="text-center">No data available!</td>
               </tr>
               @endforelse
 
@@ -392,42 +302,46 @@
             <tfoot></tfoot>
           </table>
 
-           {{-- Edit Status Modal --}}
-<div class="modal fade" id="editInternModal" tabindex="-1" aria-hidden="true" style="z-index: 9999 !important;">
-  <div class="modal-dialog modal-md modal-simple modal-dialog-centered">
-    <div class="modal-content p-2">
-      <div class="modal-body">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        <div class="text-start mb-6">
-          <h4 class="role-title">Edit Intern Status</h4>
-        </div>
+          {{-- Edit Status Modal --}}
+          <div class="modal fade" id="editInternModal" tabindex="-1" aria-hidden="true"
+            style="z-index: 9999 !important;">
+            <div class="modal-dialog modal-md modal-simple modal-dialog-centered">
+              <div class="modal-content p-2">
+                <div class="modal-body">
+                  <button type="button" style="inset-block-start: 0rem !important; inset-inline-end: 0rem !important;"class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  <div class="text-start mb-6">
+                    <h4 class="role-title">Edit Intern Status</h4>
+                  </div>
 
-        <form id="editInternForm" action="{{ route('update.intern.manager') }}" method="POST">
-          @csrf
-          {{-- English comments: Hidden input to store the intern ID --}}
-          <input type="hidden" id="edit_intern_id" name="id">
+                  <form id="editInternForm" action="{{ route('update.intern.manager.active') }}" method="POST">
+                    @csrf
+                    <input type="hidden" id="edit_intern_id" name="id">
 
-          <div class="col-12 mb-3">
-            <label class="form-label" for="edit_status">Status</label>
-            <select name="status" id="edit_status" required class="form-select text-capitalize">
-              <option value="Interview">Interview</option>
-              <option value="Contact">Contact</option>
-              <option value="Test">Test</option>
-              <option value="Completed">Completed</option>
-              <option value="Active">Active</option>
-              <option value="Removed">Removed</option>
-            </select>
+                    <!-- Status Dropdown -->
+                    <div class="mb-3">
+                      <label class="form-label">Status</label>
+                      <select name="status" id="edit_status" required class="form-select text-capitalize">
+                        <option value="Active">Active</option>
+                        <option value="Test">Test</option>
+                        <option value="Freeze">Freeze</option>
+                      </select>
+                    </div>
+
+                    <!-- Review Textarea -->
+                    <div class="mb-3">
+                      <label class="form-label">Review</label>
+                      <textarea name="review" id="edit_review" class="form-control" rows="4"
+                        placeholder="Write intern review here..."></textarea>
+                    </div>
+
+                    <div class="text-end">
+                      <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <div class="col-12 text-end">
-            <button type="button" class="btn btn-label-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Update Status</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
 
 
         </div>
@@ -436,8 +350,8 @@
         {{-- Info --}}
         <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
           <div class="dt-info" aria-live="polite">
-            Showing {{ $interns->firstItem() ?? 0 }} to {{ $interns->lastItem() ?? 0 }} of {{
-            $interns->total() ??
+            Showing {{ $internAccounts->firstItem() ?? 0 }} to {{ $internAccounts->lastItem() ?? 0 }} of {{
+            $internAccounts->total() ??
             0 }} entries
           </div>
         </div>
@@ -449,33 +363,34 @@
             <nav aria-label="pagination">
               <ul class="pagination">
                 {{-- First Page --}}
-                <li class="dt-paging-button page-item {{ $interns->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->url(1) }}" aria-label="First">
+                <li class="dt-paging-button page-item {{ $internAccounts->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $internAccounts->url(1) }}"
+                    aria-label="First">
                     <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
                 {{-- Previous Page --}}
-                <li class="dt-paging-button page-item {{ $interns->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->previousPageUrl() }}"
+                <li class="dt-paging-button page-item {{ $internAccounts->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $internAccounts->previousPageUrl() }}"
                     aria-label="Previous">
                     <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
                 {{-- Page Numbers --}}
-                @foreach ($interns->getUrlRange(max(1, $interns->currentPage() - 2),
-                min($interns->lastPage(),
-                $interns->currentPage() + 2)) as $page => $url)
-                <li class="dt-paging-button page-item {{ $page == $interns->currentPage() ? 'active' : '' }}">
+                @foreach ($internAccounts->getUrlRange(max(1, $internAccounts->currentPage() - 2),
+                min($internAccounts->lastPage(),
+                $internAccounts->currentPage() + 2)) as $page => $url)
+                <li class="dt-paging-button page-item {{ $page == $internAccounts->currentPage() ? 'active' : '' }}">
                   <a class="page-link" style="border-radius: 5px;" href="{{ $url }}">{{ $page }}</a>
                 </li>
                 @endforeach
 
                 {{-- Next Page --}}
                 <li
-                  class="dt-paging-button page-item {{ $interns->currentPage() == $interns->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->nextPageUrl() }}"
+                  class="dt-paging-button page-item {{ $internAccounts->currentPage() == $internAccounts->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $internAccounts->nextPageUrl() }}"
                     aria-label="Next">
                     <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
                   </a>
@@ -483,9 +398,9 @@
 
                 {{-- Last Page --}}
                 <li
-                  class="dt-paging-button page-item {{ $interns->currentPage() == $interns->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->url($interns->lastPage()) }}"
-                    aria-label="Last">
+                  class="dt-paging-button page-item {{ $internAccounts->currentPage() == $internAccounts->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;"
+                    href="{{ $internAccounts->url($internAccounts->lastPage()) }}" aria-label="Last">
                     <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
@@ -516,13 +431,11 @@
 </script>
 
 <script>
-function downloadActiveCSV() {
+  function downloadActiveCSV() {
     const form = document.getElementById('filterForm');
     const formData = new FormData(form);
-    
     const params = new URLSearchParams(formData).toString();
-    
-    window.location.href = "{{ route('manager.active.export') }}?" + params;
+    window.location.href = "{{ route('manager.active.internee.export') }}?" + params;
 }
 </script>
 
@@ -530,32 +443,30 @@ function downloadActiveCSV() {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // English comments: Handle data loading into the Edit Modal
+
     const editInternModal = document.getElementById('editInternModal');
-    if (editInternModal) {
-        editInternModal.addEventListener('show.bs.modal', function (event) {
-            // English comments: Button that triggered the modal
-            const button = event.relatedTarget;
-            
-            // English comments: Extract info from data-* attributes
-            const internId = button.getAttribute('data-id');
-            const currentStatus = button.getAttribute('data-status');
 
-            // English comments: Update the modal's content
-            const idInput = editInternModal.querySelector('#edit_intern_id');
-            const statusSelect = editInternModal.querySelector('#edit_status');
+    editInternModal.addEventListener('show.bs.modal', function (event) {
 
-            idInput.value = internId;
-            statusSelect.value = currentStatus;
-        });
-    }
+        const button = event.relatedTarget;
+
+        const internId = button.getAttribute('data-id');
+        const currentStatus = button.getAttribute('data-status');
+        const review = button.getAttribute('data-review');
+
+        document.getElementById('edit_intern_id').value = internId;
+        document.getElementById('edit_status').value = currentStatus;
+        document.getElementById('edit_review').value = review ?? '';
+
+    });
+
 });
 </script>
 
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.querySelectorAll('.delete-record').forEach(button => {
+  document.querySelectorAll('.delete-record').forEach(button => {
     button.addEventListener('click', function() {
         const internId = this.getAttribute('data-id');
         const internName = this.getAttribute('data-name');
