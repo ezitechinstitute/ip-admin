@@ -111,36 +111,50 @@
 </div>
 
 {{-- Create Template Modal --}}
-<div class="modal fade" id="createTemplateModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-simple modal-dialog-centered">
-        <div class="modal-content p-2">
-            <div class="modal-body">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  <div class="modal fade" id="createTemplateModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-simple modal-dialog-centered modal-add-new-role">
+              <div class="modal-content p-2">
+                <div class="modal-body">
+                  <button type="button" style="inset-block-start: 0rem !important; inset-inline-end: 0rem !important;" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  <div class="text-start mb-6">
+                    <h4 class="role-title">Edit Transaction</h4>
+                  </div>
 
-                <h4 class="mb-4">Create Offer Letter Template</h4>
+                  <form method="POST" class="row g-3" id="editTransactionForm">
+                    @csrf
+                    @method('PUT')
 
-                <form id="createTemplateForm" novalidate>
-                    <div class="mb-3">
-                        <label for="templateName" class="form-label">Template Name</label>
-                        <input type="text" id="templateName" class="form-control" placeholder="Enter template name">
+                    <div class="col-12 col-md-8 form-control-validation mb-3">
+                      <label for="edit-amount" class="form-label">Subject</label>
+                      <input type="text" class="form-control" name="date" id="edit-date" placeholder="Enter Your Subject"
+                        required />
                     </div>
 
-                    <div class="mb-3">
-                        <label for="templateContent" class="form-label">Template Content</label>
-                        <textarea id="templateContent" class="form-control" rows="8" placeholder="Use dynamic fields: {intern_name}, {technology}, {intern_id}, {join_date}, {end_date}, {duration}"></textarea>
-                        <small class="text-muted">Dynamic fields will be auto-filled when generating offer letters.</small>
+                   
+
+                    {{-- <div class="col-12 col-md-4 form-control-validation mb-3">
+                      <label class="form-label" for="edit-amount">Amount</label>
+                      <input type="number" id="edit-amount" name="amount" class="form-control"
+                        placeholder="Enter Amount" required />
+                    </div> --}}
+
+                    <div class="col-12 form-control-validation mb-3">
+                      <label class="form-label" for="edit-description">Body <span class="text-primary">(Placeholders: name, email,  join_date, end_date,technology, duration)</span></label>
+                      <textarea name="description" rows="5" id="edit-description" class="form-control"
+                        placeholder="Write body..." required></textarea>
                     </div>
 
-                    <div class="text-end">
-                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Template</button>
+                    <div class="col-12 text-end mt-3">
+                      <button type="reset" class="btn btn-label-secondary me-2" data-bs-dismiss="modal"
+                        aria-label="Close">Cancel</button>
+                      <button type="submit" class="btn btn-primary">Update</button>
                     </div>
-                </form>
+                  </form>
 
+                </div>
+              </div>
             </div>
-        </div>
-    </div>
-</div>
+          </div>
 
 {{-- Generate Offer Letter Modal --}}
 <div class="modal fade" id="generateOfferModal" tabindex="-1" aria-hidden="true">
@@ -148,9 +162,7 @@
         <div class="modal-content p-2">
             <div class="modal-body">
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-
                 <h4 class="mb-4">Generate Offer Letter</h4>
-
                 <form id="generateOfferForm" novalidate>
                     <div class="mb-3">
                         <label for="internName" class="form-label">Intern Name</label>
