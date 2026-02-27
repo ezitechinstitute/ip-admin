@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'New Voucher')
+@section('title', 'Vouchers')
 
 @section('vendor-style')
 <link rel="stylesheet" href="path-to/datatables.bootstrap5.css">
@@ -222,9 +222,12 @@
     </td>
 
     <td>
+
+
         <span class="text-truncate d-flex align-items-center text-heading text-nowrap">
             {{ $Voucher->status }}
         </span>
+        
     </td>
 </tr>
 @empty
