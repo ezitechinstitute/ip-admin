@@ -69,7 +69,30 @@
         });
     }, 5000); // 5 seconds
 </script>
+<style>
+  .privilege-masonry {
+    column-count: 2;
+    column-gap: 12px;
+    width: 100%;
+  }
 
+  .masonry-item {
+    display: inline-block;
+    width: 100%;
+    break-inside: avoid;
+    margin-bottom: 5px;
+  }
+
+  @media (max-width: 768px) {
+    .privilege-masonry {
+      column-count: 1;
+    }
+  }
+
+  .form-check-input {
+    cursor: pointer;
+  }
+</style>
 <div class="card">
 
   <div class="card-datatable">
@@ -180,7 +203,7 @@
                       <input type="text" id="email" name="email" class="form-control" placeholder="Enter manager email"
                         tabindex="-1" />
                     </div>
-                    <div
+                    {{-- <div
                       class="col-12 col-md-6 form-control-validation mb-3 form-password-toggle form-control-validation">
                       <label class="form-label" for="password">Password</label>
                       <div class="input-group col-12 col-md-4 input-group-merge">
@@ -194,16 +217,16 @@
                       <label class="form-label" for="contact">Phone</label>
                       <input type="text" id="contact" name="contact" class="form-control"
                         placeholder="Enter manager phone" tabindex="-1" />
-                    </div>
+                    </div> --}}
 
 
 
-                    <div class="col-12 col-md-6 form-control-validation mb-3">
+                    {{-- <div class="col-12 col-md-6 form-control-validation mb-3">
                       <label for="flatpickr-date" class="form-label">Join Date</label>
                       <input type="text" class="form-control" name='join_date' placeholder="YYYY-MM-DD"
                         id="flatpickr-date" />
-                    </div>
-                    <div class="col-12 col-md-6 form-control-validation mb-3">
+                    </div> --}}
+                    <div class="col-12 col-md-12 form-control-validation mb-3">
                       <label class="form-label" for="comission">Comission (Rs:)</label>
                       <input type="number" id="comission" name="comission" class="form-control"
                         placeholder="Enter comission" tabindex="-1" value="1000" />
@@ -240,6 +263,52 @@
                         aria-label="Close">Cancel</button>
                       <button type="submit" class="btn btn-primary">Create</button>
                     </div>
+                    {{-- Privileges Section - Masonry Layout --}}
+                    <div class="col-12 mt-6">
+                      <div class="d-flex mb-4" style="justify-content: space-between; align-items: center">
+                        <h5 class="mb-0">Manager Role Privileges</h5>
+                        <div class="d-flex align-items-center">
+                          <input type="checkbox" class="form-check-input me-2 mt-0 select-all-group" id="selectAll">
+                          <label class="small text-muted mb-0" style="font-size: 13px; cursor: pointer;"
+                            for="selectAll">Select All Privileges</label>
+                        </div>
+                      </div>
+
+                      <div class="privilege-masonry">
+                        @foreach($privilegeGroups as $group)
+                        <div class="masonry-item">
+                          <div class="card shadow-sm border-0 mb-2"
+                            style="border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb !important;">
+
+                            <div
+                              class="card-header d-flex justify-content-between align-items-center border-0 px-3 py-3"
+                              style="background-color: #f8f9fa;">
+                              <h6 class="mb-0 fw-bold" style="color: #333;">{{ $group['title'] }}</h6>
+                              <div class="d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2 mt-0 select-all-group"
+                                  id="selectAll_{{ $loop->index }}">
+                                <label class="small text-muted mb-0" style="font-size: 13px; cursor: pointer;"
+                                  for="selectAll_{{ $loop->index }}">All</label>
+                              </div>
+                            </div>
+
+                            <div class="card-body p-0">
+                              <ul class="list-group list-group-flush">
+                                @foreach($group['privileges'] as $privilege)
+                                <li class="list-group-item d-flex align-items-center py-2 px-3 border-light">
+                                  <input type="checkbox" name="permissions[]" value="{{ $privilege['key'] }}"
+                                    class="form-check-input me-3 mt-0 group-item">
+                                  <span style="color: #555; font-size: 14px;">{{ $privilege['title'] }}</span>
+                                </li>
+                                @endforeach
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                        @endforeach
+                      </div>
+                    </div>
+                    <div></div>
                   </form>
                   <!--/ Add role form -->
                 </div>
@@ -247,7 +316,7 @@
             </div>
           </div>
 
-          {{-- Edit namager modal --}}
+          {{-- Edit manager modal --}}
           <div class="modal fade" id="editManagerModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-simple modal-dialog-centered">
               <div class="modal-content p-2">
@@ -276,7 +345,7 @@
                         placeholder="Enter manager email" />
                     </div>
 
-                    <div class="col-12 col-md-6 form-control-validation mb-3">
+                    {{-- <div class="col-12 col-md-6 form-control-validation mb-3">
                       <label class="form-label" for="edit_password">Password</label>
                       <div class="input-group input-group-merge">
                         <input type="password" id="edit_password" class="form-control" name="password"
@@ -285,26 +354,26 @@
                           <i class="ti tabler-eye-off"></i>
                         </span>
                       </div>
-                    </div>
+                    </div> --}}
 
 
 
 
 
 
-                    <div class="col-12 col-md-6 form-control-validation mb-3">
+                    {{-- <div class="col-12 col-md-6 form-control-validation mb-3">
                       <label class="form-label" for="edit_contact">Phone</label>
                       <input type="text" id="edit_contact" name="contact" class="form-control"
                         placeholder="Enter manager phone" />
-                    </div>
+                    </div> --}}
 
-                    <div class="col-12 col-md-6 form-control-validation mb-3">
+                    {{-- <div class="col-12 col-md-6 form-control-validation mb-3">
                       <label for="edit_flatpickr-date" class="form-label">Join Date</label>
                       <input type="text" class="form-control" name='join_date' placeholder="YYYY-MM-DD"
                         id="edit_flatpickr-date" />
-                    </div>
+                    </div> --}}
 
-                    <div class="col-12 col-md-6 form-control-validation mb-3">
+                    <div class="col-12 col-md-12 form-control-validation mb-3">
                       <label class="form-label" for="edit_comission">Commission (Rs:)</label>
                       <input type="number" id="edit_comission" name="comission" class="form-control"
                         placeholder="Enter commission" />
@@ -335,6 +404,41 @@
                     <div class="col-12 text-end mt-3">
                       <button type="reset" class="btn btn-label-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                       <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                    <div class="col-12 mt-4">
+                      <div class="d-flex mb-3" style="justify-content: space-between; align-items: center">
+                        <h5 class="mb-0">Edit Privileges</h5>
+                        <div class="d-flex align-items-center">
+                          <input type="checkbox" class="form-check-input me-2 mt-0" id="editSelectAll">
+                          <label class="small text-muted mb-0" style="font-size: 13px; cursor: pointer;"
+                            for="editSelectAll">Select All Privileges</label>
+                        </div>
+                      </div>
+
+                      <div class="privilege-masonry">
+                        @foreach($privilegeGroups as $group)
+                        <div class="masonry-item mb-3">
+                          <div class="card shadow-sm border-0" style="border: 1px solid #e5e7eb !important;">
+                            <div class="card-header d-flex justify-content-between align-items-center p-2"
+                              style="background-color: #f8f9fa;">
+                              <span class="fw-bold small">{{ $group['title'] }}</span>
+                              <input type="checkbox" class="form-check-input edit-select-all-group">
+                            </div>
+                            <div class="card-body p-0">
+                              <ul class="list-group list-group-flush">
+                                @foreach($group['privileges'] as $privilege)
+                                <li class="list-group-item py-1 px-3 border-light">
+                                  <input type="checkbox" name="permissions[]" value="{{ $privilege['key'] }}"
+                                    class="form-check-input me-2 edit-group-item" data-key="{{ $privilege['key'] }}">
+                                  <span style="font-size: 13px;">{{ $privilege['title'] }}</span>
+                                </li>
+                                @endforeach
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                        @endforeach
+                      </div>
                     </div>
                   </form>
                 </div>
@@ -462,7 +566,8 @@
                     class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$manager->name}}</span>
                 </td>
                 <td>@if ($manager->contact)
-                  <span class="text-heading text-nowrap"><i style="color: rgb(40, 186, 40)" class="icon-base me-1 ti tabler-phone icon-22px"></i>{{$manager->contact}}</span>
+                  <span class="text-heading text-nowrap"><i style="color: rgb(40, 186, 40)"
+                      class="icon-base me-1 ti tabler-phone icon-22px"></i>{{$manager->contact}}</span>
                   @else
                   <span class="text-heading text-nowrap">N/A</span>
                   @endif
@@ -667,29 +772,54 @@
     const form = document.getElementById('addRoleForm');
     const nameInput     = document.getElementById('name');
     const emailInput    = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const phoneInput    = document.getElementById('contact');
+    //const passwordInput = document.getElementById('password');
+    //const phoneInput    = document.getElementById('contact');
     // const dateInput     = document.getElementById('flatpickr-date');
     const commissionInput = document.getElementById('comission');
     const managerCheckbox = document.getElementById('manager');
 
-    // ✅ 1. Initialize Flatpickr with Today's Date
-   const dateInput = document.getElementById('flatpickr-date');
+    // ✅ 1. Initialize Flatpickr (Redeclaration fixed)
     const addModalEl = document.getElementById('AddManagerModel');
 
     // 1. FIXED FLATPICKR INITIALIZATION
-    const addPicker = flatpickr(dateInput, {
-        dateFormat: "Y-m-d",
-        defaultDate: "today",
-        allowInput: true,
-        monthSelectorType: 'static',
-        static: true, // Crucial for modals
-        appendTo: addModalEl.querySelector('.modal-content'), // Forces picker to stay inside modal
-        onOpen: function(selectedDates, dateStr, instance) {
-            instance.calendarContainer.style.zIndex = "9999"; // Ensures it sits on top of the modal
-        }
+    // const addPicker = flatpickr(dateInput, {
+    //     dateFormat: "Y-m-d",
+    //     defaultDate: "today",
+    //     allowInput: true,
+    //     monthSelectorType: 'static',
+    //     static: true, // Crucial for modals
+    //     appendTo: addModalEl.querySelector('.modal-content'), // Forces picker to stay inside modal
+    //     onOpen: function(selectedDates, dateStr, instance) {
+    //         instance.calendarContainer.style.zIndex = "9999"; // Ensures it sits on top of the modal
+    //     }
+    // });
+
+    // ✅ 2. Privilege Selection Logic
+    const selectAllGlobal = document.getElementById('selectAll');
+    const groupSelectAlls = document.querySelectorAll('.select-all-group');
+    const allItems = document.querySelectorAll('.group-item');
+
+    // Main Select All
+    if (selectAllGlobal) {
+        selectAllGlobal.addEventListener('change', function() {
+            const isChecked = this.checked;
+            document.querySelectorAll('.group-item, .select-all-group').forEach(cb => {
+                cb.checked = isChecked;
+            });
+        });
+    }
+
+    // Group Select All
+    groupSelectAlls.forEach(groupCB => {
+        groupCB.addEventListener('change', function() {
+            const card = this.closest('.card');
+            card.querySelectorAll('.group-item').forEach(cb => {
+                cb.checked = this.checked;
+            });
+        });
     });
     
+    // ✅ 3. Validation Helpers
     function showError(input, message) {
         removeError(input);
         const div = document.createElement('div');
@@ -720,23 +850,23 @@
             : removeError(emailInput);
     }
 
-    function validatePassword() {
-        passwordInput.value.length < 6
-            ? showError(passwordInput, 'Minimum 6 characters required')
-            : removeError(passwordInput);
-    }
+    // function validatePassword() {
+    //     passwordInput.value.length < 6
+    //         ? showError(passwordInput, 'Minimum 6 characters required')
+    //         : removeError(passwordInput);
+    // }
 
-    function validatePhone() {
-        phoneInput.value.length < 10
-            ? showError(phoneInput, 'Valid phone number required')
-            : removeError(phoneInput);
-    }
+    // function validatePhone() {
+    //     phoneInput.value.length < 10
+    //         ? showError(phoneInput, 'Valid phone number required')
+    //         : removeError(phoneInput);
+    // }
 
-    function validateDate() {
-        dateInput.value.trim() === ''
-            ? showError(dateInput, 'Join date is required')
-            : removeError(dateInput);
-    }
+    // function validateDate() {
+    //     dateInput.value.trim() === ''
+    //         ? showError(dateInput, 'Join date is required')
+    //         : removeError(dateInput);
+    // }
 
     function validateCommission() {
         const value = commissionInput.value.trim();
@@ -753,26 +883,19 @@
 
     function validatePermission() {
         const wrapper = managerCheckbox.closest('.form-control-validation');
-        let err = wrapper.querySelector('.error-msg');
-
         if (!managerCheckbox.checked) {
-            if (!err) {
-                err = document.createElement('div');
-                err.className = 'text-danger small mt-1 error-msg';
-                err.innerText = 'Manager role must be selected';
-                wrapper.appendChild(err);
-            }
-        } else if (err) {
-            err.remove();
+            showError(managerCheckbox, 'Manager role must be selected');
+        } else {
+            removeError(managerCheckbox);
         }
     }
 
     // ✅ Live validation
     nameInput.addEventListener('input', validateName);
     emailInput.addEventListener('input', validateEmail);
-    passwordInput.addEventListener('input', validatePassword);
-    phoneInput.addEventListener('input', validatePhone);
-    dateInput.addEventListener('change', validateDate); // Triggers when date picked
+    // passwordInput.addEventListener('input', validatePassword);
+    // phoneInput.addEventListener('input', validatePhone);
+    // dateInput.addEventListener('change', validateDate); 
     managerCheckbox.addEventListener('change', validatePermission);
     commissionInput.addEventListener('input', validateCommission);
 
@@ -780,18 +903,27 @@
     form.addEventListener('submit', function (e) {
         validateName();
         validateEmail();
-        validatePassword();
-        validatePhone();
-        validateDate();
+        // validatePassword();
+        // validatePhone();
+        // validateDate();
         validateCommission(); 
         validatePermission();
 
-        if (form.querySelectorAll('.is-invalid, .error-msg').length > 0) {
+        const errorCount = form.querySelectorAll('.is-invalid, .error-msg').length;
+        if (errorCount > 0) {
             e.preventDefault();
+            // Agar pehla error privileges section mein ho toh scroll karein
+            form.querySelector('.is-invalid, .error-msg').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     });
 });
 </script>
+
+
+
+
+
+
 
 
 <script>
@@ -799,64 +931,130 @@
     // 1. SELECT ELEMENTS
     const editForm = document.getElementById('editManagerForm');
     const editModalEl = document.getElementById('editManagerModal');
-    const editPasswordInput = document.getElementById('edit_password');
-    const toggleEditPassword = document.getElementById('toggleEditPassword');
+    // const editPasswordInput = document.getElementById('edit_password'); // Commented as requested
+    // const toggleEditPassword = document.getElementById('toggleEditPassword'); // Commented as requested
     const editManagerCheckbox = document.getElementById('edit_role_manager');
-    const editDateInput = document.getElementById('edit_flatpickr-date');
+    // const editDateInput = document.getElementById('edit_flatpickr-date');
 
-    // 2. INITIALIZE FLATPICKR
-    const editPicker = flatpickr(editDateInput, {
-        dateFormat: "Y-m-d",
-        monthSelectorType: 'static',
-        static: true,
-        appendTo: editModalEl.querySelector('.modal-content')
-    });
+    // 2. INITIALIZE FLATPICKR FOR EDIT MODAL
+    // const editPicker = flatpickr(editDateInput, {
+    //     dateFormat: "Y-m-d",
+    //     monthSelectorType: 'static',
+    //     static: true,
+    //     appendTo: editModalEl.querySelector('.modal-content')
+    // });
 
-    // 3. POPULATE DATA
+    // PRIVILEGE SELECTORS
+    const editSelectAllGlobal = document.getElementById('editSelectAll');
+    const editGroupSelectAlls = document.querySelectorAll('.edit-select-all-group');
+    const editPrivilegeItems = document.querySelectorAll('.edit-group-item');
+
+    // 3. POPULATE DATA & FETCH PERMISSIONS (When Edit Button Clicked)
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const data = this.dataset;
-            editForm.action = `/admin/managers/update/${data.id}`;
+            const managerId = data.id;
+            
+            // Set Form Action
+            editForm.action = `/admin/managers/update/${managerId}`;
 
-            document.getElementById('edit_manager_id').value = data.id;
+            // Set Basic Inputs
+            document.getElementById('edit_manager_id').value = managerId;
             document.getElementById('edit_name').value = data.name;
             document.getElementById('edit_email').value = data.email;
-            document.getElementById('edit_contact').value = data.contact;
             document.getElementById('edit_comission').value = data.comission;
-            document.getElementById('edit_password').value = data.password;
+            // document.getElementById('edit_contact').value = data.contact; // Commented
+            // document.getElementById('edit_password').value = data.password; // Commented
 
-            if (data.join_date && data.join_date !== "N/A") {
-                editPicker.setDate(data.join_date, true);
-            } else {
-                editPicker.clear();
-            }
+            // Handle Date
+            // if (data.join_date && data.join_date !== "N/A") {
+            //     editPicker.setDate(data.join_date, true);
+            // } else {
+            //     editPicker.clear();
+            // }
 
+            // Handle Status
             if(data.status == "1") {
                 document.getElementById('editStatusActive').checked = true;
             } else {
                 document.getElementById('editStatusFreeze').checked = true;
             }
 
-            // Set checkbox state
+            // Default Role Check
             editManagerCheckbox.checked = true;
 
-            // Reset Toggle UI
-            editPasswordInput.type = 'password';
-            const icon = toggleEditPassword?.querySelector('i');
-            if (icon) {
-                icon.classList.remove('tabler-eye');
-                icon.classList.add('tabler-eye-off');
-            }
+            // --- FETCH & AUTO-CHECK PRIVILEGES ---
+           
+            editPrivilegeItems.forEach(cb => cb.checked = false);
+            editGroupSelectAlls.forEach(cb => cb.checked = false);
+            if(editSelectAllGlobal) editSelectAllGlobal.checked = false;
+            const url = "{{ route('admin.managers.roles.permissions', ':id') }}".replace(':id', managerId);
+            fetch(url)
+                .then(res => res.json())
+                .then(permissions => {
+                    permissions.forEach(key => {
+                        const cb = document.querySelector(`.edit-group-item[data-key="${key}"]`);
+                        if(cb) cb.checked = true;
+                    });
+                    
+                    
+                    updateAllEditGroupCheckboxes();
+                    updateGlobalEditCheckbox();
+                });
         });
     });
 
-    // 4. VALIDATION HELPERS
+    // 4. PRIVILEGE TOGGLE LOGIC
+    // Global Select All
+    if (editSelectAllGlobal) {
+        editSelectAllGlobal.addEventListener('change', function() {
+            const isChecked = this.checked;
+            document.querySelectorAll('.edit-group-item, .edit-select-all-group').forEach(cb => {
+                cb.checked = isChecked;
+            });
+        });
+    }
+
+    // Group-wise Select All
+    editGroupSelectAlls.forEach(groupCB => {
+        groupCB.addEventListener('change', function() {
+            const card = this.closest('.card');
+            card.querySelectorAll('.edit-group-item').forEach(cb => cb.checked = this.checked);
+            updateGlobalEditCheckbox();
+        });
+    });
+
+    // Individual Checkbox Click
+    editPrivilegeItems.forEach(item => {
+        item.addEventListener('change', function() {
+            updateAllEditGroupCheckboxes();
+            updateGlobalEditCheckbox();
+        });
+    });
+
+    function updateAllEditGroupCheckboxes() {
+        editGroupSelectAlls.forEach(groupCB => {
+            const card = groupCB.closest('.card');
+            const items = card.querySelectorAll('.edit-group-item');
+            const checked = card.querySelectorAll('.edit-group-item:checked');
+            groupCB.checked = (items.length === checked.length && items.length > 0);
+        });
+    }
+
+    function updateGlobalEditCheckbox() {
+        if (editSelectAllGlobal) {
+            const total = editPrivilegeItems.length;
+            const checked = document.querySelectorAll('.edit-group-item:checked').length;
+            editSelectAllGlobal.checked = (total === checked && total > 0);
+        }
+    }
+
+    // 5. VALIDATION HELPERS
     function showError(input, message) {
         removeError(input);
         const div = document.createElement('div');
         div.className = 'text-danger small mt-1 error-msg';
         div.innerText = message;
-        // Finding the parent container to append the error
         input.closest('.form-control-validation')?.appendChild(div);
         input.classList.add('is-invalid');
     }
@@ -870,7 +1068,7 @@
         }
     }
 
-    // 5. VALIDATION LOGIC (ADDED MANAGER CHECK)
+    // 6. VALIDATION LOGIC
     const validate = {
         name: () => {
             const el = document.getElementById('edit_name');
@@ -880,21 +1078,13 @@
             const el = document.getElementById('edit_email');
             !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim()) ? showError(el, 'Valid email required') : removeError(el);
         },
-        phone: () => {
-            const el = document.getElementById('edit_contact');
-            el.value.length < 10 ? showError(el, 'Valid phone required') : removeError(el);
-        },
-        date: () => {
-            editDateInput.value.trim() === '' ? showError(editDateInput, 'Join date is required') : removeError(editDateInput);
-        },
+        // date: () => {
+        //     editDateInput.value.trim() === '' ? showError(editDateInput, 'Join date is required') : removeError(editDateInput);
+        // },
         comm: () => {
             const el = document.getElementById('edit_comission');
             el.value.trim() === '' || isNaN(el.value) ? showError(el, 'Commission must be a number') : removeError(el);
         },
-        password: () => {
-            editPasswordInput.value.length < 6 ? showError(editPasswordInput, 'Min 6 characters required') : removeError(editPasswordInput);
-        },
-        // NEW: Manager Checkbox validation
         manager: () => {
             if (!editManagerCheckbox.checked) {
                 showError(editManagerCheckbox, 'Manager role must be selected');
@@ -904,68 +1094,29 @@
         }
     };
 
-    // 6. ATTACH LISTENERS
+    // 7. ATTACH EVENT LISTENERS
     document.getElementById('edit_name').addEventListener('input', validate.name);
     document.getElementById('edit_email').addEventListener('input', validate.email);
-    document.getElementById('edit_contact').addEventListener('input', validate.phone);
     editDateInput.addEventListener('change', validate.date); 
     document.getElementById('edit_comission').addEventListener('input', validate.comm);
-    editPasswordInput.addEventListener('input', validate.password);
     editManagerCheckbox.addEventListener('change', validate.manager);
 
-    // 7. FORM SUBMIT
+    // 8. FORM SUBMIT VALIDATION
     editForm.addEventListener('submit', function (e) {
         validate.name();
         validate.email();
-        validate.phone();
-        validate.date();
+        // validate.date();
         validate.comm();
-        validate.password();
-        validate.manager(); // Run the manager check on submit
+        validate.manager();
 
         if (this.querySelectorAll('.is-invalid, .error-msg').length > 0) {
             e.preventDefault();
+            // Scroll to the first error
+            this.querySelector('.is-invalid').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     });
 
-    // 7. PASSWORD TOGGLE (FIXED FOR EDIT MODAL)
-if (toggleEditPassword) {
-    // We use a fresh listener to ensure it targets the correct input
-    toggleEditPassword.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevents modal interference
-        
-        const icon = this.querySelector('i');
-        const isPwd = editPasswordInput.type === 'password';
-
-        // Toggle the input type
-        editPasswordInput.type = isPwd ? 'text' : 'password';
-
-        // Toggle the icons correctly using replace for better reliability
-        if (isPwd) {
-            icon.classList.replace('tabler-eye-off', 'tabler-eye');
-        } else {
-            icon.classList.replace('tabler-eye', 'tabler-eye-off');
-        }
-    });
-}
-
-// 3. POPULATE DATA (Small addition here to reset the icon when modal opens)
-document.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        // ... (your existing population code)
-
-        // Add this specific reset logic here
-        editPasswordInput.type = 'password';
-        const icon = toggleEditPassword?.querySelector('i');
-        if (icon) {
-            icon.classList.add('tabler-eye-off');
-            icon.classList.remove('tabler-eye');
-        }
-    });
-});
-
-    // 9. MODAL RESET
+    // 9. MODAL RESET ON CLOSE
     editModalEl.addEventListener('hidden.bs.modal', function () {
         editForm.reset();
         editPicker.clear();
@@ -979,7 +1130,7 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
 
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function () {
 
   const permissionModal = document.getElementById('ManagerPermissionsModel');
   const techTableBody = permissionModal.querySelector('table tbody');
