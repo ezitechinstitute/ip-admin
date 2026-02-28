@@ -444,7 +444,9 @@ use Illuminate\Support\Facades\Route;
   // 3. Final fallback to a static local asset.
   
   if ($account && $account->image) {
-      $dynamicImage = asset($account->image);
+      $dynamicImage = (str_starts_with($account->image, 'data:image')
+            ? $account->image
+            : asset($account->image));
   
   } else {
       $dynamicImage = asset('assets/img/branding/ezitech.png');

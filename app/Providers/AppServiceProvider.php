@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Gate;
+use App\Models\ManagerRole;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +34,16 @@ class AppServiceProvider extends ServiceProvider
             }
             return [];
         });
+
+        Gate::define('check-privilege', function ($user, $permissionKey) {
+   
+    if (!$user) return false;
+
+    
+    return ManagerRole::where('manager_id', $user->getKey())
+                      ->where('permission_key', $permissionKey)
+                      ->exists();
+});
 
 
         // --- Global SMTP Configuration from DB ---

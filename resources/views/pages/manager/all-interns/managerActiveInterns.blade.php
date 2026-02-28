@@ -23,6 +23,9 @@
 
 @section('content')
 <!-- Users List Table -->
+@php
+$manager = auth()->guard('manager')->user();
+@endphp
 <div class="col-12 mb-6">
   <h4 class="mt-6 mb-1">Active Interns</h4>
 </div>
@@ -138,12 +141,15 @@
 
             @if($isAdminAllowed)
             <div class="btn-group" role="group">
+              @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'excel_active_interns'))
               <button id="btnGroupDrop1" type="button" class="btn add-new btn-outline-primary dropdown-toggle"
                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="icon-base ti tabler-dots-vertical icon-md d-sm-none"></i>
                 <i class="icon-base ti tabler-upload icon-xs me-2"></i>
                 <span class="d-none d-sm-block">Export</span>
               </button>
+              @endif
               <div class="dropdown-menu" style="z-index: 1021" aria-labelledby="btnGroupDrop1">
                 <a class="dt-button dropdown-item" href="javascript:void(0);" onclick="downloadActiveCSV()">
                   <span>
@@ -262,6 +268,9 @@
                   <span class="badge {{ $badgeClass }} text-capitalize">{{ $intern->status }}</span>
                 </td>
                 <td>
+                  @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'edit_status_active_interns') || $manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'remove_active_interns'))
                   <div class="dropdown">
                     <a href="javascript:;"
                       class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
@@ -269,11 +278,16 @@
                       <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end">
+                      @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'edit_status_active_interns'))
                       <a href="#" class="dropdown-item edit-intern" data-bs-toggle="modal"
                         data-bs-target="#editInternModal" data-id="{{ $intern->int_id }}"
                         data-status="{{ $intern->status }}" data-review="{{ $intern->review }}">
                         Edit Status
                       </a>
+                      @endif
+                       @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'remove_active_interns'))
                       <a href="#" class="dropdown-item delete-record" data-id="{{ $intern->int_id }}"
                         data-name="{{ $intern->name }}">Remove</a>
                       <form id="delete-form-{{ $intern->int_id }}"
@@ -282,8 +296,10 @@
                         @csrf
                         @method('PATCH')
                       </form>
+                      @endif
                     </div>
                   </div>
+                  @endif
                 </td>
               </tr>
               @empty

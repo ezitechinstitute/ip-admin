@@ -1,0 +1,258 @@
+{
+  "privileges": [
+    {
+      "key": "manager_dashboard",
+      "title": "Manager Dashboard",
+      "privileges": [
+        {
+          "key": "manager_dashboard_view",
+          "title": "View Manager Dashboard"
+        },
+        {
+          "key": "manager_statistics",
+          "title": "Manager Statistics"
+        }
+      ]
+    },
+    {
+      "key": "my_interns",
+      "title": "My Interns",
+      "privileges": [
+        {
+          "key": "view_my_interns",
+          "title": "View My Interns"
+        },
+        {
+          "key": "statistics_my_interns",
+          "title": "Statistics"
+        },
+        {
+          "key": "excel_my_interns",
+          "title": "Download Excel"
+        },
+        {
+          "key": "edit_status_my_interns",
+          "title": "Edit Status"
+        },
+        {
+          "key": "remove_my_interns",
+          "title": "Remove Intern"
+        }
+      ]
+    },
+    {
+      "key": "active_interns",
+      "title": "Active Interns",
+      "privileges": [
+        {
+          "key": "view_active_interns",
+          "title": "View Active Interns"
+        },
+        
+        {
+          "key": "excel_active_interns",
+          "title": "Download Excel"
+        },
+        {
+          "key": "edit_status_active_interns",
+          "title": "Edit Status"
+        },
+        {
+          "key": "remove_active_interns",
+          "title": "Remove Intern"
+        }
+      ]
+    },
+    {
+      "key": "new_interns",
+      "title": "New Interns",
+      "privileges": [
+        {
+          "key": "view_new_interns",
+          "title": "View New Interns"
+        },
+        
+        {
+          "key": "excel_new_interns",
+          "title": "Download Excel"
+        },
+        {
+          "key": "edit_status_new_interns",
+          "title": "Edit Status"
+        },
+        {
+          "key": "remove_new_interns",
+          "title": "Remove Intern"
+        }
+      ]
+    },
+    {
+      "key": "contact_with",
+      "title": "Contact With",
+      "privileges": [
+        {
+          "key": "view_contact_with",
+          "title": "View Contact With"
+        },
+        
+        {
+          "key": "excel_contact_with",
+          "title": "Download Excel"
+        },
+        {
+          "key": "edit_status_contact_with",
+          "title": "Edit Status"
+        },
+        {
+          "key": "remove_contact_with",
+          "title": "Remove Intern"
+        }
+      ]
+    },
+    {
+      "key": "interview_test",
+      "title": "Interview Test",
+      "privileges": [
+        {
+          "key": "view_interview_test",
+          "title": "View Interview Test"
+        },
+        
+        {
+          "key": "excel_interview_test",
+          "title": "Download Excel"
+        },
+        {
+          "key": "edit_status_interview_test",
+          "title": "Edit Status"
+        },
+        {
+          "key": "remove_interview_test",
+          "title": "Remove Intern"
+        }
+      ]
+    },
+    {
+      "key": "test_completed",
+      "title": "Test Completed",
+      "privileges": [
+        {
+          "key": "view_test_completed",
+          "title": "View Test Completed"
+        },
+        
+        {
+          "key": "excel_test_completed",
+          "title": "Download Excel"
+        },
+        {
+          "key": "edit_status_test_completed",
+          "title": "Edit Status"
+        },
+        {
+          "key": "remove_test_completed",
+          "title": "Remove Intern"
+        }
+      ]
+    },
+    {
+      "key": "manager_international_interns",
+      "title": "International Interns",
+      "privileges": [
+        {
+          "key": "view_manager_international_interns",
+          "title": "View International Interns"
+        },
+        
+        {
+          "key": "excel_manager_international_interns",
+          "title": "Download Excel"
+        },
+        {
+          "key": "edit_status_manager_international_interns",
+          "title": "Edit Status"
+        },
+        {
+          "key": "remove_manager_international_interns",
+          "title": "Remove Intern"
+        }
+      ]
+    },
+    {
+      "key": "manager_remaining_amount",
+      "title": "Remaining Amount",
+      "privileges": [
+        {
+          "key": "view_manager_remaining_amount",
+          "title": "View Remaining Amount"
+        }
+      ]
+    },
+    {
+      "key": "manager_offer_letter_request",
+      "title": "Offer Letter Request",
+      "privileges": [
+        {
+          "key": "view_manager_offer_letter_request",
+          "title": "View Offer Letter Request"
+        }
+      ]
+    },
+    {
+      "key": "manager_offer_letter_template",
+      "title": "Offer Letter Template",
+      "privileges": [
+        {
+          "key": "view_manager_offer_letter_template",
+          "title": "View Offer Letter Template"
+        },
+        {
+          "key": "add_new_manager_offer_letter_template",
+          "title": "Add New Template"
+        },
+        {
+          "key": "edit_manager_offer_letter_template",
+          "title": "Edit Template"
+        },
+        {
+          "key": "delete_manager_offer_letter_template",
+          "title": "Delete Template"
+        },
+        {
+          "key": "preview_manager_offer_letter_template",
+          "title": "Preview Template"
+        }
+      ]
+    },
+    {
+      "key": "manager_payment_receipt",
+      "title": "Payment Receipt",
+      "privileges": [
+        {
+          "key": "view_manager_payment_receipt",
+          "title": "View Payment Receipt"
+        }
+      ]
+    },
+    {
+      "key": "manager_profile_settings",
+      "title": "Profile Settings",
+      "privileges": [
+        {
+          "key": "view_manager_profile_settings",
+          "title": "View Profile Settings"
+        }
+      ]
+    },
+    {
+      "key": "manager_knowledge_base",
+      "title": "Knowledge Base",
+      "privileges": [
+        {
+          "key": "view_manager_knowledge_base",
+          "title": "View Knowledge Base"
+        }
+      ]
+    }
+  ]
+}

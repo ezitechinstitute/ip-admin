@@ -464,7 +464,9 @@ use Illuminate\Support\Facades\Route;
           $manager = Auth::guard('manager')->user();
 
           if ($manager && $manager->image) {
-              $dynamicImage = asset($manager->image);
+              $dynamicImage = (str_starts_with($manager->image, 'data:image')
+            ? $manager->image
+            : asset($manager->image));
           } else {
               $dynamicImage = asset('assets/img/branding/ezitech.png');
           }
