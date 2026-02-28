@@ -68,7 +68,6 @@ use App\Http\Controllers\charts\ChartJs;
 use App\Http\Controllers\dashboard\Analytics;
 use App\Http\Controllers\dashboard\Crm;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\manager_controllers\DashboardManagerController;
 use App\Http\Controllers\extended_ui\Avatar;
 use App\Http\Controllers\extended_ui\BlockUI;
 use App\Http\Controllers\extended_ui\DragAndDrop;
@@ -127,6 +126,15 @@ use App\Http\Controllers\layouts\Vertical;
 use App\Http\Controllers\layouts\WithoutMenu;
 use App\Http\Controllers\layouts\WithoutNavbar;
 use App\Http\Controllers\leavecontroller;
+use App\Http\Controllers\manager_controllers\AllManagerInternController;
+use App\Http\Controllers\manager_controllers\DashboardManagerController;
+use App\Http\Controllers\manager_controllers\InternationalInternsManagerController;
+use App\Http\Controllers\manager_controllers\ManagerKnowledgeBaseController;
+use App\Http\Controllers\manager_controllers\OfferLetterRequestController;
+use App\Http\Controllers\manager_controllers\OfferLetterTemplateController;
+use App\Http\Controllers\manager_controllers\PaymentReceiptController;
+use App\Http\Controllers\manager_controllers\ProfileSettingsController;
+use App\Http\Controllers\manager_controllers\RemainingAmountController;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\modal\ModalExample;
@@ -165,14 +173,10 @@ use App\Http\Controllers\user_interface\Dropdowns;
 use App\Http\Controllers\user_interface\Footer;
 use App\Http\Controllers\user_interface\ListGroups;
 use App\Http\Controllers\user_interface\Modals;
-
-
 use App\Http\Controllers\user_interface\Navbar;
 use App\Http\Controllers\user_interface\Offcanvas;
 use App\Http\Controllers\user_interface\PaginationBreadcrumbs;
 use App\Http\Controllers\user_interface\Progress;
-
-
 use App\Http\Controllers\user_interface\Spinners;
 use App\Http\Controllers\user_interface\TabsPills;
 use App\Http\Controllers\user_interface\Toasts;
@@ -182,11 +186,12 @@ use App\Http\Controllers\WithdrawManagerController;
 use App\Http\Controllers\wizard_example\Checkout as WizardCheckout;
 use App\Http\Controllers\wizard_example\CreateDeal;
 use App\Http\Controllers\wizard_example\PropertyListing;
-use App\Http\Controllers\manager_controllers\InternationalInternsManagerController;
-use App\Http\Middleware\ValidUser;
 use App\Http\Middleware\validManager;
+use App\Http\Middleware\ValidUser;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\manager_controllers\AllManagerInternController;
+
+
+
 
 // Main Page Route
 // Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
@@ -388,6 +393,8 @@ Route::get('/laravel/user-management', [UserManagement::class, 'UserManagement']
 Route::resource('/user-list', UserManagement::class);
 Route::get('/', [LoginCover::class, 'index'])->name('login');
 Route::get('/logout', [LoginCover::class, 'logoutAuth'])->name('logout');
+Route::get('/manager/logout', [LoginCover::class, 'managerLogout'])
+    ->name('manager.logout');
 
 Route::post('login-auth-form', [LoginCover::class, 'loginAuthForm'])->name('login-auth-form');
 
@@ -402,6 +409,10 @@ Route::get('/reset-password-new', [OTPVerifyController::class, 'showNewPasswordF
 Route::post('/reset-password-update', [OTPVerifyController::class, 'updatePassword'])->name('auth.password.update');
 Route::post('/resend-otp', [OTPVerifyController::class, 'resendOtp'])->name('auth.otp.resend');
 
+Route::get('/set-new-password/{email}', [OTPVerifyController::class, 'setNewPassword'])->name('auth.set.new.password');
+
+Route::post('/set-password-generate', [OTPVerifyController::class, 'updateSetPassword'])
+    ->name('auth.password.update.set.new');
 
 // Admin routes - Start
 Route::prefix('/admin')->middleware(['validUser'])->group(function (){
@@ -461,7 +472,7 @@ Route::post('/manager-permissions/store', [ManagersController::class, 'storePerm
 Route::get('manager/{id}/permissions', [ManagersController::class, 'getManagerPermissions'])
     ->name('manager.permissions.get');
 Route::get('/managers/export-csv', [ManagersController::class, 'downloadManagerCSV'])->name('managers.export.admin');
-
+Route::get('/managers/permissions/{id}', [ManagersController::class, 'getManagerRoles'])->name('admin.managers.roles.permissions');
 
 // Supervisors
 Route::get('supervisors', [SupervisorsController::class, 'index'])->name('supervisors.admin');
@@ -577,26 +588,90 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
-    Route::get('/all-interns', [AllManagerInternController::class, 'index']) ->name('manager.allInterns');
-    // Active Interns submenu page
-    Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])->name('manager.activeInterns');
-    Route::get('/international-interns', [InternationalInternsManagerController::class, 'index'])->name('manager.international.interns');
+    Route::get('/my-interns', [AllManagerInternController::class, 'myInterns']) ->name('manager.myInterns');
+    Route::get('/my-interns/export', [AllManagerInternController::class, 'exportMyInternsCSV'])->name('manager.myInterns.export');
 
-
-    Route::get('/all-interns/active/export', [AllManagerInternController::class, 'exportActiveCSV'])
-         ->name('active.interns.export.csv.manager');
-
-
-    Route::patch('/interns/remove/{id}', [AllManagerInternController::class, 'removeIntern'])
-     ->name('manager.interns.remove');
-
-     Route::post('/all-interns/update', [AllManagerInternController::class, 'updateInternStatus'])
-         ->name('update.intern.manager');
     
-Route::get('/all-interns/newInterns', [AllManagerInternController::class, 'newInterns'])->name('manager.newInterns');    
-Route::get('/all-interns/contact', [AllManagerInternController::class, 'contactWith'])->name('manager.contactWith');    
-Route::get('/all-interns/interview', [AllManagerInternController::class, 'interview'])->name('manager.interview');    
+    // Active Interns submenu page
+    Route::get('/all-interns', [AllManagerInternController::class, 'index']) ->name('manager.allInterns');
+    Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])->name('manager.activeInterns');
+    Route::post('/update-intern-active-int', 
+    [AllManagerInternController::class, 'updateInternActive'])
+    ->name('update.intern.manager.active');
+    Route::get('/manager/all-interns/active/export', [AllManagerInternController::class, 'exportActiveInterns'])
+    ->name('manager.active.internee.export');
 
+    Route::get('/international-interns', [InternationalInternsManagerController::class, 'index'])->name('manager.international.interns');
+    Route::get('/manager/international-interns/export', [InternationalInternsManagerController::class, 'exportInternationalInterns'])
+    ->name('manager.international.interns.export');
+
+    Route::get('/all-interns/newInterns', [AllManagerInternController::class, 'newInterns'])->name('manager.newInterns');    
+    Route::get('/all-interns/contact', [AllManagerInternController::class, 'contactWith'])->name('manager.contactWith');    
+    Route::get('/all-interns/interview', [AllManagerInternController::class, 'interview'])->name('manager.interview');    
+
+    // Offer Letter Route (corrected)
+    Route::get('/offer-letter-template', [OfferLetterTemplateController::class, 'index'])->name('manager.offer.letter.template');
+    Route::post('/offer-letter-template-create', [OfferLetterTemplateController::class, 'store'])->name('manager.offer.letter.template.create');
+    Route::put('/manager/offer-letter-template-update/{id}', [OfferLetterTemplateController::class, 'update'])->name('manager.offer.letter.template.update');
+Route::delete('/offer-letter-template/delete/{id}', [OfferLetterTemplateController::class, 'destroy'])
+     ->name('manager.offer.letter.template.delete');
+
+        Route::get('/offer-letter-request', [OfferLetterRequestController::class, 'index'])->name('manager.offer.letter.request');
+
+
+    Route::get('/remainingamount', [RemainingAmountController::class, 'index'])->name('manager.remainingamount');
+
+
+    Route::get('/active-interns/export', [AllManagerInternController::class, 'exportActiveInternsCSV'])->name('manager.active.export');
+
+
+
+    Route::patch('/manager/interns/remove/{id}', [AllManagerInternController::class, 'remove'])->name('manager.interns.remove');
+    Route::patch('/manager/intern-active/remove/{id}', 
+    [AllManagerInternController::class, 'removeInternAccActive'])
+    ->name('remove.internActiveAcc.manager');
+     Route::post('/interns/update', [AllManagerInternController::class, 'updateStatus'])->name('update.intern.manager');
+    
+Route::get('/all-interns/newInterns', [AllManagerInternController::class, 'newInterns'])->name('manager.newInterns');  
+Route::get('/newInterns/export', [AllManagerInternController::class, 'exportNewInternsCSV'])->name('manager.newInterns.export');
+
+
+Route::get('/all-interns/contact', [AllManagerInternController::class, 'contactWith'])->name('manager.contactWith');   
+Route::get('/contact-with/export', [AllManagerInternController::class, 'exportContactWith'])->name('manager.contactWith.export');
+
+Route::get('/all-interns/test', [AllManagerInternController::class, 'test'])->name('manager.test'); 
+Route::get('/test-interns/export', [AllManagerInternController::class, 'exportTestCSV'])->name('manager.test.export');
+
+
+Route::get('/all-interns/completed', [AllManagerInternController::class, 'completed'])->name('manager.completed'); 
+Route::get('/completed-interns/export', [AllManagerInternController::class, 'exportCompletedCSV'])->name('manager.completed.export');
+
+
+
+
+
+//Payment Receipt Routes
+
+Route::get('/payment-receipt',[PaymentReceiptController::class,'index'])->name('manager.payment-receipt');
+
+
+
+Route::get('/profile-settings', [ProfileSettingsController::class, 'index'])->name('manager.profile.settings');
+Route::post('profile-settings/update',
+            [ProfileSettingsController::class, 'update']
+        )->name('manager.profile.update');
+Route::post('password/update', [ProfileSettingsController::class, 'updatePassword'])
+        ->name('manager.password.update');
+
+
+Route::get('/knowledge-base', [ManagerKnowledgeBaseController::class, 'index'])->name('manager.knowledge.base');
+Route::get('/knowledge-base/export',
+    [ManagerKnowledgeBaseController::class, 'exportKnowledgeBaseCSV']
+)->name('manager.knowledge-base.export');
 });
+
+
+
+
 
    

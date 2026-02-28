@@ -4,7 +4,8 @@
       "name": "Manager Dashboard",
       "icon": "menu-icon icon-base ti tabler-smart-home",
       "slug": "manager/dashboard",
-      "url": "manager/dashboard"
+      "url": "manager/dashboard",
+      "permission": "manager_dashboard_view"
     },
     {
       "menuHeader": "Intern Management"
@@ -12,33 +13,39 @@
     {
       "name": "My Interns",
       "icon": "menu-icon icon-base ti tabler-users-group",
-      "slug": "manager/all-interns",
-      "url": "manager/all-interns",
+      "slug": "manager/my-interns",
+      "url": "manager/my-interns",
+      "permission": "view_my_interns",
       "submenu": [
         {
           "url": "manager/all-interns/active",
           "name": "Active Interns",
-          "slug": "manager/all-interns/active"
+          "slug": "manager/all-interns/active",
+          "permission": "view_active_interns"
         },
         {
           "url": "manager/all-interns/newInterns",
           "name": "New Interns",
-          "slug": "manager/all-interns/newInterns"
+          "slug": "manager/all-interns/newInterns",
+          "permission": "view_new_interns"
         },
         {
           "url": "manager/all-interns/contact",
           "name": "Contact With",
-          "slug": "manager/all-interns/contact"
-        },
-        {
-          "url": "manager/all-interns/interview",
-          "name": "Interview Test",
-          "slug": "manager/all-interns/interview"
+          "slug": "manager/all-interns/contact",
+          "permission": "view_contact_with"
         },
         {
           "url": "manager/all-interns/test",
+          "name": "Interview Test",
+          "slug": "manager/all-interns/test",
+          "permission": "view_interview_test"
+        },
+        {
+          "url": "manager/all-interns/completed",
           "name": "Test Completed",
-          "slug": "manager/all-interns/test"
+          "slug": "manager/all-interns/completed",
+          "permission": "view_test_completed"
         }
       ]
     },
@@ -46,7 +53,8 @@
       "name": "International Interns",
       "icon": "menu-icon icon-base ti tabler-world",
       "slug": "manager/international-interns",
-      "url": "manager/international-interns"
+      "url": "manager/international-interns",
+      "permission": "view_manager_international_interns"
     },
     {
       "menuHeader": "Reports & Logs"
@@ -54,20 +62,47 @@
     {
       "name": "Remaining Amount",
       "icon": "menu-icon icon-base ti tabler-cash",
-      "slug": "manager/projects",
-      "url": "manager/projects"
+      "slug": "manager/remainingamount",
+      "url": "manager/remainingamount",
+      "permission": "view_manager_remaining_amount"
     },
     {
-      "url": "manager/leave",
+      "url": "manager/offer-letter-request",
       "name": "Offer Letter Request",
       "icon": "menu-icon icon-base ti tabler-file-certificate",
-      "slug": "manager/leave"
+      "slug": "manager/offer-letter-request",
+      "permission": "view_manager_offer_letter_request"
     },
     {
-      "url": "manager/feedback",
+      "url": "manager/offer-letter-template",
+      "name": "Offer Letter Template",
+      "icon": "menu-icon icon-base ti tabler-certificate",
+      "slug": "manager/offer-letter-template",
+      "permission": "view_manager_offer_letter_template"
+    },
+    {
+      "url": "manager/payment-receipt",
       "name": "Payment Receipt",
       "icon": "menu-icon icon-base ti tabler-receipt-2",
-      "slug": "manager/feedback"
+      "slug": "manager/payment-receipt",
+      "permission": "view_manager_payment_receipt"
+    },
+    {
+      "menuHeader": "Manager Settings"
+    },
+    {
+      "url": "manager/profile-settings",
+      "name": "Profile Settings",
+      "icon": "menu-icon icon-base ti tabler-user",
+      "slug": "manager/profile-settings",
+      "permission": "view_manager_profile_settings"
+    },
+    {
+      "url": "manager/knowledge-base",
+      "name": "Knowledge Base",
+      "icon": "menu-icon icon-base ti tabler-book",
+      "slug": "manager/knowledge-base",
+      "permission": "view_manager_knowledge_base"
     }
   ]
 }

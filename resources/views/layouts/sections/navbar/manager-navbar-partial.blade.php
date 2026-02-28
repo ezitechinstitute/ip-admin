@@ -139,74 +139,100 @@ use Illuminate\Support\Facades\Route;
           </div>
         </div>
         
-        <div class="dropdown-shortcuts-list scrollable-container">
-          <div class="row row-bordered overflow-visible g-0">
-              <div class="row row-bordered overflow-visible g-0">
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-device-desktop-analytics icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/dashboard') }}" class="stretched-link">Dashboard</a>
-              <small>User Dashboard</small>
-            </div>
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-settings icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/settings') }}" class="stretched-link">Setting</a>
-              <small>Account Settings</small>
-            </div>
-          </div>
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-id icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/intern-accounts') }}" class="stretched-link">Intect Accounts</a>
-              <small>Tech & Status</small>
-            </div>
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-file-invoice icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/invoice') }}" class="stretched-link">Invoices</a>
-              <small>Amount & Remaining</small>
-            </div>
-          </div>
-          <div class="row row-bordered overflow-visible g-0">
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-user icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/managers') }}" class="stretched-link">Role Managers</a>
-              <small>Permission</small>
-            </div>
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-users icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/supervisors') }}" class="stretched-link">Role Supervisors</a>
-              <small>Permission</small>
-            </div>
-          </div>
-        
-          <div class="row row-bordered overflow-visible g-0">
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-cash-banknote icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/withdraw') }}" class="stretched-link">Withdraw</a>
-              <small>Amount & Status</small>
-            </div>
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-               
-                <i class="icon-base ti tabler-book icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/knowledge-base') }}" class="stretched-link">Knowledge Base</a>
-              <small>Useful Knowledge</small>
-            </div>
-          </div>
-        </div>
+       <div class="dropdown-shortcuts-list scrollable-container">
+  <div class="row row-bordered overflow-visible g-0">
+
+    <div class="row row-bordered overflow-visible g-0">
+      <div class="dropdown-shortcuts-item col">
+        <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+          <i class="icon-base ti tabler-smart-home icon-26px text-heading"></i>
+        </span>
+        <a href="{{ route('manager.dashboard') }}" class="stretched-link">Dashboard</a>
+        <small>Manager Dashboard</small>
+      </div>
+
+      <div class="dropdown-shortcuts-item col">
+        <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+          <i class="icon-base ti tabler-users icon-26px text-heading"></i>
+        </span>
+        <a href="{{ route('manager.activeInterns') }}" class="stretched-link">Active Interns</a>
+        <small>Manage Active Interns</small>
+      </div>
+    </div>
+
+    <div class="dropdown-shortcuts-item col">
+      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+        <i class="icon-base ti tabler-user-plus icon-26px text-heading"></i>
+      </span>
+      <a href="{{ route('manager.newInterns') }}" class="stretched-link">New Interns</a>
+      <small>Recently Joined</small>
+    </div>
+
+    <div class="dropdown-shortcuts-item col">
+      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+        <i class="icon-base ti tabler-phone icon-26px text-heading"></i>
+      </span>
+      <a href="{{ route('manager.contactWith') }}" class="stretched-link">Contact With</a>
+      <small>Intern Communication</small>
+    </div>
+
+  </div>
+
+  <div class="row row-bordered overflow-visible g-0">
+
+    <div class="dropdown-shortcuts-item col">
+      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+        <i class="icon-base ti tabler-test-pipe icon-26px text-heading"></i>
+      </span>
+      <a href="{{ route('manager.test') }}" class="stretched-link">Interview Test</a>
+      <small>Assign & Review</small>
+    </div>
+
+    <div class="dropdown-shortcuts-item col">
+      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+        <i class="icon-base ti tabler-check icon-26px text-heading"></i>
+      </span>
+      <a href="{{ route('manager.completed') }}" class="stretched-link">Test Completed</a>
+      <small>Completed Tests</small>
+    </div>
+
+  </div>
+
+  <div class="row row-bordered overflow-visible g-0">
+
+    <div class="dropdown-shortcuts-item col">
+      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+        <i class="icon-base ti tabler-world icon-26px text-heading"></i>
+      </span>
+      <a href="{{ route('manager.international.interns') }}" class="stretched-link">International Interns</a>
+      <small>Overseas Interns</small>
+    </div>
+
+    <div class="dropdown-shortcuts-item col">
+      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+        <i class="icon-base ti tabler-cash icon-26px text-heading"></i>
+      </span>
+      <a href="{{ route('manager.remainingamount') }}" class="stretched-link">Remaining Amount</a>
+      <small>Payment Overview</small>
+    </div>
+<div class="dropdown-shortcuts-item col">
+      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+        <i class="icon-base ti tabler-file-certificate icon-26px text-heading"></i>
+      </span>
+      <a href="{{ route('manager.offer.letter.request') }}" class="stretched-link">Offer Letter Request</a>
+      <small>Request Status</small>
+    </div>
+
+    <div class="dropdown-shortcuts-item col">
+      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+        <i class="icon-base ti tabler-file-certificate icon-26px text-heading"></i>
+      </span>
+      <a href="{{ route('manager.offer.letter.template') }}" class="stretched-link">Offer Letter Template</a>
+      <small>Request Template</small>
+    </div>
+  </div>
+ 
+</div>
       </div>
     </li>
     <!-- Quick links -->
@@ -430,133 +456,86 @@ use Illuminate\Support\Facades\Route;
     </li> --}}
     <!--/ Notification -->
     <!-- User -->
-    <li class="nav-item navbar-dropdown dropdown-user dropdown ms-2">
-      <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
-        <div class="avatar avatar-online">
-         @php
-  // Fetch the admin account and general settings
-  $account = \App\Models\AdminAccount::first();
-  $settings = \App\Models\AdminSetting::first(); // Assuming you have a settings model
+<li class="nav-item navbar-dropdown dropdown-user dropdown ms-2">
+  <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
+    <div class="avatar avatar-online">
 
-  // Logic: 
-  // 1. Check if account has a profile image.
-  // 2. If not, fallback to system logo.
-  // 3. Final fallback to a static local asset.
-  
-  if ($account && $account->image) {
-      $dynamicImage = (str_starts_with($account->image, 'data:image')
-            ? $account->image
-            : asset($account->image));
-  
-  } else {
-      $dynamicImage = asset('assets/img/branding/ezitech.png');
-  }
-@endphp
+      @php
+          $manager = Auth::guard('manager')->user();
 
-<img src="{{ $dynamicImage }}" alt="Profile Picture" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
+          if ($manager && $manager->image) {
+              $dynamicImage = (str_starts_with($manager->image, 'data:image')
+            ? $manager->image
+            : asset($manager->image));
+          } else {
+              $dynamicImage = asset('assets/img/branding/ezitech.png');
+          }
+      @endphp
+
+      <img src="{{ $dynamicImage }}" 
+           class="rounded-circle"
+           style="width: 40px; height: 40px; object-fit: cover;" />
+    </div>
+  </a>
+
+  <ul class="dropdown-menu dropdown-menu-end">
+
+    <!-- Profile Header -->
+    <li>
+      <a class="dropdown-item mt-0" href="{{ route('manager.dashboard') }}">
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0 me-2">
+            <div class="avatar avatar-online">
+              <img src="{{ $dynamicImage }}" class="rounded-circle" />
+            </div>
+          </div>
+          <div class="flex-grow-1">
+            <h6 class="mb-0">{{ $manager->name ?? 'Manager' }}</h6>
+            <small class="text-body-secondary">Manager</small>
+          </div>
         </div>
       </a>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <li>
-          <a class="dropdown-item mt-0"
-            href="{{ Route::has('profile.show') ? route('profile.show') : url('/admin/settings') }}">
-            <div class="d-flex align-items-center">
-              <div class="flex-shrink-0 me-2">
-                <div class="avatar avatar-online">
-                  <img src="{{ $dynamicImage }}"
-                    alt class="rounded-circle" />
-                </div>
-              </div>
-              <div class="flex-grow-1">
-                <h6 class="mb-0">
-                  {{$account->name}}
-                </h6>
-                <small class="text-body-secondary">Admin</small>
-              </div>
-            </div>
-          </a>
-        </li>
-        <li>
-          <div class="dropdown-divider my-1 mx-n2"></div>
-        </li>
-        <li>
-          <a class="dropdown-item"
-            href="{{ Route::has('profile.show') ? route('profile.show') : url('/admin/settings') }}">
-            <i class="icon-base ti tabler-user me-3 icon-md"></i><span class="align-middle">My Profile</span> </a>
-        </li>
-        @if (Auth::check() && Laravel\Jetstream\Jetstream::hasApiFeatures())
-        <li>
-          <a class="dropdown-item" href="{{ route('api-tokens.index') }}">
-            <i class="icon-base ti tabler-settings me-3 icon-md"></i><span class="align-middle">API Tokens</span> </a>
-        </li>
-        @endif
-      
-        @if (Auth::User() && Laravel\Jetstream\Jetstream::hasTeamFeatures())
-        <li>
-          <div class="dropdown-divider my-1 mx-n2"></div>
-        </li>
-        <li>
-          <h6 class="dropdown-header">Manage Team</h6>
-        </li>
-        <li>
-          <div class="dropdown-divider my-1"></div>
-        </li>
-        <li>
-          <a class="dropdown-item"
-            href="{{ Auth::user() ? route('teams.show', Auth::user()->currentTeam->id) : 'javascript:void(0)' }}">
-            <i class="icon-base bx bx-cog icon-md me-3"></i><span>Team Settings</span>
-          </a>
-        </li>
-        @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
-        <li>
-          <a class="dropdown-item" href="{{ route('teams.create') }}">
-            <i class="icon-base bx bx-user icon-md me-3"></i><span>Create New Team</span>
-          </a>
-        </li>
-        @endcan
-        @if (Auth::user()->allTeams()->count() > 1)
-        <li>
-          <div class="dropdown-divider my-1"></div>
-        </li>
-        <li>
-          <h6 class="dropdown-header">Switch Teams</h6>
-        </li>
-        <li>
-          <div class="dropdown-divider my-1"></div>
-        </li>
-        @endif
-        @if (Auth::user())
-        @foreach (Auth::user()->allTeams() as $team)
-     
-        @endforeach
-        @endif
-        @endif
-        <li>
-          <div class="dropdown-divider my-1 mx-n2"></div>
-        </li>
-        @if (Auth::check())
-        <li>
-          <a class="dropdown-item" href="{{ route('logout') }}"
-            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-            <i class="icon-base bx bx-power-off icon-md me-3"></i><span>Logout</span>
-          </a>
-        </li>
-        <form method="POST" id="logout-form" action="{{ route('logout') }}">
-          @csrf
-        </form>
-        @else
-        <li>
-          <div class="d-grid px-2 pt-2 pb-1">
-            <a class="btn btn-sm btn-danger d-flex"
-              href="{{route('logout')}}">
-              <small class="align-middle">Logout</small>
-              <i class="icon-base ti tabler-login ms-2 icon-14px"></i>
-            </a>
-          </div>
-        </li>
-        @endif
-      </ul>
     </li>
-    <!--/ User -->
+
+    <li>
+      <div class="dropdown-divider my-1 mx-n2"></div>
+    </li>
+
+    <!-- My Profile -->
+    <li>
+      <a class="dropdown-item" href="{{ route('manager.profile.settings') }}">
+        <i class="icon-base ti tabler-user me-3 icon-md"></i>
+        <span class="align-middle">My Profile</span>
+      </a>
+    </li>
+
+    <li>
+      <div class="dropdown-divider my-1 mx-n2"></div>
+    </li>
+
+    {{-- ✅ SAME OLD LOGOUT BUTTON --}}
+    @if (Auth::check())
+    <li>
+      <a class="dropdown-item" href="{{ route('manager.logout') }}"
+        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+        <i class="icon-base bx bx-power-off icon-md me-3"></i>
+        <span>Logout</span>
+      </a>
+    </li>
+    <form method="POST" id="logout-form" action="{{ route('manager.logout') }}">
+      @csrf
+    </form>
+    @else
+    <li>
+      <div class="d-grid px-2 pt-2 pb-1">
+        <a class="btn btn-sm btn-danger d-flex"
+          href="{{route('manager.logout')}}">
+          <small class="align-middle">Logout</small>
+          <i class="icon-base ti tabler-login ms-2 icon-14px"></i>
+        </a>
+      </div>
+    </li>
+    @endif
+
   </ul>
-</div>
+</li>

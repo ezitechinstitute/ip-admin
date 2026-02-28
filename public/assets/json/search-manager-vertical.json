@@ -1,0 +1,112 @@
+{
+  "navigation": {
+    "Menu": [
+      {
+        "name": "Manager Dashboard",
+        "icon": "menu-icon icon-base ti tabler-smart-home",
+        "url": "manager/dashboard"
+      },
+      {
+        "name": "Active Interns",
+        "icon": "menu-icon icon-base ti tabler-users",
+        "url": "manager/all-interns/active"
+      },
+      {
+        "name": "New Interns",
+        "icon": "menu-icon icon-base ti tabler-users",
+        "url": "manager/all-interns/newInterns"
+      },
+      {
+        "name": "Contact With",
+        "icon": "menu-icon icon-base ti tabler-users",
+        "url": "manager/all-interns/contact"
+      },
+      {
+        "name": "Interview Test",
+        "icon": "menu-icon icon-base ti tabler-users",
+        "url": "manager/all-interns/test"
+      },
+      {
+        "name": "Test Completed",
+        "icon": "menu-icon icon-base ti tabler-users",
+        "url": "manager/all-interns/completed"
+      },
+      {
+        "name": "International Interns",
+        "icon": "menu-icon icon-base ti tabler-world",
+        "url": "manager/international-interns"
+      },
+      {
+        "name": "Remaining Amount",
+        "icon": "menu-icon icon-base ti tabler-cash",
+        "url": "manager/remainingamount"
+      },
+      {
+        "name": "Offer Letter Request",
+        "icon": "menu-icon icon-base ti tabler-file-certificate",
+        "url": "manager/offerletter"
+      },
+      {
+        "name": "Payment Receipt",
+        "icon": "menu-icon icon-base ti tabler-receipt-2",
+        "url": "manager/feedback"
+      }
+    ]
+  },
+  "suggestions": {
+    "navigation": {
+      "Menu": [
+        {
+          "name": "Manager Dashboard",
+          "icon": "menu-icon icon-base ti tabler-smart-home",
+          "url": "manager/dashboard"
+        },
+        {
+          "name": "Active Interns",
+          "icon": "menu-icon icon-base ti tabler-users",
+          "url": "manager/all-interns/active"
+        },
+        {
+          "name": "New Interns",
+          "icon": "menu-icon icon-base ti tabler-users",
+          "url": "manager/all-interns/newInterns"
+        },
+        {
+          "name": "Contact With",
+          "icon": "menu-icon icon-base ti tabler-users",
+          "url": "manager/all-interns/contact"
+        },
+        {
+          "name": "Interview Test",
+          "icon": "menu-icon icon-base ti tabler-users",
+          "url": "manager/all-interns/test"
+        },
+        {
+          "name": "Test Completed",
+          "icon": "menu-icon icon-base ti tabler-users",
+          "url": "manager/all-interns/completed"
+        },
+        {
+          "name": "International Interns",
+          "icon": "menu-icon icon-base ti tabler-world",
+          "url": "manager/international-interns"
+        },
+        {
+          "name": "Remaining Amount",
+          "icon": "menu-icon icon-base ti tabler-cash",
+          "url": "manager/remainingamount"
+        },
+        {
+          "name": "Offer Letter Request",
+          "icon": "menu-icon icon-base ti tabler-file-certificate",
+          "url": "manager/offerletter"
+        },
+        {
+          "name": "Payment Receipt",
+          "icon": "menu-icon icon-base ti tabler-receipt-2",
+          "url": "manager/feedback"
+        }
+      ]
+    }
+  }
+}

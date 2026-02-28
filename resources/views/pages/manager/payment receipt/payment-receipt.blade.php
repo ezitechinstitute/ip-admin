@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Contact With')
+@section('title', 'Vouchers')
 
 @section('vendor-style')
 <link rel="stylesheet" href="path-to/datatables.bootstrap5.css">
@@ -24,7 +24,7 @@
 @section('content')
 <!-- Users List Table -->
 <div class="col-12 mb-6">
-  <h4 class="mt-6 mb-1">Contact With</h4>
+  <h4 class="mt-6 mb-1">Payment Voucher</h4>
 </div>
 {{-- Error Messages --}}
 @if($errors->any())
@@ -56,9 +56,7 @@
     }, 5000); // 5 seconds
 </script>
 <div class="card">
-@php
-$manager = auth()->guard('manager')->user();
-@endphp
+
   <div class="card-datatable">
     <div id="DataTables_Table_0_wrapper" class="dt-container dt-bootstrap5 dt-empty-footer">
       <div class="row m-3 my-0 justify-content-between">
@@ -83,9 +81,9 @@ $manager = auth()->guard('manager')->user();
         </div>
 
 
-        <div
+        {{-- <div
           class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
-          <form method="GET" action="{{ route('manager.contactWith') }}" id="filterForm" class="d-flex gap-2">
+          <form method="GET" action="{{ route('manager.newVoucher') }}" id="filterForm" class="d-flex gap-2">
 
             <input type="search" name="search" id="searchInput" class="form-control"
               placeholder="Search by Name or Email" value="{{ request('search') }}">
@@ -99,21 +97,20 @@ $manager = auth()->guard('manager')->user();
             <select name="status" id="statusFilter" class="form-select text-capitalize" onchange="this.form.submit()">
               <option value="">Select Technology</option>
 
-              @foreach ($allowedTechNames as $techName) {{-- $tech ki jagah $techName --}}
+              @foreach ($allowedTechNames as $techName) 
               @php
-              // English comments: Since $techName is now a string, use it directly
               $techSlug = strtolower(str_replace(' ', '-', $techName));
               @endphp
 
               <option value="{{ $techSlug }}" {{ request('status')==$techSlug ? 'selected' : '' }}>
-                {{ $techName }} {{-- Object property hatayein, direct variable use karein --}}
+                {{ $techName }} 
               </option>
               @endforeach
             </select>
 
             <select name="intern_type" id="typeFilter" class="form-select text-capitalize"
               onchange="this.form.submit()">
-              <option value="">Internship Type</option>
+              <option value="">Voucherhip Type</option>
               @foreach (['Onsite','Remote'] as $type)
               <option value="{{ $type }}" {{ request('intern_type')==$type ? 'selected' : '' }}>
                 {{ $type }}
@@ -140,17 +137,14 @@ $manager = auth()->guard('manager')->user();
 
             @if($isAdminAllowed)
             <div class="btn-group" role="group">
-              @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'excel_contact_with'))
               <button id="btnGroupDrop1" type="button" class="btn add-new btn-outline-primary dropdown-toggle"
                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="icon-base ti tabler-dots-vertical icon-md d-sm-none"></i>
                 <i class="icon-base ti tabler-upload icon-xs me-2"></i>
                 <span class="d-none d-sm-block">Export</span>
               </button>
-              @endif
               <div class="dropdown-menu" style="z-index: 1021" aria-labelledby="btnGroupDrop1">
-                <a class="dt-button dropdown-item" href="javascript:void(0);" onclick="downloadContactWithCSV()">
+                <a class="dt-button dropdown-item" href="javascript:void(0);" onclick="downloadNewVoucherCSV()">
                   <span>
                     <span class="d-flex align-items-center">
                       <i class="icon-base ti tabler-file-spreadsheet me-1"></i>CSV / Excel
@@ -162,101 +156,94 @@ $manager = auth()->guard('manager')->user();
             @endif
           </form>
         </div>
-      </div>
+      </div> --}}
 
       <div class="justify-content-between dt-layout-table">
-        <div class="table-responsive overflow-auto"
-          style="max-height: 700px;">
-          <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
+        <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto"
+          style="max-height: 500px;">
+         <table class="table"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
 
-           <thead class="border-top sticky-top bg-card">
+            <thead class="border-top sticky-top bg-card" font-weight: 700 !important >
               <tr>
 
-                <th data-dt-column="2" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Profile Picture" tabindex="0"><span class="dt-column-title"
-                    role="button">Image</span><span class="dt-column-order"></span></th>
+        
                 <th data-dt-column="3" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Full Name" tabindex="0"><span class="dt-column-title" role="button">Name</span><span
+                  aria-label="Full Name" tabindex="0"><span class="dt-column-title" role="button">Recipient</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Email</span><span
+                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Account No</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Contact</span><span
+                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Amount</span><span
                     class="dt-column-order"></span></th>
                     <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">City</span><span
+                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Date</span><span
                     class="dt-column-order"></span></th>
-                    <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Internship Type</span><span
-                    class="dt-column-order"></span></th>
-                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
-                  aria-label="Join Date"><span class="dt-column-title">Technology</span><span
-                    class="dt-column-order"></span></th>
-                    <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Join Date</span><span
-                    class="dt-column-order"></span></th>
+               
+            
                 
 
 
 
 
-                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
+                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label=""><span
                     class="dt-column-title">Status</span><span class="dt-column-order"></span></th>
-                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
-                    class="dt-column-title">Action</span><span class="dt-column-order"></span></th>
+             
 
 
               </tr>
             </thead>
-            <tbody>
-              @forelse ($interns as $intern)
-              <tr class="">
-                <td class="">
-                  <div class="d-flex justify-content-start align-items-center user-name">
-                    <div class="avatar-wrapper">
-                      @if ($intern->image)
-                      <div class="avatar avatar-md me-4">
-                        <img src="{{ 
-    $intern->image
-        ? (str_starts_with($intern->image, 'data:image')
-            ? $intern->image
-            : asset($intern->image)) 
-        : '' 
-    }}" alt="{{ $intern->name }}" class="rounded-circle" />
-                      </div>
-                      @else
-                      <div class="avatar avatar-md me-4">
-                        <span class="avatar-initial rounded-circle bg-label-warning">
-                          {{ strtoupper(substr($intern->name, 0, 2)) }}
-                        </span>
-                      </div>
-                      @endif
-                    </div>
+           <tbody>
+@forelse ($Vouchers as $Voucher)
+<tr>
+    <td>
+        <span class="text-truncate d-flex align-items-center text-heading text-nowrap">
+            {{ $Voucher->recipient_type }}
+        </span>
+    </td>
 
-                  </div>
-                </td>
-                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$intern->name}}</span></td>
-                <td><span class="text-heading text-nowrap"><small><i
-                        class="icon-base ti tabler-mail me-1 text-danger icon-22px"></i>{{$intern->email}}</small></span></td>
-                <td>@if ($intern->phone)
-                  <span class="text-heading text-nowrap"><i
-                      class="icon-base ti tabler-phone me-1 text-success icon-22px"></i>{{$intern->phone}}</span>
-                  @else
-                  N/A
-                  @endif
-                </td>
-                <td><span class="text-heading text-nowrap">{{$intern->city}}</span></td>
-                <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td>
-                <td><span class="text-heading text-nowrap">{{$intern->technology}}</span></td>
-                <td><span class="text-heading text-nowrap">@if ($intern->join_date)
-                  <span class="text-heading text-nowrap"><i
-                      class="icon-base ti tabler-phone me-1 text-success icon-22px"></i>{{$intern->join_date}}</span>
-                  @else
-                  N/A
-                  @endif</span></td>
-                <td>@php
+    <td>
+        <span class="text-heading text-nowrap">
+            <small>{{ $Voucher->admin_account_no }}</small>
+        </span>
+    </td>
+
+    <td>
+        <span class="text-truncate d-flex align-items-center text-heading text-nowrap">
+            {{ $Voucher->amount }}
+        </span>
+    </td>
+
+    <td>
+        <span class="text-heading text-nowrap">
+            <small>{{ $Voucher->date }}</small>
+        </span>
+    </td>
+
+    <td>
+
+
+        <span class="text-truncate d-flex align-items-center text-heading text-nowrap">
+            {{ $Voucher->status }}
+        </span>
+        
+    </td>
+</tr>
+@empty
+<tr>
+    <td colspan="5" class="text-center">
+        No data available!
+    </td>
+</tr>
+@endforelse
+</tbody>
+
+             
+
+
+                {{--<td>
+                  @php
                   // Map statuses to Bootstrap badge classes
                   $statusClasses = [
                   'interview' => 'bg-label-primary',
@@ -265,80 +252,60 @@ $manager = auth()->guard('manager')->user();
                   'completed' => 'bg-label-success',
                   'active' => 'bg-label-success',
                   'removed' => 'bg-label-danger',
-                  'freeze' => 'bg-label-danger',
                   ];
 
                   $status = strtolower($intern->status); // ensure lowercase
                   $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
                   @endphp
 
-                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span></td>
-                  <td>
-                    @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'edit_status_contact_with') || $manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'remove_contact_with'))
-                  <div class="dropdown">
-                    <a href="javascript:;"
-                      class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
-                      data-bs-toggle="dropdown" aria-expanded="false">
-                      <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
-                    </a>
+                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span>
+                </td>--}}
 
-                    <div class="dropdown-menu dropdown-menu-end m-0">
-
-                      @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'edit_status_contact_with'))
-                      <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal"
-                        data-bs-target="#editInternModal" data-id="{{ $intern->id }}"
-                        data-status="{{ $intern->status }}"> Edit
-                        Status
+                {{-- <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td> --}}
+                {{--<td>
+                  <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                      <a href="javascript:;"
+                        class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
                       </a>
-                      @endif
-                      @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'remove_contact_with'))
-                      <a href="javascript:void(0);" class="dropdown-item delete-record"
-                        data-id="{{ $intern->id }}" data-name="{{ $intern->name }}">
-                        Remove
-                      </a>
-                      @endif
-                      {{-- Hidden Form for Security --}}
-                      <form id="delete-form-{{ $intern->id }}"
-                        action="{{ route('manager.interns.remove', $intern->id) }}" method="POST"
-                        style="display: none;">
-                        @csrf
-                        @method('PATCH') {{-- Status update ke liye PATCH best hai --}}
-                      </form>
+
+                      <div class="dropdown-menu dropdown-menu-end m-0">
+
+                        <a href="{{route('view.profile.internee.admin', $intern->id)}}"
+                          class="dropdown-item permission-btn">
+                          View Profile
+                        </a>
+                        <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal"
+                          data-bs-target="#editInternModal" data-id="{{ $intern->id }}" data-name="{{ $intern->name }}"
+                          data-email="{{ $intern->email }}" data-technology="{{ $intern->technology }}"
+                          data-status="{{ $intern->status }}">
+                          Edit
+                        </a>
+
+                        @if (strtolower($intern->status) != 'removed')
+                        <a href="javascript:;" class="dropdown-item permission-btn delete-record"
+                          data-id="{{ $intern->id }}">
+                          Remove
+                        </a>
+                        <form id="delete-form-{{ $intern->id }}" action="{{ route('Voucher.destroy', $intern->id) }}"
+                          method="POST" style="display: none;">
+                          @csrf
+                          @method('DELETE')
+                        </form>
+                        @endif
 
 
 
-
+                      </div>
                     </div>
                   </div>
-                  @endif
-                </td>
+
+                </td>--}}
+
 
               
-
-
-              </tr>
-
-
-
-              @empty
-              <tr>
-                <td colspan="11">
-                  <p class="text-center mb-0">No data available!</p>
-                </td>
-              </tr>
-              @endforelse
-
-
-
-
-
-
-
-            </tbody>
             <tfoot></tfoot>
           </table>
 
@@ -347,7 +314,7 @@ $manager = auth()->guard('manager')->user();
   <div class="modal-dialog modal-md modal-simple modal-dialog-centered">
     <div class="modal-content p-2">
       <div class="modal-body">
-        <button type="button" class="btn-close" style="inset-block-start: 0rem !important; inset-inline-end: 0rem !important;" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         <div class="text-start mb-6">
           <h4 class="role-title">Edit Intern Status</h4>
         </div>
@@ -356,7 +323,7 @@ $manager = auth()->guard('manager')->user();
           @csrf
           {{-- English comments: Hidden input to store the intern ID --}}
           <input type="hidden" id="edit_intern_id" name="id">
-
+{{-- 
           <div class="col-12 mb-3">
             <label class="form-label" for="edit_status">Status</label>
             <select name="status" id="edit_status" required class="form-select text-capitalize">
@@ -367,7 +334,7 @@ $manager = auth()->guard('manager')->user();
               <option value="Active">Active</option>
               <option value="Removed">Removed</option>
             </select>
-          </div>
+          </div> --}}
 
           <div class="col-12 text-end">
             <button type="button" class="btn btn-label-secondary me-2" data-bs-dismiss="modal">Cancel</button>
@@ -384,12 +351,12 @@ $manager = auth()->guard('manager')->user();
       </div>
       <div class="row mx-3 justify-content-between">
         {{-- Info --}}
-        <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
+        {{-- <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
           <div class="dt-info" aria-live="polite">
-            Showing {{ $interns->firstItem() ?? 0 }} to {{ $interns->lastItem() ?? 0 }} of {{
-            $interns->total() ??
+            Showing {{ $Voucher->firstItem() ?? 0 }} to {{ $Voucher->lastItem() ?? 0 }} of {{
+            $Voucher->total() ??
             0 }} entries
-          </div>
+          </div> --}}
         </div>
 
         {{-- Pagination --}}
@@ -399,33 +366,33 @@ $manager = auth()->guard('manager')->user();
             <nav aria-label="pagination">
               <ul class="pagination">
                 {{-- First Page --}}
-                <li class="dt-paging-button page-item {{ $interns->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->url(1) }}" aria-label="First">
+                <li class="dt-paging-button page-item {{ $Vouchers->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $Vouchers->url(1) }}" aria-label="First">
                     <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
                 {{-- Previous Page --}}
-                <li class="dt-paging-button page-item {{ $interns->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->previousPageUrl() }}"
+                <li class="dt-paging-button page-item {{ $Vouchers->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $Vouchers->previousPageUrl() }}"
                     aria-label="Previous">
                     <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
                 {{-- Page Numbers --}}
-                @foreach ($interns->getUrlRange(max(1, $interns->currentPage() - 2),
-                min($interns->lastPage(),
-                $interns->currentPage() + 2)) as $page => $url)
-                <li class="dt-paging-button page-item {{ $page == $interns->currentPage() ? 'active' : '' }}">
+                @foreach ($Vouchers->getUrlRange(max(1, $Vouchers->currentPage() - 2),
+                min($Vouchers->lastPage(),
+                $Vouchers->currentPage() + 2)) as $page => $url)
+                <li class="dt-paging-button page-item {{ $page == $Vouchers->currentPage() ? 'active' : '' }}">
                   <a class="page-link" style="border-radius: 5px;" href="{{ $url }}">{{ $page }}</a>
                 </li>
                 @endforeach
 
                 {{-- Next Page --}}
                 <li
-                  class="dt-paging-button page-item {{ $interns->currentPage() == $interns->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->nextPageUrl() }}"
+                  class="dt-paging-button page-item {{ $Vouchers->currentPage() == $Vouchers->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $Vouchers->nextPageUrl() }}"
                     aria-label="Next">
                     <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
                   </a>
@@ -433,8 +400,8 @@ $manager = auth()->guard('manager')->user();
 
                 {{-- Last Page --}}
                 <li
-                  class="dt-paging-button page-item {{ $interns->currentPage() == $interns->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->url($interns->lastPage()) }}"
+                  class="dt-paging-button page-item {{ $Vouchers->currentPage() == $Vouchers->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $Vouchers->url($Vouchers->lastPage()) }}"
                     aria-label="Last">
                     <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
                   </a>
@@ -450,7 +417,7 @@ $manager = auth()->guard('manager')->user();
 
 </div>
 
-<script>
+{{-- <script>
   let timer;
 
   document.getElementById('searchInput').addEventListener('keyup', function () {
@@ -463,21 +430,18 @@ $manager = auth()->guard('manager')->user();
   document.getElementById('statusFilter').addEventListener('change', function () {
     document.getElementById('filterForm').submit();
   });
-</script>
+</script> --}}
 
-@push('scripts')
-<script>
-  // Collects all current filters and redirects to the export route
-function downloadContactWithCSV() {
+{{-- <script>
+function downloadNewVoucherCSV() {
     const form = document.getElementById('filterForm');
     const formData = new FormData(form);
+    
     const params = new URLSearchParams(formData).toString();
     
-    // Redirecting to the export route with current filters
-    window.location.href = "{{ route('manager.contactWith.export') }}?" + params;
+    window.location.href = "{{ route('manager.newVoucher.export') }}?" + params;
 }
-</script>
-@endpush
+</script> --}}
 
 
 @push('scripts')
