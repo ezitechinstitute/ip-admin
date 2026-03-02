@@ -1,35 +1,60 @@
 @php
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Gate;
 
 $configData = Helper::appClasses();
 $currentPath = request()->path();
-
-// English comments: Get the first segment of the URL (e.g., 'admin' or 'manager')
 $firstSegment = Request::segment(1);
 
-/** * English comments: 
- * 1. If the URL starts with 'admin', we FORCE the admin menu.
- * 2. If the URL starts with 'manager', we FORCE the manager menu.
- * 3. Fallback to Admin menu for any other case.
- */
+// 1. Menu file decide karein
 if ($firstSegment == 'admin') {
     $menuPath = base_path('resources/menu/verticalMenu.json');
-} elseif ($firstSegment == 'manager' || Auth::guard('manager')->check()) {
-    $menuPath = base_path('resources/menu/managerMenu.json');
 } else {
-    // English comments: Default fallback to Admin Menu
-    $menuPath = base_path('resources/menu/verticalMenu.json');
+    $menuPath = base_path('resources/menu/managerMenu.json');
 }
 
-// English comments: Final safety check for file existence
 if (!file_exists($menuPath)) {
     $menuPath = base_path('resources/menu/verticalMenu.json');
 }
 
+// 2. JSON load karein
 $menuJson = file_get_contents($menuPath);
-$menuData = [json_decode($menuJson)];
+$menuData = json_decode($menuJson);
+
+// 3. --- ROLE BASED FILTERING LOGIC ---
+if ($firstSegment == 'manager' && Auth::guard('manager')->check()) {
+    $manager = Auth::guard('manager')->user();
+    
+    // Permission filter function
+    $filteredMenu = array_filter($menuData->menu, function ($menu) use ($manager) {
+        // Agar permission set nahi hai, toh menu dikha do
+        if (!isset($menu->permission)) {
+            return true;
+        }
+        // --- KEY CHANGE: Gate check for the menu item ---
+        return Gate::forUser($manager)->allows('check-privilege', $menu->permission);
+    });
+
+    // Submenu filter logic
+    foreach ($filteredMenu as $menu) {
+        if (isset($menu->submenu)) {
+            $menu->submenu = array_filter($menu->submenu, function ($sub) use ($manager) {
+                if (!isset($sub->permission)) return true;
+                // --- KEY CHANGE: Gate check for the submenu item ---
+                return Gate::forUser($manager)->allows('check-privilege', $sub->permission);
+            });
+            // Re-index submenu array
+            $menu->submenu = array_values($menu->submenu);
+        }
+    }
+
+    $menuData->menu = array_values($filteredMenu);
+}
+// -------------------------------------
+
+// Final data for loop
+$menuDataFinal = [$menuData];
 @endphp
 
 <aside id="layout-menu" class="layout-menu menu-vertical menu"
@@ -41,15 +66,15 @@ $menuData = [json_decode($menuJson)];
   {{-- App Brand - Same for everyone --}}
   @if (!isset($navbarFull))
   <style>
-  /* English comments: Display logic for full and small logo */
+  /* Display logic for full and small logo */
   .logo-full { display: block; }
   .logo-small { display: none; }
 
-  /* English comments: When menu is collapsed, hide full logo and show small one */
+  /* When menu is collapsed, hide full logo and show small one */
   .layout-menu-collapsed:not(.layout-menu-hover) .logo-full { display: none !important; }
   .layout-menu-collapsed:not(.layout-menu-hover) .logo-small { display: block !important; }
 
-  /* English comments: Hide the toggle button (i tags) when the menu is collapsed */
+  /* Hide the toggle button (i tags) when the menu is collapsed */
   .layout-menu-collapsed:not(.layout-menu-hover) .layout-menu-toggle i { 
     display: none !important; 
   }
@@ -57,7 +82,7 @@ $menuData = [json_decode($menuJson)];
     <div class="app-brand demo">
       <a href="{{ url('/') }}" class="app-brand-link">
         @php
-          // English comments: Fetch dynamic logo from AdminSettings for both roles
+          // Fetch dynamic logo from AdminSettings for both roles
           $settings = \App\Models\AdminSetting::first();
           $dynamicLogo = $settings && $settings->system_logo 
                          ? asset($settings->system_logo) 
@@ -73,12 +98,6 @@ $menuData = [json_decode($menuJson)];
       </a>
 
       <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
-        <style>
-          .logo-full { display: block; }
-          .logo-small { display: none; }
-          .layout-menu-collapsed:not(.layout-menu-hover) .logo-full { display: none !important; }
-          .layout-menu-collapsed:not(.layout-menu-hover) .logo-small { display: block !important; }
-        </style>
         <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
         <i class="icon-base ti tabler-x d-block d-xl-none"></i>
       </a>
@@ -88,7 +107,8 @@ $menuData = [json_decode($menuJson)];
   <div class="menu-inner-shadow"></div>
 
   <ul class="menu-inner py-1">
-    @foreach ($menuData[0]->menu as $menu)
+    {{-- Loop mein $menuData[0] ki jagah $menuDataFinal[0] use karein --}}
+    @foreach ($menuDataFinal[0]->menu as $menu)
 
       {{-- MENU HEADER --}}
       @if (isset($menu->menuHeader))
@@ -120,7 +140,7 @@ $menuData = [json_decode($menuJson)];
       <li class="menu-item {{ $activeClass }}">
         @isset($menu->submenu)
           <a href="javascript:void(0);" class="menu-link menu-toggle">
-            <span onclick="event.stopPropagation(); window.location='{{ url($menu->url) }}';" class="d-flex align-items-center flex-grow-1" style="cursor:pointer;">
+            <span onclick="event.stopPropagation(); window.location='{{ url($menu->url ?? 'javascript:void(0);') }}';" class="d-flex align-items-center flex-grow-1" style="cursor:pointer;">
               @isset($menu->icon) <i class="{{ $menu->icon }}"></i> @endisset
               <div>{{ __($menu->name ?? '') }}</div>
             </span>

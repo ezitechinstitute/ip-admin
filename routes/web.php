@@ -409,6 +409,10 @@ Route::get('/reset-password-new', [OTPVerifyController::class, 'showNewPasswordF
 Route::post('/reset-password-update', [OTPVerifyController::class, 'updatePassword'])->name('auth.password.update');
 Route::post('/resend-otp', [OTPVerifyController::class, 'resendOtp'])->name('auth.otp.resend');
 
+Route::get('/set-new-password/{email}', [OTPVerifyController::class, 'setNewPassword'])->name('auth.set.new.password');
+
+Route::post('/set-password-generate', [OTPVerifyController::class, 'updateSetPassword'])
+    ->name('auth.password.update.set.new');
 
 // Admin routes - Start
 Route::prefix('/admin')->middleware(['validUser'])->group(function (){
@@ -468,7 +472,7 @@ Route::post('/manager-permissions/store', [ManagersController::class, 'storePerm
 Route::get('manager/{id}/permissions', [ManagersController::class, 'getManagerPermissions'])
     ->name('manager.permissions.get');
 Route::get('/managers/export-csv', [ManagersController::class, 'downloadManagerCSV'])->name('managers.export.admin');
-
+Route::get('/managers/permissions/{id}', [ManagersController::class, 'getManagerRoles'])->name('admin.managers.roles.permissions');
 
 // Supervisors
 Route::get('supervisors', [SupervisorsController::class, 'index'])->name('supervisors.admin');
@@ -607,7 +611,14 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
 
     // Offer Letter Route (corrected)
     Route::get('/offer-letter-template', [OfferLetterTemplateController::class, 'index'])->name('manager.offer.letter.template');
+    Route::post('/offer-letter-template-create', [OfferLetterTemplateController::class, 'store'])->name('manager.offer.letter.template.create');
+    Route::put('/manager/offer-letter-template-update/{id}', [OfferLetterTemplateController::class, 'update'])->name('manager.offer.letter.template.update');
+Route::delete('/offer-letter-template/delete/{id}', [OfferLetterTemplateController::class, 'destroy'])
+     ->name('manager.offer.letter.template.delete');
+
         Route::get('/offer-letter-request', [OfferLetterRequestController::class, 'index'])->name('manager.offer.letter.request');
+
+
     Route::get('/remainingamount', [RemainingAmountController::class, 'index'])->name('manager.remainingamount');
 
 

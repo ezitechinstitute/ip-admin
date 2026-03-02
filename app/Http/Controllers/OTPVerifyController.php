@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Carbon;
 use App\Mail\ForgetPasswordMail;
+use App\Models\ManagersAccount;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 
 class OTPVerifyController extends Controller
 {
@@ -175,4 +177,39 @@ class OTPVerifyController extends Controller
         return response()->json(['success' => false, 'message' => 'Failed to send OTP.'], 500);
     }
 }
+
+
+
+    public function setNewPassword($email){
+        return view('content.authentications.auth-set-new-password', compact('email'));
+    }
+
+
+    public function updateSetPassword(Request $request)
+{
+    // Yahan 'm_email' use karein
+    $validator = Validator::make($request->all(), [
+        'm_email' => 'required|email|exists:manager_accounts,email', 
+        'password' => 'required|min:5|confirmed',
+        'date' => 'required|date',
+    ]);
+
+    if ($validator->fails()) {
+        return redirect()->back()->withErrors($validator)->withInput();
+    }
+
+    // Yahan bhi 'm_email' use karein
+    $manager = ManagersAccount::where('email', $request->m_email)->first();
+
+    if ($manager->password) {
+        return redirect()->back()->withErrors(['password' => 'Password is already set for this account.']);
+    }
+
+    $manager->password = $request->password; // Plain text store ho raha hai
+    $manager->join_date = $request->date;
+    $manager->save();
+
+    return redirect()->route('login')->with('success', 'Password set successfully! Please login.');
+}
+
 }

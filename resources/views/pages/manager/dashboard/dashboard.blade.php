@@ -92,6 +92,10 @@ $configData = Helper::appClasses();
       </div>
     </div>
   </div>
+ @php
+    $manager = auth()->guard('manager')->user();
+@endphp
+  @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege', 'manager_statistics'))
   <div class="col-xl-8 col-md-12">
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between">
@@ -150,6 +154,7 @@ $configData = Helper::appClasses();
       </div>
     </div>
   </div>
+  @endif
 <div class="col-xl-6 col-xl-6">
   <div class="card h-100">
     <div class="card-header d-flex justify-content-between ">
