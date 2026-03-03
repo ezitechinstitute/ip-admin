@@ -46,13 +46,13 @@
 
 {{-- Auto-hide script --}}
 <script>
-//   setTimeout(function() {
-//         const alerts = document.querySelectorAll('.alert');
-//         alerts.forEach(alert => {
-//             alert.classList.remove('show');
-//             alert.classList.add('hide');
-//             setTimeout(() => alert.remove(), 500);
-//         });
+  setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.classList.remove('show');
+            alert.classList.add('hide');
+            setTimeout(() => alert.remove(), 500);
+        });
     }, 5000); // 5 seconds
 </script>
 <div class="card">
@@ -63,16 +63,20 @@
         <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
           <div class="dt-length mb-md-6 mb-0 d-flex items-center mt-5">
 
-            {{-- <form id="perPageForm" method="GET">
-              <select name="per_page" class="form-select" onchange="this.form.submit()">
-                @foreach([15, 25, 50, 100] as $val)
-                <option value="{{ $val }}" {{ $perPage==$val ? 'selected' : '' }}>{{ $val }}</option>
-                @endforeach
+            <form id="perPageForm" method="GET">
+              <select name="perpage" class="form-select" onchange="this.form.submit()">
+    @foreach([15, 25, 50, 100] as $val)
+        <option value="{{ $val }}"
+            {{ request('perpage', 15) == $val ? 'selected' : '' }}>
+            {{ $val }}
+        </option>
+    @endforeach
+</select>
               </select>
               <input type="hidden" name="search" value="{{ request('search') }}">
               <input type="hidden" name="status" value="{{ request('status') }}">
               <input type="hidden" name="intern_type" value="{{ request('intern_type') }}">
-            </form> --}}
+            </form>
 
 
 
@@ -80,21 +84,40 @@
           </div>
         </div>
 
-{{-- 
-        <div
-          class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
-          <form method="GET" action="{{ route('manager.contactWith') }}" id="filterForm" class="d-flex gap-2">
 
-            <input type="search" name="search" id="searchInput" class="form-control"
-              placeholder="Search by Name or Email" value="{{ request('search') }}">
-            <style>
-              input[type="search"]::-webkit-search-cancel-button,
-              input[type="search"]::-webkit-search-decoration {
-                -webkit-appearance: none;
-                appearance: none;
-              }
-            </style>
-            <select name="status" id="statusFilter" class="form-select text-capitalize" onchange="this.form.submit()">
+       <div class="d-md-flex align-items-center col-md-auto ms-auto d-flex gap-2 flex-wrap"  class="form-control">
+
+  <form method="GET"
+        action="{{ route('manager.offer.letter.request') }}"
+        id="filterForm"
+        class="d-flex align-items-center gap-2">
+
+    <!-- Search -->
+    <input type="search"
+           name="search"
+           id="searchInput"
+           class="form-control form-control-sm"
+           style="width: 200px;"
+           placeholder="Search..."
+           value="{{ request('search') }}">
+
+    <!-- Status Filter -->
+    <select name="status"
+            id="statusFilter"
+            class="form-select form-select-sm"
+            onchange="this.form.submit()">
+        <option value="">Status</option>
+        <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Approved</option>
+        <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Rejected</option>
+    </select>
+
+    <!-- Keep Perpage -->
+    <input type="hidden" name="perpage" value="{{ request('perpage', 15) }}">
+
+  </form>
+
+</div>
+       {{--     <select name="status" id="statusFilter" class="form-select text-capitalize" onchange="this.form.submit()">
               <option value="">Select Technology</option>
 
               @foreach ($allowedTechNames as $techName) {{-- $tech ki jagah $techName --}}
@@ -366,59 +389,59 @@
 
         </div>
       </div>
-      {{-- <div class="row mx-3 justify-content-between"> --}}
+      <div class="row mx-3 justify-content-between">
         {{-- Info --}}
-        {{-- <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
+        <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
           <div class="dt-info" aria-live="polite">
-            Showing {{ $interns->firstItem() ?? 0 }} to {{ $interns->lastItem() ?? 0 }} of {{
-            $interns->total() ??
+            Showing {{ $offerletters->firstItem() ?? 0 }} to {{ $offerletters->lastItem() ?? 0 }} of {{
+            $offerletters->total() ??
             0 }} entries
           </div>
-        </div> --}}
+        </div>
 
         {{-- Pagination --}}
-        {{-- <div
+        <div
           class="d-md-flex align-items-center dt-layout-end mt-4 col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
           <div class="dt-paging">
             <nav aria-label="pagination">
-              <ul class="pagination"> --}}
+              <ul class="pagination">
                 {{-- First Page --}}
-                {{-- <li class="dt-paging-button page-item {{ $interns->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->url(1) }}" aria-label="First">
+                <li class="dt-paging-button page-item {{ $offerletters->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $offerletters->url(1) }}" aria-label="First">
                     <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                   </a>
-                </li> --}}
+                </li>
 
                 {{-- Previous Page --}}
-                {{-- <li class="dt-paging-button page-item {{ $interns->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->previousPageUrl() }}"
+                <li class="dt-paging-button page-item {{ $offerletters->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $offerletters->previousPageUrl() }}"
                     aria-label="Previous">
                     <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                   </a>
-                </li> --}}
+                </li>
 
                 {{-- Page Numbers --}}
-                {{-- @foreach ($interns->getUrlRange(max(1, $interns->currentPage() - 2),
-                min($interns->lastPage(),
-                $interns->currentPage() + 2)) as $page => $url)
-                <li class="dt-paging-button page-item {{ $page == $interns->currentPage() ? 'active' : '' }}">
+                @foreach ($offerletters->getUrlRange(max(1, $offerletters->currentPage() - 2),
+                min($offerletters->lastPage(),
+                $offerletters->currentPage() + 2)) as $page => $url)
+                <li class="dt-paging-button page-item {{ $page == $offerletters->currentPage() ? 'active' : '' }}">
                   <a class="page-link" style="border-radius: 5px;" href="{{ $url }}">{{ $page }}</a>
                 </li>
-                @endforeach --}}
+                @endforeach
 
                 {{-- Next Page --}}
-                {{-- <li
-                  class="dt-paging-button page-item {{ $interns->currentPage() == $interns->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->nextPageUrl() }}"
+                <li
+                  class="dt-paging-button page-item {{ $offerletters->currentPage() == $offerletters->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $offerletters->nextPageUrl() }}"
                     aria-label="Next">
                     <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
                   </a>
-                </li> --}}
+                </li>
 
                 {{-- Last Page --}}
-                {{-- <li
-                  class="dt-paging-button page-item {{ $interns->currentPage() == $interns->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" style="border-radius: 5px;" href="{{ $interns->url($interns->lastPage()) }}"
+                <li
+                  class="dt-paging-button page-item {{ $offerletters->currentPage() == $offerletters->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $offerletters->url($offerletters->lastPage()) }}"
                     aria-label="Last">
                     <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
                   </a>
@@ -427,14 +450,14 @@
             </nav>
           </div>
         </div>
-      </div> --}}
+      </div>
 
     </div>
   </div>
 
 </div>
 
-{{-- <script>
+<script>
   let timer;
 
   document.getElementById('searchInput').addEventListener('keyup', function () {
@@ -447,7 +470,7 @@
   document.getElementById('statusFilter').addEventListener('change', function () {
     document.getElementById('filterForm').submit();
   });
-</script> --}}
+</script>
 
 {{-- @push('scripts')
 <script>
