@@ -9,8 +9,20 @@
           "title": "View Manager Dashboard"
         },
         {
+          "key": "manager_dashboard_greetings",
+          "title": "Greetings Card"
+        },
+        {
           "key": "manager_statistics",
           "title": "Manager Statistics"
+        },
+        {
+          "key": "manager_dashboard_kpi_overview",
+          "title": "Manager KPI Overview"
+        },
+        {
+          "key": "manager_dashboard_interview_pipeline",
+          "title": "Interview Pipeline"
         }
       ]
     },

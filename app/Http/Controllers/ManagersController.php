@@ -15,79 +15,96 @@ use Illuminate\Support\Facades\Mail;
 
 class ManagersController extends Controller
 {
-    public function managersData(Request $request){
-
-        $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    public function managersData(Request $request)
+{
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     $query = ManagersAccount::query();
 
-    // 🔍 Search
+    // 🔍 Search (Prefix search for high performance on 100k+ records)
     if ($request->filled('search')) {
         $search = $request->search;
-
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('eti_id', 'like', "%{$search}%");
+            // English: Use prefix search to allow database indexing to work
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('eti_id', 'like', "{$search}%");
         });
     }
 
-    // 🔘 Status filter with default 'interview'
-    $status = $request->status; // raw status from request
-
-   
+    // 🔘 Status filter
     if ($request->filled('status')) {
         $query->where('status', $request->status);
     }
-    $query->where('loginas', 'Manager');
-    //get latest record
-    $query->latest();
-    
-    $allManagers = $query->paginate($perPage)->withQueryString();
 
+    // English: Filtering by Manager role
+    $query->where('loginas', 'Manager');
+
+    // 📄 Efficient Pagination
+    // English: Fixed column name to manager_id as per your database schema
+    $allManagers = $query->latest('manager_id')->paginate($perPage)->withQueryString();
+
+    // 📂 JSON Privilege Loading (Optimized)
     $jsonPath = base_path('resources/menu/managerRolePrivileges.json');
     $privilegeGroups = [];
 
     if (file_exists($jsonPath)) {
+        // English: Loading privileges once outside the loop for efficiency
         $jsonData = json_decode(file_get_contents($jsonPath), true);
         $privilegeGroups = $jsonData['privileges'] ?? [];
     }
-    // ----------------------------------------
-        return view('pages.admin.manager.manager', compact('allManagers', 'perPage', 'privilegeGroups'));
-    }
+
+    return view('pages.admin.manager.manager', compact('allManagers', 'perPage', 'privilegeGroups'));
+}
 
    public function addManager(Request $request)
 {
+    // 1. Fetch SMTP Settings from DB
+    $settings = DB::table('admin_settings')->first(); 
+
+    // 2. Comprehensive SMTP Validation (Active check + Data Presence)
+    // English: Checking if settings exist, if it's active, and if critical fields are not empty
+    if (
+        !$settings || 
+        $settings->smtp_active_check == 0 || 
+        empty($settings->smtp_host) || 
+        empty($settings->smtp_email) || 
+        empty($settings->smtp_password)
+    ) {
+        return back()
+            ->withErrors(['smtp_error' => 'SMTP is either inactive or configuration is missing in database. Manager cannot be added without email capability.'])
+            ->withInput();
+    }
+
+    // 3. Standard Validation
     $request->validate([
-        'name'      => 'required|string|max:255',
-        'email'     => 'required|email|unique:manager_accounts,email',
-        // 'password'  => 'required|min:6', 
-        // 'join_date' => 'required|date',
+        'name'  => 'required|string|max:255',
+        'email' => 'required|email|unique:manager_accounts,email',
     ]);
 
-    // Generate ETI ID
+    // 4. Generate ETI ID (Original Logic)
     do {
         $number = rand(100, 999);
         $etiId = 'ETI-MANAGER-' . $number;
     } while (ManagersAccount::where('eti_id', $etiId)->exists());
 
- 
+    // 5. Create Manager
     $manager = ManagersAccount::create([
-        'eti_id'     => $etiId,
-        'image'      => '',
-        'name'       => $request->name,
-        'email'      => $request->email,
-        'password'   => $request->password ?? '', 
-        'contact'    => $request->contact ?? '',
-        'join_date'  => $request->join_date ?? '',
-        'loginas'    => $request->manager == 'on' ? 'Manager' : '',
-        'status'     => $request->status,
-        'department' => $request->department ?? '',
-        'comission'  => $request->comission,
+        'eti_id'            => $etiId,
+        'image'             => '',
+        'name'              => $request->name,
+        'email'             => $request->email,
+        'password'          => $request->password ?? '', 
+        'contact'           => $request->contact ?? '',
+        'join_date'         => $request->join_date ?? '',
+        'loginas'           => $request->manager == 'on' ? 'Manager' : '',
+        'status'            => $request->status,
+        'department'        => $request->department ?? '',
+        'comission'         => $request->comission,
         'emergency_contact' => $request->emergency_contact ?? 0,
     ]);
 
-    
+    // 6. Permissions Logic (Original Logic)
     if ($request->has('permissions') && is_array($request->permissions)) {
         $permissionsData = [];
         foreach ($request->permissions as $key) {
@@ -98,16 +115,22 @@ class ManagersController extends Controller
                 'updated_at'     => now(),
             ];
         }
-        
         ManagerRole::insert($permissionsData);
     }
 
-    Mail::to($manager->email)->send(new ManagerSetPasswordMail([
-    'name' => $manager->name,
-    'email' => $manager->email,
-    // 'passwordSetUrl' => route('manager.password.set')
-]));
-    return back()->with('success', 'Manager and added successfully!');
+    // 7. Send Email with Error Catching
+    try {
+        Mail::to($manager->email)->send(new ManagerSetPasswordMail([
+            'name'  => $manager->name,
+            'email' => $manager->email,
+        ]));
+    } catch (\Exception $e) {
+        // English: Log the system error for debugging
+        \Log::error("SMTP Error: " . $e->getMessage());
+        return back()->with('success', 'Manager added, but welcome email failed. Check SMTP logs.');
+    }
+
+    return back()->with('success', 'Manager added successfully!');
 }
 
 
@@ -239,12 +262,17 @@ public function getManagerPermissions($id)
 
     public function downloadManagerCSV()
 {
-    $managers = ManagersAccount::where('loginas', 'Manager')->latest()->get();
+    // English: Setting high limits for processing large datasets (100k+)
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
+    // 1. Base Query with sorting on primary key
+    $query = ManagersAccount::where('loginas', 'Manager')->latest('manager_id');
 
     $csvFileName = 'managers_export_' . date('Y-m-d') . '.csv';
+    
     $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$csvFileName",
+        "Content-type"        => "text/csv; charset=UTF-8",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
@@ -252,11 +280,23 @@ public function getManagerPermissions($id)
 
     $columns = ['ETI-ID', 'Name', 'Email', 'Phone', 'Join Date', 'Commission', 'Department', 'Emergency Contact', 'Status'];
 
-    $callback = function() use($managers, $columns) {
+    // English: Using modern streamDownload to prevent memory exhaustion
+    return response()->streamDownload(function() use ($query, $columns) {
+        // English: Crucial - Clear output buffer to avoid ERR_INVALID_RESPONSE or HTML injection
+        if (ob_get_level() > 0) ob_end_clean();
+
         $file = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for proper Excel character rendering
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+        
+        // Write Headers
         fputcsv($file, $columns);
 
-        foreach ($managers as $manager) {
+        /* 🚀 English: cursor() fetches records one by one from DB. 
+           It keeps memory usage low even for 300,000+ records.
+        */
+        foreach ($query->cursor() as $manager) {
             fputcsv($file, [
                 $manager->eti_id,
                 $manager->name,
@@ -269,10 +309,53 @@ public function getManagerPermissions($id)
                 $manager->status == 1 ? 'Active' : 'Freeze',
             ]);
         }
-        fclose($file);
-    };
 
-    return response()->stream($callback, 200, $headers);
+        fclose($file);
+    }, $csvFileName, $headers);
+}
+
+
+    public function resendEmail($id)
+{
+    // 1. Fetch SMTP Settings from DB (As per your addManager logic)
+    $settings = DB::table('admin_settings')->first(); 
+
+    // 2. Comprehensive SMTP Validation
+    // English: Checking if settings exist and if critical fields are active/not empty
+    if (
+        !$settings || 
+        $settings->smtp_active_check == 0 || 
+        empty($settings->smtp_host) || 
+        empty($settings->smtp_email) || 
+        empty($settings->smtp_password)
+    ) {
+        return back()->with('error', 'SMTP is either inactive or configuration is missing in database.');
+    }
+
+    // 3. Find the Manager
+    // English: Ensure the manager exists or return 404
+    $manager = \App\Models\ManagersAccount::findOrFail($id);
+
+    // 4. Security Check
+    // English: Only resend if password is still empty
+    if (!empty($manager->password)) {
+        return back()->with('error', 'This manager has already set their password.');
+    }
+
+    // 5. Send Email with Error Catching
+    try {
+        Mail::to($manager->email)->send(new \App\Mail\ManagerSetPasswordMail([
+            'name'  => $manager->name,
+            'email' => $manager->email,
+        ]));
+
+        return back()->with('success', 'Invitation email has been resent to ' . $manager->email);
+        
+    } catch (\Exception $e) {
+        // English: Log the system error for debugging
+        \Log::error("SMTP Resend Error: " . $e->getMessage());
+        return back()->with('error', 'Failed to send email. Please check your SMTP settings.');
+    }
 }
 
 }

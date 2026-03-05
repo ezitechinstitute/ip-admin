@@ -10,47 +10,55 @@ use Illuminate\Http\Request;
 class WithdrawManagerController extends Controller
 {
     public function index(Request $request)
-    {
-        $pageLimitSet = AdminSetting::first();
-    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
-        $query = Withdraw::query();
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where('ac_name', 'like', "%{$search}%");
-        }
-
-        if ($request->filled('status')) {
-            $query->where('req_status', $request->status);
-        }
-
-        $withdraws = $query->latest()->paginate($perPage);
-
-        return view('pages.admin.withdraw.withdraw', compact('withdraws', 'perPage'));
-    }
-
-
-    public function exportWithdrawCSV(Request $request)
 {
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+
     $query = Withdraw::query();
 
-    // Wahi filters apply karein jo index method mein hain
+    // 🔍 Search (Prefix search is much faster on large datasets)
     if ($request->filled('search')) {
         $search = $request->search;
-        $query->where('ac_name', 'like', "%{$search}%");
+        // English: Using prefix search to leverage database indexes effectively
+        $query->where('ac_name', 'like', "{$search}%");
     }
 
+    // 🔘 Status Filter
     if ($request->filled('status')) {
         $query->where('req_status', $request->status);
     }
 
-    $withdraws = $query->latest()->get();
+    // 📄 Efficient Pagination
+    // English: latest() can be slow on 300k+ rows; adding 'id' ensures stable and fast sorting
+    $withdraws = $query->latest('id')->paginate($perPage)->withQueryString();
+
+    return view('pages.admin.withdraw.withdraw', compact('withdraws', 'perPage'));
+}
+
+
+    public function exportWithdrawCSV(Request $request)
+{
+    // English: Prevent timeouts and memory exhaustion for large exports
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
+    $query = Withdraw::query();
+
+    // 🔍 Search Filter (Prefix optimized)
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where('ac_name', 'like', "{$search}%");
+    }
+
+    // 🔘 Status Filter
+    if ($request->filled('status')) {
+        $query->where('req_status', $request->status);
+    }
 
     $filename = "withdraw_requests_" . date('Y-m-d_H-i-s') . ".csv";
     
     $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$filename",
+        "Content-type"        => "text/csv; charset=UTF-8",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
@@ -58,11 +66,28 @@ class WithdrawManagerController extends Controller
 
     $columns = ['Bank Name', 'Account No', 'Account Holder', 'Description', 'Date', 'Amount', 'Status'];
 
-    $callback = function() use($withdraws, $columns) {
+    // English: Using streamDownload to push data directly to the browser
+    return response()->streamDownload(function() use ($query, $columns) {
+        // English: Ensure no previous output or HTML interferes with the CSV
+        if (ob_get_level() > 0) ob_end_clean();
+
         $file = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for proper Excel formatting
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+        
+        // Write Header Row
         fputcsv($file, $columns);
 
-        foreach ($withdraws as $row) {
+        /* 🚀 English: cursor() allows us to process 300k+ rows by only 
+           keeping one record in memory at a time.
+        */
+        foreach ($query->latest('req_id')->cursor() as $row) {
+            // English: Mapping status based on your integer logic
+            $statusText = 'Pending';
+            if ($row->req_status == 1) $statusText = 'Completed';
+            if ($row->req_status == 2) $statusText = 'Rejected';
+
             fputcsv($file, [
                 $row->bank,
                 $row->ac_no,
@@ -70,12 +95,11 @@ class WithdrawManagerController extends Controller
                 $row->description,
                 $row->date,
                 $row->amount,
-                $row->req_status == 1 ? 'Completed' : 'Pending'
+                $statusText
             ]);
         }
-        fclose($file);
-    };
 
-    return response()->stream($callback, 200, $headers);
+        fclose($file);
+    }, $filename, $headers);
 }
 }
