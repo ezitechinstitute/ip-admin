@@ -324,7 +324,12 @@
                   <button type="button" style="inset-block-start: 0rem !important; inset-inline-end: 0rem !important;"
                     class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                   <div class="text-start mb-6">
-                    <h4 class="role-title">Edit Manager</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center">
+                      <h4 class="role-title">Edit Manager</h4>
+                      <a href="javascript:;" id="resendEmailBtn" class="btn btn-sm btn-outline-primary rounded-2 waves-effect waves-light d-none">
+    Resend Email
+</a>
+                    </div>
                     <p class="text-body-secondary">Update manager details and permissions</p>
                   </div>
 
@@ -572,7 +577,12 @@
                   <span class="text-heading text-nowrap">N/A</span>
                   @endif
                 </td>
-                <td><span class="text-heading text-nowrap">{{$manager->join_date}}</span></td>
+                <td>@if ($manager->join_date)<span class="text-heading text-nowrap">{{$manager->join_date}}
+                  </span>
+                
+                @else
+                  <span class="text-heading text-nowrap">N/A</span>
+                  @endif</td>
                 <td><span class="fw-bold">Rs: </span><span
                     class="text-heading text-nowrap">{{$manager->comission}}</span>
                 </td>
@@ -949,14 +959,42 @@
     const editGroupSelectAlls = document.querySelectorAll('.edit-select-all-group');
     const editPrivilegeItems = document.querySelectorAll('.edit-group-item');
 
+
+
+
+
+
+    
+
     // 3. POPULATE DATA & FETCH PERMISSIONS (When Edit Button Clicked)
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const data = this.dataset;
             const managerId = data.id;
+
+
+            const resendBtn = document.getElementById('resendEmailBtn');
+        const passValue = data.password; 
+
+        if (resendBtn) {
+            // English: Check if password is null, empty, or string "null"
+            if (!passValue || passValue === "" || passValue === "null" || passValue === undefined) {
+                resendBtn.classList.remove('d-none');
+                resendBtn.style.setProperty('display', 'inline-block', 'important');
+                let routeUrl = "{{ route('manager.resend-email', ':id') }}";
+        resendBtn.href = routeUrl.replace(':id', managerId);
+            } else {
+                resendBtn.classList.add('d-none');
+                resendBtn.style.display = 'none';
+            }
+        }
+        // --------------------------------
+
+
             
             // Set Form Action
-            editForm.action = `/admin/managers/update/${managerId}`;
+            const updateBaseUrl = "{{ route('update-manager', ':id') }}";
+            editForm.action = updateBaseUrl.replace(':id', managerId);
 
             // Set Basic Inputs
             document.getElementById('edit_manager_id').value = managerId;
@@ -1237,6 +1275,7 @@ if (allCheckboxes.length > 0) {
     window.location.href = "{{ route('managers.export.admin') }}";
 }
 </script>
+
 @endpush
 
 

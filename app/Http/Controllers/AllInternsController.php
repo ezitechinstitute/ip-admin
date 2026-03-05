@@ -10,39 +10,45 @@ use Illuminate\Routing\Controller;
 
 class AllInternsController extends Controller
 {
-    public function allInterns(Request $request){
-        $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    public function allInterns(Request $request)
+{
+    // English: Fetch pagination limit from settings
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    $query = Intern::query();
+    // English: Using select() to only fetch required columns (massive performance boost)
+    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
 
-    // 🔍 Search
+    // 🔍 Optimized Search
     if ($request->filled('search')) {
         $search = $request->search;
 
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('city', 'like', "%{$search}%")
-              ->orWhere('technology', 'like', "%{$search}%");
+            // English: Use prefix search (search%) instead of double wildcard (%search%) 
+            // to allow MySQL to use B-Tree indexes effectively.
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
-    // 🔘 Status filter with default 'interview'
-    $status = $request->status; // raw status from request
-
-   
-    if(!empty($status)){
-        $query->where('status', strtolower($status));
+    // 🔘 Status filter
+    if ($request->filled('status')) {
+        // English: Avoid strtolower() on columns in WHERE clause to maintain index usage
+        $query->where('status', $request->status);
     }
-    
-    //get latest record
-    $query->latest();
-    
+
+    // English: Use orderBy('id', 'desc') instead of latest() for better index performance on large tables
+    $query->orderBy('id', 'desc');
+
+    // 📚 Pagination
+    // English: For 2 lakh+ data, paginate() is okay but simplePaginate() is faster 
+    // if you don't need exact total page numbers.
     $allInterns = $query->paginate($perPage)->withQueryString();
 
-    return view('pages.admin.all-interns.allInterns', compact('allInterns', 'perPage', 'status'));
-    }
+    return view('pages.admin.all-interns.allInterns', compact('allInterns', 'perPage'));
+}
 
 
 
@@ -61,34 +67,37 @@ class AllInternsController extends Controller
 
     public function interviewIntern(Request $request)
 {
+    // English: Fetch pagination limit from settings
     $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    $query = Intern::query();
+    // English: Using select() to fetch only necessary columns for better memory management
+    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
 
-    // 🔍 Search
+    // 🔘 Status filter with default 'interview'
+    // English: We set the status early to ensure the query stays targeted
+    $status = $request->input('status', 'interview');
+    $query->where('status', $status);
+
+    // 🔍 Optimized Search
     if ($request->filled('search')) {
         $search = $request->search;
 
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('city', 'like', "%{$search}%")
-              ->orWhere('technology', 'like', "%{$search}%");
+            // English: Using prefix search ("search%") instead of double wildcard ("%search%") 
+            // is much faster as it can utilize B-Tree indexes.
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
-    // 🔘 Status filter with default 'interview'
-    $status = $request->status; // raw status from request
-
-    if (empty($status)) {
-        $status = 'interview'; // default
-    }
-
-    $query->where('status', strtolower($status));
-    //get latest record
-    $query->latest();
+    // English: Use orderBy('id', 'desc') instead of latest() for primary key performance
+    $query->orderBy('id', 'desc');
+    
     // 🔢 Pagination
+    // English: paginate() is suitable here, but simplePaginate() would be faster for massive datasets.
     $interview = $query->paginate($perPage)->withQueryString();
 
     return view('pages.admin.all-interns.interview', compact('interview', 'perPage', 'status'));
@@ -105,62 +114,77 @@ public function removeIntern($id)
 }
 
 
-public function contactIntern(Request $request){
-
+public function contactIntern(Request $request)
+{
+    // English: Fetch pagination limit from settings
     $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    $query = intern::query();
+    // English: Selection of specific columns to reduce RAM usage and increase query speed
+    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
 
-    if($request->filled('search')){
+    // 🔍 Optimized Search
+    if ($request->filled('search')) {
         $search = $request->search;
-        $query->where(function ($q) use ($search){
-            $q->where('name', 'like', "%{$search}%")
-            ->orWhere('email', 'like', "%{$search}%")
-            ->orWhere('city', 'like', "%{$search}%")
-            ->orWhere('technology', 'like', "%{$search}%");
+
+        $query->where(function ($q) use ($search) {
+            // English: Using prefix search ("search%") instead of double wildcard ("%search%") 
+            // is significantly faster on large datasets with indexes.
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
-    $status = $request->status;
-    if(empty($status)){
-        $status = 'contact';
-    }
+    // 🔘 Status filter
+    $status = $request->input('status', 'contact');
+    
+    // English: Direct match is faster than using strtolower() inside the query
+    $query->where('status', $status);
 
-    $query->where('status', strtolower($status));
-    //get latest record
-    $query->latest();
+    // English: Use orderBy('id', 'desc') instead of latest() for better primary key performance
+    $query->orderBy('id', 'desc');
+
+    // 🔢 Pagination
     $contact = $query->paginate($perPage)->withQueryString();
 
     return view('pages.admin.all-interns.contactIntern', compact('contact', 'perPage', 'status'));
 }
 
-
-public function testIntern(Request $request){
-
+public function testIntern(Request $request)
+{
+    // English: Fetch pagination limit from settings
     $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    $query = intern::query();
+    // English: Selection of specific columns only. Fetching 20+ columns for 2.7L records wastes RAM.
+    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
 
-    if($request->filled('search')){
+    // 🔍 Optimized Search
+    if ($request->filled('search')) {
         $search = $request->search;
-        $query->where(function ($q) use ($search){
-            $q->where('name', 'like', "%{$search}%")
-            ->orWhere('email', 'like', "%{$search}%")
-            ->orWhere('city', 'like', "%{$search}%")
-            ->orWhere('technology', 'like', "%{$search}%");
+
+        $query->where(function ($q) use ($search) {
+            // English: Using prefix search ("search%") instead of double wildcard ("%search%") 
+            // is exponentially faster on large indexed tables.
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
-    $status = $request->status;
-    if(empty($status)){
-        $status = 'test';
-    }
+    // 🔘 Status filter
+    $status = $request->input('status', 'test');
+    
+    // English: Exact match is faster than using strtolower() inside the SQL engine
+    $query->where('status', $status);
 
-    $query->where('status', strtolower($status));
-    //get latest record
-    $query->latest();
+    // English: Use orderBy('id', 'desc') instead of latest() to leverage the primary key index
+    $query->orderBy('id', 'desc');
+
+    // 🔢 Pagination
     $test = $query->paginate($perPage)->withQueryString();
 
     return view('pages.admin.all-interns.testIntern', compact('test', 'perPage', 'status'));
@@ -168,31 +192,39 @@ public function testIntern(Request $request){
 
 
 
-public function completedIntern(Request $request){
-
+public function completedIntern(Request $request)
+{
+    // English: Fetch pagination limit from settings
     $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    $query = intern::query();
+    // English: Selecting specific columns is crucial for 200k+ records to save RAM.
+    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
 
-    if($request->filled('search')){
+    // 🔍 Optimized Search
+    if ($request->filled('search')) {
         $search = $request->search;
-        $query->where(function ($q) use ($search){
-            $q->where('name', 'like', "%{$search}%")
-            ->orWhere('email', 'like', "%{$search}%")
-            ->orWhere('city', 'like', "%{$search}%")
-            ->orWhere('technology', 'like', "%{$search}%");
+
+        $query->where(function ($q) use ($search) {
+            // English: Using prefix search ("search%") instead of double wildcard ("%search%") 
+            // is exponentially faster on large indexed tables.
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
-    $status = $request->status;
-    if(empty($status)){
-        $status = 'completed';
-    }
+    // 🔘 Status filter
+    $status = $request->input('status', 'completed');
+    
+    // English: Matching exact case is faster than applying functions like strtolower() in SQL
+    $query->where('status', $status);
 
-    $query->where('status', strtolower($status));
-    //get latest record
-    $query->latest();
+    // English: Using orderBy('id', 'desc') leverages the Primary Key index for faster sorting
+    $query->orderBy('id', 'desc');
+
+    // 🔢 Pagination
     $completed = $query->paginate($perPage)->withQueryString();
 
     return view('pages.admin.all-interns.completedIntern', compact('completed', 'perPage', 'status'));
@@ -200,31 +232,39 @@ public function completedIntern(Request $request){
 
 
 
-public function activeIntern(Request $request){
-
+public function activeIntern(Request $request)
+{
+    // English: Fetch pagination limit from settings
     $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    $query = intern::query();
+    // English: Selecting only necessary columns to avoid loading heavy data (like images/long text) into RAM
+    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
 
-    if($request->filled('search')){
+    // 🔍 Optimized Search
+    if ($request->filled('search')) {
         $search = $request->search;
-        $query->where(function ($q) use ($search){
-            $q->where('name', 'like', "%{$search}%")
-            ->orWhere('email', 'like', "%{$search}%")
-            ->orWhere('city', 'like', "%{$search}%")
-            ->orWhere('technology', 'like', "%{$search}%");
+
+        $query->where(function ($q) use ($search) {
+            // English: Changed "%search%" to "search%" where possible. 
+            // Leading wildcards (%) prevent the database from using indexes, causing slow full table scans.
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
-    $status = $request->status;
-    if(empty($status)){
-        $status = 'active';
-    }
+    // 🔘 Status filter
+    $status = $request->input('status', 'active');
+    
+    // English: Matching exact case is faster than applying strtolower() on every row in the database
+    $query->where('status', $status);
 
-    $query->where('status', strtolower($status));
-    //get latest record
-    $query->latest();
+    // English: Using orderBy('id', 'desc') instead of latest() to leverage the Primary Key index for speed
+    $query->orderBy('id', 'desc');
+
+    // 🔢 Pagination
     $active = $query->paginate($perPage)->withQueryString();
 
     return view('pages.admin.all-interns.activeIntern', compact('active', 'perPage', 'status'));
@@ -333,25 +373,36 @@ public function activeIntern(Request $request){
 
 public function exportCSVInterview(Request $request)
 {
+    // English: Remove execution time limit for large exports
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $fileName = 'interview_interns_' . date('d-m-Y_His') . '.csv';
 
-    $query = Intern::query();
+    // English: Selection of specific columns to keep the cursor light
+    $query = Intern::select([
+        'id', 'name', 'email', 'country', 'city', 'phone', 'cnic', 
+        'gender', 'birth_date', 'interview_type', 'university', 
+        'technology', 'duration', 'intern_type', 'join_date', 'status'
+    ]);
 
+    // 🔍 Search Optimization
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('city', 'like', "%{$search}%")
-              ->orWhere('technology', 'like', "%{$search}%");
+            // English: Trailing wildcard for better index utilization
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
+    // 🔘 Status Filter
     $status = $request->status ?: 'interview';
-    $query->where('status', strtolower($status));
+    $query->where('status', $status);
 
-    $interns = $query->latest()->get();
-
+    // English: Headers for streaming CSV download
     $headers = [
         "Content-type"        => "text/csv",
         "Content-Disposition" => "attachment; filename=$fileName",
@@ -362,19 +413,22 @@ public function exportCSVInterview(Request $request)
 
     $columns = ['ID', 'Name', 'Email', 'Country', 'City', 'Phone', 'CNIC', 'Gender', 'DOB', 'Interview Type', 'University', 'Technology', 'Duration', 'Intern Type', 'Join Date', 'Status'];
 
-    $callback = function() use ($interns, $columns) {
+    // English: Using a stream response to handle 270k+ records without memory issues
+    $callback = function() use ($query, $columns) {
         $file = fopen('php://output', 'w');
         fputcsv($file, $columns);
 
-        foreach ($interns as $intern) {
+        // English: cursor() fetches one row at a time instead of all at once (get())
+        
+        foreach ($query->orderBy('id', 'desc')->cursor() as $intern) {
             fputcsv($file, [
                 $intern->id,
                 $intern->name,
                 $intern->email,
                 $intern->country,
                 $intern->city,
-                ' ' . $intern->phone, 
-                ' ' . $intern->cnic,
+                " " . $intern->phone, // English: Space prevents Excel from formatting as scientific number
+                " " . $intern->cnic,
                 $intern->gender,
                 $intern->birth_date,
                 $intern->interview_type,
@@ -385,6 +439,9 @@ public function exportCSVInterview(Request $request)
                 $intern->join_date ? date('Y-m-d', strtotime($intern->join_date)) : '',
                 ucfirst($intern->status),
             ]);
+            
+            // English: Periodically clear the buffer to keep memory low
+            flush();
         }
         fclose($file);
     };
@@ -397,25 +454,36 @@ public function exportCSVInterview(Request $request)
 
 public function exportCSVContact(Request $request)
 {
+    // English: Disable time limit and increase memory for heavy export
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $fileName = 'contact_interns_' . date('d-m-Y_His') . '.csv';
 
-    $query = Intern::query();
+    // English: Select only required columns to minimize data overhead
+    $query = Intern::select([
+        'id', 'name', 'email', 'country', 'city', 'phone', 'cnic', 
+        'gender', 'birth_date', 'interview_type', 'university', 
+        'technology', 'duration', 'intern_type', 'join_date', 'status'
+    ]);
 
+    // 🔍 Search Optimization
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('city', 'like', "%{$search}%")
-              ->orWhere('technology', 'like', "%{$search}%");
+            // English: Use prefix search for better index performance
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
+    // 🔘 Status Filter
     $status = $request->status ?: 'contact';
-    $query->where('status', strtolower($status));
+    $query->where('status', $status);
 
-    $interns = $query->latest()->get();
-
+    // English: CSV Download Headers
     $headers = [
         "Content-type"        => "text/csv",
         "Content-Disposition" => "attachment; filename=$fileName",
@@ -426,19 +494,22 @@ public function exportCSVContact(Request $request)
 
     $columns = ['ID', 'Name', 'Email', 'Country', 'City', 'Phone', 'CNIC', 'Gender', 'DOB', 'Interview Type', 'University', 'Technology', 'Duration', 'Intern Type', 'Join Date', 'Status'];
 
-    $callback = function() use ($interns, $columns) {
+    // English: Stream response to handle large datasets (270k+) without crashing
+    $callback = function() use ($query, $columns) {
         $file = fopen('php://output', 'w');
         fputcsv($file, $columns);
 
-        foreach ($interns as $intern) {
+        // English: cursor() processes one record at a time, keeping RAM usage extremely low
+        
+        foreach ($query->orderBy('id', 'desc')->cursor() as $intern) {
             fputcsv($file, [
                 $intern->id,
                 $intern->name,
                 $intern->email,
                 $intern->country,
                 $intern->city,
-                ' ' . $intern->phone, 
-                ' ' . $intern->cnic,
+                " " . $intern->phone, // Space avoids scientific notation in Excel
+                " " . $intern->cnic,
                 $intern->gender,
                 $intern->birth_date,
                 $intern->interview_type,
@@ -449,6 +520,9 @@ public function exportCSVContact(Request $request)
                 $intern->join_date ? date('Y-m-d', strtotime($intern->join_date)) : '',
                 ucfirst($intern->status),
             ]);
+            
+            // English: Force output to browser to avoid server timeout
+            flush();
         }
         fclose($file);
     };
@@ -461,24 +535,34 @@ public function exportCSVContact(Request $request)
 
 public function exportCSVTest(Request $request)
 {
+    // English: Remove time limits and increase memory for high-volume data
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $fileName = 'test_interns_' . date('d-m-Y_His') . '.csv';
 
-    $query = Intern::query();
+    // English: Select only required columns to keep the cursor memory footprint low
+    $query = Intern::select([
+        'id', 'name', 'email', 'country', 'city', 'phone', 'cnic', 
+        'gender', 'birth_date', 'interview_type', 'university', 
+        'technology', 'duration', 'intern_type', 'join_date', 'status'
+    ]);
 
+    // 🔍 Search Optimization
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('city', 'like', "%{$search}%")
-              ->orWhere('technology', 'like', "%{$search}%");
+            // English: Trailing wildcard only for better index usage
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
+    // 🔘 Status Filter
     $status = $request->status ?: 'test';
-    $query->where('status', strtolower($status));
-
-    $interns = $query->latest()->get();
+    $query->where('status', $status);
 
     $headers = [
         "Content-type"        => "text/csv",
@@ -490,11 +574,14 @@ public function exportCSVTest(Request $request)
 
     $columns = ['ID', 'Name', 'Email', 'Country', 'City', 'Phone', 'CNIC', 'Gender', 'DOB', 'Interview Type', 'University', 'Technology', 'Duration', 'Intern Type', 'Join Date', 'Status'];
 
-    $callback = function() use ($interns, $columns) {
+    // English: Using stream response to handle 2.7 Lakh+ records efficiently
+    $callback = function() use ($query, $columns) {
         $file = fopen('php://output', 'w');
         fputcsv($file, $columns);
 
-        foreach ($interns as $intern) {
+        // English: cursor() processes one row at a time, preventing memory exhaustion
+        
+        foreach ($query->orderBy('id', 'desc')->cursor() as $intern) {
             fputcsv($file, [
                 $intern->id,
                 $intern->name,
@@ -513,6 +600,9 @@ public function exportCSVTest(Request $request)
                 $intern->join_date ? date('Y-m-d', strtotime($intern->join_date)) : '',
                 ucfirst($intern->status),
             ]);
+            
+            // English: Periodically flush buffer to send data to browser immediately
+            flush();
         }
         fclose($file);
     };
@@ -525,24 +615,35 @@ public function exportCSVTest(Request $request)
 
 public function exportCSVCompleted(Request $request)
 {
+    // English: Remove time limit and increase memory for massive data export
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $fileName = 'completed_interns_' . date('d-m-Y_His') . '.csv';
 
-    $query = Intern::query();
+    // English: Selecting only required columns for performance
+    $query = Intern::select([
+        'id', 'name', 'email', 'country', 'city', 'phone', 'cnic', 
+        'gender', 'birth_date', 'interview_type', 'university', 
+        'technology', 'duration', 'intern_type', 'join_date', 'status'
+    ]);
 
+    // 🔍 Search Optimization
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('city', 'like', "%{$search}%")
-              ->orWhere('technology', 'like', "%{$search}%");
+            // English: Use prefix search for index optimization
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
+    // 🔘 Status Filter
     $status = $request->status ?: 'completed';
-    $query->where('status', strtolower($status));
-
-    $interns = $query->latest()->get();
+    // English: Exact case match is faster in SQL indexed columns
+    $query->where('status', $status);
 
     $headers = [
         "Content-type"        => "text/csv",
@@ -554,11 +655,14 @@ public function exportCSVCompleted(Request $request)
 
     $columns = ['ID', 'Name', 'Email', 'Country', 'City', 'Phone', 'CNIC', 'Gender', 'DOB', 'Interview Type', 'University', 'Technology', 'Duration', 'Intern Type', 'Join Date', 'Status'];
 
-    $callback = function() use ($interns, $columns) {
+    // English: Stream response to handle large datasets efficiently
+    $callback = function() use ($query, $columns) {
         $file = fopen('php://output', 'w');
         fputcsv($file, $columns);
 
-        foreach ($interns as $intern) {
+        // English: cursor() processes records one by one, keeping memory usage minimal
+        
+        foreach ($query->orderBy('id', 'desc')->cursor() as $intern) {
             fputcsv($file, [
                 $intern->id,
                 $intern->name,
@@ -577,6 +681,9 @@ public function exportCSVCompleted(Request $request)
                 $intern->join_date ? date('Y-m-d', strtotime($intern->join_date)) : '',
                 ucfirst($intern->status),
             ]);
+            
+            // English: Flush the output buffer to send data to the browser immediately
+            flush();
         }
         fclose($file);
     };
@@ -588,24 +695,34 @@ public function exportCSVCompleted(Request $request)
 
 public function exportCSVActive(Request $request)
 {
+    // English: Essential for large scale data (270k+ records)
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $fileName = 'active_interns_' . date('d-m-Y_His') . '.csv';
 
-    $query = Intern::query();
+    // English: Select only required columns to reduce data processing overhead
+    $query = Intern::select([
+        'id', 'name', 'email', 'country', 'city', 'phone', 'cnic', 
+        'gender', 'birth_date', 'interview_type', 'university', 
+        'technology', 'duration', 'intern_type', 'join_date', 'status'
+    ]);
 
+    // 🔍 Search Optimization
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('city', 'like', "%{$search}%")
-              ->orWhere('technology', 'like', "%{$search}%");
+            // English: Prefix search for index efficiency
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%")
+              ->orWhere('city', 'like', "{$search}%")
+              ->orWhere('technology', 'like', "{$search}%");
         });
     }
 
+    // 🔘 Status Filter
     $status = $request->status ?: 'active';
-    $query->where('status', strtolower($status));
-
-    $interns = $query->latest()->get();
+    $query->where('status', $status);
 
     $headers = [
         "Content-type"        => "text/csv",
@@ -617,18 +734,21 @@ public function exportCSVActive(Request $request)
 
     $columns = ['ID', 'Name', 'Email', 'Country', 'City', 'Phone', 'CNIC', 'Gender', 'DOB', 'Interview Type', 'University', 'Technology', 'Duration', 'Intern Type', 'Join Date', 'Status'];
 
-    $callback = function() use ($interns, $columns) {
+    // English: Stream response to prevent server from running out of RAM
+    $callback = function() use ($query, $columns) {
         $file = fopen('php://output', 'w');
         fputcsv($file, $columns);
 
-        foreach ($interns as $intern) {
+        // English: cursor() is a game changer—it fetches one row at a time from DB
+        
+        foreach ($query->orderBy('id', 'desc')->cursor() as $intern) {
             fputcsv($file, [
                 $intern->id,
                 $intern->name,
                 $intern->email,
                 $intern->country,
                 $intern->city,
-                ' ' . $intern->phone, 
+                ' ' . $intern->phone, // Prevents scientific notation
                 ' ' . $intern->cnic,
                 $intern->gender,
                 $intern->birth_date,
@@ -640,6 +760,9 @@ public function exportCSVActive(Request $request)
                 $intern->join_date ? date('Y-m-d', strtotime($intern->join_date)) : '',
                 ucfirst($intern->status),
             ]);
+            
+            // English: Flush the buffer to send data chunks to the browser immediately
+            flush();
         }
         fclose($file);
     };

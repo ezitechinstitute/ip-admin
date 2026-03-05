@@ -89,7 +89,7 @@
             <option value="supervisor" {{ request('leave_type')=='supervisor' ? 'selected' : '' }}>Supervisor</option>
         </select>
 
-        @php
+        {{-- @php
             $adminSettings = \App\Models\AdminSetting::first();
             $isAdminAllowed = !$adminSettings || (isset($adminSettings->export_permissions['admin']) && $adminSettings->export_permissions['admin'] == 1);
         @endphp
@@ -106,7 +106,7 @@
                     </a>
                 </div>
             </div>
-        @endif
+        @endif --}}
     </form>
 </div>
         </div>
@@ -530,6 +530,19 @@
       document.getElementById('filterForm').submit();
     });
   </script>
+
+  <script>
+function downloadLeavesCSV() {
+    // English: Get current URL parameters (filters)
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // English: Build the export URL with existing filters
+    const exportUrl = "{{ route('admin.leaves.export') }}?" + urlParams.toString();
+    
+    // English: Trigger the download
+    window.location.href = exportUrl;
+}
+</script>
   @endpush
 
 

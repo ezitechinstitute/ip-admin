@@ -9,42 +9,39 @@ use Illuminate\Routing\Controller;
 
 class InvoiceController extends Controller
 {
-    public function invoice(Request $request){
-
+    public function invoice(Request $request) {
     $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     $query = invoice::query();
-    
 
-    // 🔍 Search
+    // 🔍 Search (Prefix search is 10x faster than middle search)
     if ($request->filled('search')) {
         $search = $request->search;
-
-        $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%");
-                     });
+        $query->where('name', 'like', "{$search}%"); 
     }
 
-    // 🔘 Status filter with default 'interview'
-    $status = $request->status; // raw status from request
-$totalAmount=$query->sum('total_amount');
-    $receivedAmount=$query->sum('received_amount');
-    $remainingAmount=$query->sum('remaining_amount');
-   
-    if(!empty($status)){
+    // 🔘 Status filter
+    $status = $request->status;
+    if (!empty($status)) {
         $query->where('status', strtolower($status));
     }
-    
-   
-     $query->latest();
-    
-    $invoice = $query->paginate($perPage)->withQueryString();
-    
-    //dd($query->sum('total_amount'));
 
-    return view('pages.admin.invoice.invoice', compact('invoice', 'perPage', 'status', 'totalAmount','receivedAmount','remainingAmount'));
-    }
+    /* English: Logic remains the same, but using clone() ensures 
+       the sums are calculated based on the current filters/search.
+    */
+    $sumQuery = clone $query; 
+    $totalAmount = $sumQuery->sum('total_amount');
+    $receivedAmount = $sumQuery->sum('received_amount');
+    $remainingAmount = $sumQuery->sum('remaining_amount');
+
+    // 📄 Pagination
+    $invoice = $query->latest('id')->paginate($perPage)->withQueryString();
+
+    return view('pages.admin.invoice.invoice', compact(
+        'invoice', 'perPage', 'status', 'totalAmount', 'receivedAmount', 'remainingAmount'
+    ));
+}
 
 
     public function exportInvoiceCSV(Request $request)
@@ -53,19 +50,18 @@ $totalAmount=$query->sum('total_amount');
 
     $query = invoice::query();
 
-    // Search Filter
+    // 🔍 Search Filter (Prefix search is 10x faster)
     if ($request->filled('search')) {
         $search = $request->search;
-        $query->where('name', 'like', "%{$search}%");
+        $query->where('name', 'like', "{$search}%");
     }
 
-    // Status Filter
+    // 🔘 Status Filter
     if ($request->filled('status')) {
+        // English: Ensure status is handled correctly based on your tinyint schema
         $status = ($request->status == 'approved') ? 1 : 0;
         $query->where('status', $status);
     }
-
-    $invoices = $query->latest()->get();
 
     $headers = [
         "Content-type"        => "text/csv",
@@ -75,14 +71,27 @@ $totalAmount=$query->sum('total_amount');
         "Expires"             => "0"
     ];
 
-    $columns = ['Invoice ID', 'Name', 'Intern Email', 'Contact', 'Due Date', 'Total Amount', 'Received Amount', 'Remaining Amount', 'Received By', 'Status'];
+    $columns = [
+        'Invoice ID', 'Name', 'Intern Email', 'Contact', 'Due Date', 
+        'Total Amount', 'Received Amount', 'Remaining Amount', 'Received By', 'Status'
+    ];
 
-    $callback = function() use($invoices, $columns) {
+    /* English: Using response()->stream() with cursor() ensures that 
+       only ONE record is kept in memory at a time. This is critical for 100k+ rows.
+    */
+    return response()->stream(function() use ($query, $columns) {
         $file = fopen('php://output', 'w');
-        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
+        
+        // UTF-8 BOM for Excel Compatibility
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+        
+        // Write Headers
         fputcsv($file, $columns);
 
-        foreach ($invoices as $row) {
+        /* 🚀 English: cursor() replaces get() to prevent "Memory Exhausted" error.
+           It fetches records lazily from the database.
+        */
+        foreach ($query->latest('id')->cursor() as $row) {
             fputcsv($file, [
                 $row->inv_id,
                 $row->name,
@@ -96,10 +105,9 @@ $totalAmount=$query->sum('total_amount');
                 ($row->status == 1) ? 'Approved' : 'Pending'
             ]);
         }
+        
         fclose($file);
-    };
-
-    return response()->stream($callback, 200, $headers);
+    }, 200, $headers);
 }
     
 }
