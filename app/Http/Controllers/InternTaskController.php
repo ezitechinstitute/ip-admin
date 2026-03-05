@@ -9,32 +9,39 @@ use Illuminate\Routing\Controller;
 
 class InternTaskController extends Controller
 {
-    public function index(Request $request){
-        $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    public function index(Request $request)
+{
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    $tasks = InternTask::with('intern')
-        ->when($request->filled('search'), function ($query) use ($request) {
-            $search = $request->search;
+    // English: Changed 'id' to 'task_id' to match your exact schema
+    $query = InternTask::select('task_id', 'eti_id', 'task_title', 'task_status', 'created_at')
+        ->with(['intern' => function($q) {
+            $q->select('eti_id', 'name'); 
+        }]);
 
-            $query->where(function ($q) use ($search) {
-                $q->where('task_title', 'like', "%{$search}%")
-                  ->orWhereHas('intern', function ($sub) use ($search) {
-                      $sub->where('name', 'like', "%{$search}%");
-                  });
-            });
-        })
-        ->when($request->filled('status'), function ($query) use ($request) {
-            $query->where('task_status', $request->status);
-        })
-        ->orderByDesc('created_at')
-        ->paginate($perPage)
-        ->withQueryString();
-
-        return view('pages.admin.intern-task.internTask',
-        compact('tasks', 'perPage'));
+    // 🔍 Search Optimization
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('task_title', 'like', "{$search}%")
+              ->orWhere('eti_id', 'like', "{$search}%");
+        });
     }
 
+    // 🔘 Status Filter
+    if ($request->filled('status')) {
+        $query->where('task_status', $request->status);
+    }
+
+    // English: Sorting by 'task_id' instead of 'id' to fix the 500 error
+    $query->orderBy('task_id', 'desc'); 
+
+    // 🔢 Pagination
+    $tasks = $query->paginate($perPage)->withQueryString();
+
+    return view('pages.admin.intern-task.internTask', compact('tasks', 'perPage'));
+}
 
     public function updateInternTask(Request $request){
         $request->validate([
@@ -52,24 +59,36 @@ class InternTaskController extends Controller
 
     public function exportInternTasksCSV(Request $request)
 {
-    // File name with current timestamp
+    // English: Prevent timeouts and set a safe memory limit for 200k+ rows
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $fileName = 'intern_tasks_export_' . date('Y-m-d_H-i-s') . '.csv';
 
-    // Fetching data based on your index logic
-    $tasks = InternTask::with(['intern'])
-        ->when($request->filled('search'), function ($query) use ($request) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('task_title', 'like', "%{$search}%")
-                  ->orWhereHas('intern', function ($sub) use ($search) {
-                      $sub->where('name', 'like', "%{$search}%");
-                  });
-            });
-        })
-        ->when($request->filled('status'), function ($query) use ($request) {
-            $query->where('task_status', $request->status);
-        })
-        ->get();
+    // 1. Optimized Query (English: We exclude 'task_screenshot' to save bandwidth/RAM)
+    $query = InternTask::select([
+        'task_id', 'eti_id', 'task_title', 'task_start', 'task_end', 
+        'task_duration', 'task_days', 'task_status', 'task_obt_points', 
+        'task_points', 'review', 'submit_description', 'task_live_url', 'task_git_url'
+    ])->with(['intern' => function($q) {
+        $q->select('eti_id', 'name'); // English: Selective eager loading
+    }]);
+
+    // 🔍 Search Optimization
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            // English: Prefix search for index efficiency
+            $q->where('task_title', 'like', "{$search}%")
+              ->orWhereHas('intern', function ($sub) use ($search) {
+                  $sub->where('name', 'like', "{$search}%");
+              });
+        });
+    }
+
+    if ($request->filled('status')) {
+        $query->where('task_status', $request->status);
+    }
 
     $headers = [
         "Content-type"        => "text/csv",
@@ -79,36 +98,21 @@ class InternTaskController extends Controller
         "Expires"             => "0"
     ];
 
-    // Column titles for the CSV file
-    $columns = [
-        'Intern Name', 
-        'ETI ID', 
-        'Task Title', 
-        'Start Date', 
-        'End Date', 
-        'Duration', 
-        'Days', 
-        'Status', 
-        'Obtained Points', 
-        'Total Points', 
-        'Review', 
-        'Description', 
-        'Task Live URL',
-        'Task Git URL'
-    ];
+    $columns = ['Intern Name', 'ETI ID', 'Task Title', 'Start Date', 'End Date', 'Duration', 'Days', 'Status', 'Obtained Points', 'Total Points', 'Review', 'Description', 'Task Live URL', 'Task Git URL'];
 
-    $callback = function() use($tasks, $columns) {
+    // 2. Stream Response (English: Using cursor() to handle 200,000 rows without RAM spikes)
+    return response()->stream(function() use ($query, $columns) {
         $file = fopen('php://output', 'w');
         
-        // Add UTF-8 BOM for proper Excel rendering (fixes special characters)
+        // Add UTF-8 BOM for Excel
         fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-        
-        // Write the header columns
         fputcsv($file, $columns);
 
-        foreach ($tasks as $task) {
+        
+        // English: cursor() processes one row at a time, keeping memory flat
+        foreach ($query->orderBy('task_id', 'desc')->cursor() as $task) {
             fputcsv($file, [
-                $task->intern->name ?? 'N/A',      // From InternAccount model
+                $task->intern->name ?? 'N/A',
                 $task->eti_id,
                 $task->task_title,
                 $task->task_start,
@@ -116,17 +120,18 @@ class InternTaskController extends Controller
                 $task->task_duration,
                 $task->task_days,
                 ucfirst($task->task_status),
-                $task->task_obt_points ?? '',      // Show empty cell if null
-                $task->task_points ?? '',          // Show empty cell if null
+                $task->task_obt_points ?? '',
+                $task->task_points ?? '',
                 $task->review,
                 $task->submit_description,
                 $task->task_live_url,
                 $task->task_git_url,
             ]);
+
+            // English: Periodically flush data to the browser
+            flush();
         }
         fclose($file);
-    };
-
-    return response()->stream($callback, 200, $headers);
+    }, 200, $headers);
 }
 }

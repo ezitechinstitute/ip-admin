@@ -100,7 +100,7 @@
       appearance: none;
   }
 </style>
-            <select name="status" id="statusFilter" class="form-select text-capitalize">
+            {{-- <select name="status" id="statusFilter" class="form-select text-capitalize">
               <option value="">Select Status</option>
 
               @foreach (['Interview','Contact','Test','Completed','Active','Removed'] as $status)
@@ -110,7 +110,7 @@
                 {{ $status }}
               </option>
               @endforeach
-            </select>             
+            </select>              --}}
 
            
 

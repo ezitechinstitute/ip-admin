@@ -11,38 +11,40 @@ use Illuminate\Routing\Controller;
 
 class InternAccountsController extends Controller
 {
-    public function interAccounts(Request $request){
-
+    public function interAccounts(Request $request)
+{
+    // English: Fetch pagination limit from admin settings
     $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    $query = InternAccount::query();
+    // English: Changed 'id' to 'int_id' to match your table schema
+    $query = InternAccount::select('int_id', 'eti_id', 'name', 'email', 'int_status', 'int_technology');
 
-    // 🔍 Search
+    // 🔍 Optimized Search
     if ($request->filled('search')) {
         $search = $request->search;
 
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
+            // English: Prefix search (search%) for high performance with 3L+ records
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%");
         });
     }
 
-    // 🔘 Status filter with default 'interview'
-    $status = $request->status; // raw status from request
-
-   
-    if(!empty($status)){
-        $query->where('int_status', strtolower($status));
+    // 🔘 Status Filter
+    $status = $request->status;
+    if (!empty($status)) {
+        $query->where('int_status', $status);
     }
     
-    //get latest record
-    // $query->latest();
+    // English: Sorting by 'int_id' instead of 'id' to fix the 500 error
+    $query->orderBy('int_id', 'desc');
     
+    // 🔢 Pagination
     $internAccounts = $query->paginate($perPage)->withQueryString();
 
     return view('pages.admin.intern-accounts.internAccounts', compact('internAccounts', 'perPage', 'status'));
-    }
+}
 
     public function updateInternAccount(Request $request){
 $request->validate([
@@ -65,54 +67,57 @@ $request->validate([
 
     public function InternViewProfileAccount(Request $request, $id)
 {
-    // Intern info
+    // English: Fetch intern using int_id
     $interneAccountDetails = InternAccount::where('int_id', $id)->firstOrFail();
-
+    
     $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    // Tasks list (with search + pagination)
-    $tasks = ProjectTask::with('project')
-        ->where('eti_id', $interneAccountDetails->eti_id)
-        ->when($request->filled('search'), function ($query) use ($request) {
-            $search = $request->search;
+    // English: Always select only necessary columns to save memory (RAM)
+    $query = ProjectTask::select('task_id', 'project_id', 'eti_id', 'task_title', 'task_status', 'created_at')
+        ->where('eti_id', trim($interneAccountDetails->eti_id))
+        ->with(['project' => function($q) {
+            $q->select('project_id', 'title');
+        }]);
 
-            $query->where(function ($q) use ($search) {
-                $q->where('task_title', 'like', "%{$search}%")
-                  ->orWhereHas('project', function ($sub) use ($search) {
-                      $sub->where('title', 'like', "%{$search}%");
-                  });
+    // 🔍 Optimized Search
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            // English: Use prefix search 'search%' for better index performance
+            $q->where('task_title', 'like', "{$search}%");
+            
+            // English: Only use whereHas if absolutely necessary as it slows down large tables
+            $q->orWhereHas('project', function ($sub) use ($search) {
+                $sub->where('title', 'like', "{$search}%");
             });
-        })
-        ->orderByDesc('created_at')
-        ->paginate($perPage)
-        ->withQueryString();
+        });
+    }
 
-    // ✅ TOTAL TASKS DONE
+    // English: Ordering by Primary Key (task_id) is much faster than 'created_at'
+    $tasks = $query->orderBy('task_id', 'desc')->paginate($perPage)->withQueryString();
+
+    // ✅ COUNTS (English: These run fast if 'eti_id' and 'task_status' are indexed)
     $totalTasksDone = ProjectTask::where('eti_id', $interneAccountDetails->eti_id)
-        ->where('task_status', 'Approved')
+        ->whereIn('task_status', ['Approved', 'Completed'])
         ->count();
 
-    // ✅ PROJECTS DONE (unique projects with completed tasks)
     $projectsDone = InternProject::where('eti_id', $interneAccountDetails->eti_id)
-        ->where('pstatus', 'Completed')
-        ->distinct('project_id')
-        ->count('project_id');
-    // return $tasks;
+        ->whereIn('pstatus', ['Completed', 'Approved'])
+        ->count();
+
     return view(
         'pages.admin.intern-accounts.internViewProfile',
-        compact(
-            'interneAccountDetails',
-            'tasks',
-            'perPage',
-            'totalTasksDone',
-            'projectsDone'
-        )
+        compact('interneAccountDetails', 'tasks', 'perPage', 'totalTasksDone', 'projectsDone')
     );
 }
 
-    public function exportInternAccountsCSV(Request $request)
+   public function exportInternAccountsCSV(Request $request)
 {
+    // English: Remove execution time limit and increase memory for massive export
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     // 1. Permission Check
     $settings = \App\Models\AdminSetting::first();
     $permissions = $settings->export_permissions ?? [];
@@ -123,43 +128,51 @@ $request->validate([
     // 2. Clear buffers to avoid extra whitespace/errors in CSV
     if (ob_get_level()) ob_end_clean();
 
-    // 3. Query
-    $query = \App\Models\InternAccount::query();
+    // 3. Optimized Query (English: Selecting only needed columns to reduce RAM usage)
+    $query = \App\Models\InternAccount::select([
+        'eti_id', 'name', 'email', 'phone', 'int_technology', 'int_status', 'start_date', 'review'
+    ]);
 
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
+            // English: Use prefix search for index optimization
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('email', 'like', "{$search}%");
         });
     }
 
     if ($request->filled('status')) {
-        $query->where('int_status', strtolower($request->status));
+        // English: Avoid strtolower() inside where clause to keep index active
+        $query->where('int_status', $request->status);
     }
 
-    $interns = $query->get();
-
-    // 4. File Setup
-    $fileName = 'Intern_Accounts_' . date('Y-m-d') . '.csv';
+    // 4. File Setup & Streaming
+    $fileName = 'Intern_Accounts_' . date('Y-m-d_His') . '.csv';
     
-    return response()->stream(function() use($interns) {
+    // English: Passing the $query instead of $interns (data) to avoid memory overload
+    return response()->stream(function() use($query) {
         $file = fopen('php://output', 'w');
         
         // CSV Headers
         fputcsv($file, ['ETI-ID', 'Name', 'Email', 'Phone', 'Technology', 'Status', 'Start Date', 'Review']);
 
-        foreach ($interns as $intern) {
+        // English: Using cursor() to fetch 1 row at a time from 3L+ records
+        
+        foreach ($query->orderBy('int_id', 'desc')->cursor() as $intern) {
             fputcsv($file, [
                 $intern->eti_id,
                 $intern->name,
                 $intern->email,
-                $intern->phone,
+                " " . $intern->phone, // English: Space prevents scientific notation in Excel
                 $intern->int_technology,
                 ucfirst($intern->int_status),
                 $intern->start_date,
                 $intern->review
             ]);
+
+            // English: Periodically flush buffer to keep download active
+            flush();
         }
         fclose($file);
     }, 200, [

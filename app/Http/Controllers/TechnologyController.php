@@ -9,36 +9,33 @@ use Illuminate\Routing\Controller;
 
 class TechnologyController extends Controller
 {
-    public function technologyData(Request $request){
-
-       $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    public function technologyData(Request $request)
+{
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     $query = Technologies::query();
 
-    // 🔍 Search
+    // 🔍 Search (Prefix search for better index usage)
     if ($request->filled('search')) {
         $search = $request->search;
-
-        $query->where(function ($q) use ($search) {
-            $q->where('technology', 'like', "%{$search}%");
-        });
+        // English: Using prefix search to utilize B-Tree indexing on 'technology' column
+        $query->where('technology', 'like', "{$search}%");
     }
 
-    // 🔘 Status filter with default 'interview'
-    $status = $request->status; // raw status from request
-
-   
+    // 🔘 Status Filter
     if ($request->filled('status')) {
         $query->where('status', $request->status);
     }
-    //get latest record
-    $query->latest();
-    
-    $allTechnologies = $query->paginate($perPage)->withQueryString();
 
-        return view('pages.admin.technology.technology', compact('allTechnologies', 'perPage'));
-    }
+    // 📄 Efficient Sorting & Pagination
+    /* English: Fixed column name to tech_id to match your database schema.
+       Sorting by primary key is the fastest way to handle 100k+ records.
+    */
+    $allTechnologies = $query->latest('tech_id')->paginate($perPage)->withQueryString();
+
+    return view('pages.admin.technology.technology', compact('allTechnologies', 'perPage'));
+}
 
     public function addTechnology(Request $request){
         $request->validate(['technology'=> 'required|unique:technologies,technology', 'status'=>'required|in:0,1']);
@@ -78,24 +75,27 @@ class TechnologyController extends Controller
 
 public function downloadTechnologiesCSV(Request $request)
 {
+    // English: Prevent timeouts and memory exhaustion for large datasets
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $query = Technologies::query();
 
-    // Apply the same filters used in the table view
+    // 🔍 Apply the same filters (Prefix optimized)
     if ($request->filled('search')) {
-        $query->where('technology', 'like', "%{$request->search}%");
+        $search = $request->search;
+        // English: Prefix search is faster for 100k+ rows
+        $query->where('technology', 'like', "{$search}%");
     }
 
     if ($request->filled('status')) {
         $query->where('status', $request->status);
     }
 
-    $technologies = $query->latest()->get();
-
     $fileName = 'technologies_export_' . date('Y-m-d') . '.csv';
     
     $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$fileName",
+        "Content-type"        => "text/csv; charset=UTF-8",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
@@ -103,20 +103,31 @@ public function downloadTechnologiesCSV(Request $request)
 
     $columns = ['#ID', 'Technology Name', 'Status'];
 
-    $callback = function() use($technologies, $columns) {
+    // English: Using streamDownload to push data directly to the browser
+    return response()->streamDownload(function() use ($query, $columns) {
+        // English: Clear output buffer to avoid ERR_INVALID_RESPONSE or HTML injection
+        if (ob_get_level() > 0) ob_end_clean();
+
         $file = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for proper Excel character rendering
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+        
+        // Write Headers
         fputcsv($file, $columns);
 
-        foreach ($technologies as $tech) {
+        /* 🚀 English: cursor() allows us to process 300,000+ rows by only 
+           keeping ONE record in memory at a time. Fixed to tech_id.
+        */
+        foreach ($query->latest('tech_id')->cursor() as $tech) {
             fputcsv($file, [
                 $tech->tech_id,
                 $tech->technology,
                 $tech->status == 1 ? 'Active' : 'Freeze'
             ]);
         }
-        fclose($file);
-    };
 
-    return response()->stream($callback, 200, $headers);
+        fclose($file);
+    }, $fileName, $headers);
 }
 }

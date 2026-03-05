@@ -9,6 +9,7 @@ use App\Models\SupervisorLeave;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 
 class AdminLeaveController extends Controller
 {
@@ -151,4 +152,88 @@ $leave = new LengthAwarePaginator(
         Leave::where('leave_id', $id)->update(['leave_status' => 0]);
         return back()->with('error', 'Intern leave rejected');
     }
+
+
+
+
+
+    public function exportLeavesCSV(Request $request)
+{
+    // English: Setting time limit to 0 for large datasets (1 Lakh+)
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
+    $fileName = 'leaves_report_' . date('Y-m-d') . '.csv';
+
+    // 1. Base Queries
+    $internQuery = DB::table('intern_leaves')
+        ->select('leave_id', 'name', 'email', 'reason', 'from_date', 'to_date', 'leave_status', DB::raw("'intern' as source"));
+
+    $employeeQuery = DB::table('employee_leaves')
+        ->select('leave_id', 'name', 'email', 'reason', 'from_date', 'to_date', 'leave_status', DB::raw("'employee' as source"));
+
+    $supervisorQuery = DB::table('supervisor_leaves')
+        ->select('leave_id', 'name', 'email', 'reason', 'from_date', 'to_date', 'leave_status', DB::raw("'supervisor' as source"));
+
+    // 2. Filter Logic
+    if ($request->leave_type === 'employee') { $query = $employeeQuery; }
+    elseif ($request->leave_type === 'supervisor') { $query = $supervisorQuery; }
+    elseif ($request->leave_type === 'intern') { $query = $internQuery; }
+    else { $query = $internQuery->unionAll($employeeQuery)->unionAll($supervisorQuery); }
+
+    $finalQuery = DB::table(DB::raw("({$query->toSql()}) as combined_leaves"))->mergeBindings($query);
+
+    // Filters
+    if ($request->status) {
+        $finalQuery->where('leave_status', ($request->status === 'approved' ? 1 : 0));
+    }
+    if ($request->filter_date) {
+        $finalQuery->where('from_date', '<=', $request->filter_date)->where('to_date', '>=', $request->filter_date);
+    }
+    if ($request->search) {
+        $search = $request->search;
+        $finalQuery->where('name', 'like', "{$search}%");
+    }
+
+    $headers = [
+        "Content-type"        => "text/csv; charset=UTF-8",
+        "Content-Disposition" => "attachment; filename=\"$fileName\"",
+        "Pragma"              => "no-cache",
+        "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+        "Expires"             => "0"
+    ];
+
+    return response()->stream(function() use ($finalQuery) {
+        // English: Critical fix - Clear output buffer to avoid ERR_INVALID_RESPONSE
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        $file = fopen('php://output', 'w');
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM for Excel
+        
+        fputcsv($file, ['ID', 'Type', 'Name', 'Email', 'From', 'To', 'Reason', 'Status']);
+
+        // English: Using cursor to iterate over 100,000+ records without memory crash
+        $finalQuery->orderBy('from_date', 'desc')->cursor()->each(function ($row) use ($file) {
+            fputcsv($file, [
+                $row->leave_id, 
+                ucfirst($row->source), 
+                $row->name, 
+                $row->email, 
+                $row->from_date, 
+                $row->to_date, 
+                $row->reason, 
+                ($row->leave_status == 1) ? 'Approved' : 'Pending'
+            ]);
+        });
+
+        fclose($file);
+    }, 200, $headers);
+}
+
+
+
+
+
 }

@@ -17,6 +17,11 @@ class ProfileSettingsController extends Controller
             return redirect()->route('manager.login');
         }
 
+        if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_manager_profile_settings')) {
+        return redirect()->route('manager.dashboard')
+                         ->withErrors(['access_denied' => 'You do not have permission to access Profile Settings.']);
+    }
+
         return view('pages.manager.profile-settings.profileSettings', compact('manager'));
     }
 
