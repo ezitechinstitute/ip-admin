@@ -28,9 +28,21 @@ class InvoiceController extends Controller
 
     // 🔘 Status filter with default 'interview'
     $status = $request->status; // raw status from request
-$totalAmount=$query->sum('total_amount');
-    $receivedAmount=$query->sum('received_amount');
-    $remainingAmount=$query->sum('remaining_amount');
+// 🔘 Status filter
+if ($request->filled('status')) {
+    $status = $request->status == 'approved' ? 1 : 0;
+    $query->where('status', $status);
+}
+
+// 🔘 Invoice Type filter (NEW ADD)
+if ($request->filled('invoice_type')) {
+    $query->where('invoice_type', $request->invoice_type);
+}
+
+// Now calculate totals AFTER filters
+$totalAmount = $query->sum('total_amount');
+$receivedAmount = $query->sum('received_amount');
+$remainingAmount = $query->sum('remaining_amount');
    
     if(!empty($status)){
         $query->where('status', strtolower($status));
@@ -102,4 +114,82 @@ $totalAmount=$query->sum('total_amount');
     return response()->stream($callback, 200, $headers);
 }
     
+
+
+
+
+
+public function store(Request $request)
+{
+    $request->validate([
+        'inv_id' => 'required',
+        'name' => 'required',
+        'total_amount' => 'required|numeric',
+        'received_amount' => 'required|numeric',
+        'due_date' => 'nullable|date'
+    ]);
+
+   $total = $request->total_amount;
+$paid = $request->received_amount;
+
+if($paid > $total){
+    return back()->with('error','Received amount cannot exceed total amount');
 }
+
+$remaining = $total - $paid;
+
+if($paid == 0){
+    $status = 'pending';
+}
+elseif($remaining == 0){
+    $status = 'paid';
+}
+else{
+    $status = 'partial';
+}
+
+    Invoice::create([
+        'inv_id' => $request->inv_id,
+        'name' => $request->name,
+        'contact' => $request->contact,
+        'intern_email' => $request->intern_email,
+        'total_amount' => $total,
+        'received_amount' => $paid,
+        'remaining_amount' => $remaining,
+        'due_date' => $remaining > 0 ? $request->due_date : null,
+        'received_by' => auth()->user()->name ?? 'Admin',
+        'invoice_type' => $request->invoice_type,
+        'status' => $status
+    ]);
+
+    return redirect()->back()->with('success', 'Invoice Created Successfully');
+}
+
+
+
+public function addPayment(Request $request, $id)
+{
+    $invoice = Invoice::findOrFail($id);
+
+    $newPayment = $request->amount;
+
+    if($newPayment > $invoice->remaining_amount){
+        return back()->with('error','Amount exceeds remaining balance');
+    }
+
+    $invoice->received_amount += $newPayment;
+    $invoice->remaining_amount -= $newPayment;
+
+    if($invoice->remaining_amount == 0){
+        $invoice->status = 'paid';
+        $invoice->due_date = null;
+    } else {
+        $invoice->status = 'partial';
+    }
+
+    $invoice->save();
+
+    return back()->with('success','Payment Added Successfully');
+}
+}
+

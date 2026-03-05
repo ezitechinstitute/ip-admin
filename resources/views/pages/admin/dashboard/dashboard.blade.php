@@ -376,6 +376,14 @@ $configData = Helper::appClasses();
 
 
 </div>
+
+
+
+@foreach(auth()->user()->unreadNotifications as $notification)
+    <div class="notification-item">
+        {{ $notification->data['message'] }} - {{ $notification->data['intern_name'] }}
+    </div>
+@endforeach
 @endsection
 
 @push('scripts')

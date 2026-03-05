@@ -124,6 +124,7 @@
               <!-- Keep search & status in query -->
               <input type="hidden" name="search" value="{{ request('search') }}">
               <input type="hidden" name="status" value="{{ request('status') }}">
+              <input type="hidden" name="invoice_type" value="{{ request('invoice_type') }}">
             </form>
 
 
@@ -155,6 +156,7 @@
               <option value="{{ $slug }}" {{ request('status')==$slug ? 'selected' : '' }}>
                 {{ $status }}
               </option>
+
               @endforeach
             </select>
 
@@ -188,7 +190,21 @@
               </div>
             </div>
             @endif
+     <div class="mb-3">
+  <label for="invoiceTypeFilter" class="form-label d-block">
+    Invoice Type
+  </label>
 
+  <select name="invoice_type" id="invoiceTypeFilter" class="form-select">
+    <option value="">All Types</option>
+    <option value="internship" {{ request('invoice_type') == 'internship' ? 'selected' : '' }}>
+      Internship Invoice
+    </option>
+    <option value="course" {{ request('invoice_type') == 'course' ? 'selected' : '' }}>
+      Course Invoice
+    </option>
+  </select>
+</div>
           </form>
 
 
@@ -265,6 +281,7 @@
                @forelse ($invoice as $invoices) 
               <tr class="">
                 <td><span class="text-heading text-nowrap">{{ $invoices->inv_id }}</span></td>
+                
                 {{-- <td class="">
                   <div class="d-flex justify-content-start align-items-center user-name">
                     <div class="avatar-wrapper">
@@ -536,6 +553,9 @@
   document.getElementById('statusFilter').addEventListener('change', function () {
     document.getElementById('filterForm').submit();
   });
+  document.getElementById('invoiceTypeFilter').addEventListener('change', function () {
+    document.getElementById('filterForm').submit();
+});
 </script>
 
 
