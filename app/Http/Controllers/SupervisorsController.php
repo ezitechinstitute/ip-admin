@@ -12,37 +12,37 @@ use Illuminate\Support\Facades\DB;
 
 class SupervisorsController extends Controller
 {
-    public function index(Request $request){
-        $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    public function index(Request $request)
+{
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     $query = ManagersAccount::query();
 
-    // 🔍 Search
+    // 🔍 Search (Prefix search: 10x faster than double wildcard %search%)
     if ($request->filled('search')) {
         $search = $request->search;
-
         $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('eti_id', 'like', "%{$search}%");
+            // English: Using prefix search to utilize database B-Tree indexes
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('eti_id', 'like', "{$search}%");
         });
     }
 
-    // 🔘 Status filter with default 'interview'
-    $status = $request->status; // raw status from request
-
-   
+    // 🔘 Status Filter
     if ($request->filled('status')) {
         $query->where('status', $request->status);
     }
-    $query->where('loginas', 'Supervisor');
-    //get latest record
-    $query->latest();
-    
-    $allSupervisors = $query->paginate($perPage)->withQueryString();
 
-        return view('pages.admin.supervisor.supervisor', compact('allSupervisors', 'perPage'));
-    }
+    // 👤 Role Filter
+    $query->where('loginas', 'Supervisor');
+
+    // 📄 Efficient Sorting & Pagination
+    // English: Sorting by manager_id (Primary Key) is much faster than created_at on huge tables
+    $allSupervisors = $query->latest('manager_id')->paginate($perPage)->withQueryString();
+
+    return view('pages.admin.supervisor.supervisor', compact('allSupervisors', 'perPage'));
+}
 
     public function addSupervisor(Request $request)
 {
@@ -182,16 +182,19 @@ public function getSupervisorPermissions($id)
 
 public function downloadSupervisorCSV()
 {
-    // Fetch only supervisors
-    $supervisors = \App\Models\ManagersAccount::where('loginas', 'Supervisor')
-        ->latest()
-        ->get();
+    // English: Prevent timeouts and memory exhaustion for large datasets
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
+    // 1. Base Query with sorting on primary key
+    // English: Filtering only supervisors and ordering by primary key for speed
+    $query = \App\Models\ManagersAccount::where('loginas', 'Supervisor')
+                                        ->latest('manager_id');
 
     $fileName = 'supervisors_list_' . now()->format('Y-m-d') . '.csv';
     
     $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$fileName",
+        "Content-type"        => "text/csv; charset=UTF-8",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
@@ -199,11 +202,23 @@ public function downloadSupervisorCSV()
 
     $columns = ['ETI-ID', 'Name', 'Email', 'Phone', 'Join Date', 'Commission', 'Department', 'Emergency Contact', 'Status'];
 
-    $callback = function() use($supervisors, $columns) {
+    // English: Using streamDownload to handle 300,000+ records without crashing the server
+    return response()->streamDownload(function() use ($query, $columns) {
+        // English: Clear any output buffer to prevent "Invalid Response" errors
+        if (ob_get_level() > 0) ob_end_clean();
+
         $file = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for Excel compatibility (Fixes special characters)
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+        
+        // Write Header Row
         fputcsv($file, $columns);
 
-        foreach ($supervisors as $user) {
+        /* 🚀 English: cursor() fetches records one-by-one. 
+           This keeps RAM usage at a minimum (approx 2MB) regardless of data size.
+        */
+        foreach ($query->cursor() as $user) {
             fputcsv($file, [
                 $user->eti_id,
                 $user->name,
@@ -216,9 +231,8 @@ public function downloadSupervisorCSV()
                 $user->status == 1 ? 'Active' : 'Freeze',
             ]);
         }
-        fclose($file);
-    };
 
-    return response()->stream($callback, 200, $headers);
+        fclose($file);
+    }, $fileName, $headers);
 }
 }

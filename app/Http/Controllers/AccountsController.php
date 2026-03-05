@@ -12,14 +12,14 @@ class AccountsController extends Controller
     public function index(Request $request)
 {
     $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     $query = Account::query();
 
-    // 🔍 Search
+    // 🔍 Search Filter (Prefix search is faster)
     if ($request->filled('search')) {
         $search = $request->search;
-        $query->where('description', 'like', "%{$search}%");
+        $query->where('description', 'like', "{$search}%");
     }
 
     // 📅 From Date Filter
@@ -32,16 +32,18 @@ class AccountsController extends Controller
         $query->whereDate('date', '<=', $request->to_date);
     }
 
-    // 💰 Totals (after applying filters)
-    $totalCredit = $query->sum('credit');
-    $totalDebit = $query->sum('debit');
-    $totalBalance = $query->sum('balance');
+    // 💰 Optimized Totals (English: Calculate all 3 sums in ONE database hit)
+    // English: Using clone() to preserve filters for both Sums and Pagination
+    $sums = (clone $query)->selectRaw('SUM(credit) as total_c, SUM(debit) as total_d, SUM(balance) as total_b')
+                         ->first();
 
-    // 🗂 Latest first
-    $query->latest('date');
+    $totalCredit = $sums->total_c ?? 0;
+    $totalDebit = $sums->total_d ?? 0;
+    $totalBalance = $sums->total_b ?? 0;
 
-    // 📄 Paginate
-    $accounts = $query->paginate($perPage)->withQueryString();
+    // 🗂 Sorting & Pagination
+    // English: Adding ID to latest() ensures stable sorting on large datasets
+    $accounts = $query->latest('date')->latest('id')->paginate($perPage)->withQueryString();
 
     return view(
         'pages.admin.accounts.accounts', 
@@ -123,11 +125,15 @@ public function updateTransaction(Request $request, $id)
 
     public function exportAccountsCSV(Request $request)
 {
+    // English: Setting high limits for large dataset processing
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $query = Account::query();
 
-    // Apply same filters as index
+    // 🔍 Same Filters as Index (Optimized Search)
     if ($request->filled('search')) {
-        $query->where('description', 'like', "%{$request->search}%");
+        $query->where('description', 'like', $request->search . "%");
     }
     if ($request->filled('from_date')) {
         $query->whereDate('date', '>=', $request->from_date);
@@ -136,13 +142,10 @@ public function updateTransaction(Request $request, $id)
         $query->whereDate('date', '<=', $request->to_date);
     }
 
-    $accounts = $query->orderBy('date', 'asc')->get();
-
     $filename = "accounts_report_" . now()->format('Y-m-d') . ".csv";
     
     $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$filename",
+        "Content-type"        => "text/csv; charset=UTF-8",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
@@ -150,11 +153,23 @@ public function updateTransaction(Request $request, $id)
 
     $columns = ['Date', 'Description', 'Credit', 'Debit', 'Balance'];
 
-    $callback = function() use($accounts, $columns) {
+    // English: Using streamDownload with cursor to handle 3 Lakh+ records efficiently
+    return response()->streamDownload(function() use ($query, $columns) {
+        // English: Clear output buffer to prevent "Invalid Response" or HTML injection
+        if (ob_get_level() > 0) ob_end_clean();
+
         $file = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for Excel compatibility
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+        
+        // Write Headers
         fputcsv($file, $columns);
 
-        foreach ($accounts as $account) {
+        /* 🚀 English: cursor() is the secret. It fetches records one-by-one 
+           from the database, keeping RAM usage near zero.
+        */
+        foreach ($query->orderBy('date', 'asc')->cursor() as $account) {
             fputcsv($file, [
                 $account->date,
                 $account->description,
@@ -163,10 +178,9 @@ public function updateTransaction(Request $request, $id)
                 $account->balance ?? 0,
             ]);
         }
-        fclose($file);
-    };
 
-    return response()->stream($callback, 200, $headers);
+        fclose($file);
+    }, $filename, $headers);
 }
 
 

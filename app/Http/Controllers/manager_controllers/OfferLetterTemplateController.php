@@ -14,6 +14,20 @@ class OfferLetterTemplateController extends Controller
 
 public function index(Request $request)
 {
+    $manager = Auth::guard('manager')->user();
+
+    if (!$manager) {
+        return redirect()->route('manager.login');
+    }
+
+    // --- Privilege Check Start ---
+    // Yahan check karein ke manager ke paas ye permission hai ya nahi
+    if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_manager_offer_letter_template')) {
+        return redirect()->route('manager.dashboard')
+                         ->withErrors(['access_denied' => 'You do not have permission to access Offer Letter Templates.']);
+    }
+
+
     // ⚙️ Fetch Pagination Limit
     $pageLimitSet = AdminSetting::first();
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
