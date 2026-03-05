@@ -109,27 +109,27 @@
 <div class="card">   
   <div class="card-datatable">
     <div class="justify-content-between dt-layout-table">
-        <div class="d-md-flex justify-content-between align-items-center  dt-layout-full table-responsive overflow-auto"
-          style="max-height: 600px;">
+       <div class="table-responsive">
           <table class="datatables-users table border-start border-end " id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
-            <thead class="border-top sticky-top bg-card">
+            <thead class="border-top bg-card fw-bold">
               <tr>
                 <th data-dt-column="1" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Full Name" tabindex="0"><span class="dt-column-title" role="button">#</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="2" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Profile Picture" tabindex="0"><span class="dt-column-title" role="button">Paid Amount
+                  aria-label="Profile Picture" tabindex="0"><span class="dt-column-title" role="button">Name
                   </span><span class="dt-column-order"></span></th>
                 <th data-dt-column="3" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Full Name" tabindex="0"><span class="dt-column-title" role="button">Remaining Balance</span><span
+                  aria-label="Full Name" tabindex="0"><span class="dt-column-title" role="button">Email</span><span
+                    class="dt-column-order"></span></th>
+                    <th data-dt-column="3" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                  aria-label="Full Name" tabindex="0"><span class="dt-column-title" role="button">Contact</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Next Due Date</span><span
+                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Remaining Amount</span><span
                     class="dt-column-order"></span></th>
-              <th data-dt-column="6" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
-                  aria-label="Join Date"><span class="dt-column-title">Status</span><span
-                    class="dt-column-order"></span></th>
+              
               
 
 
@@ -137,19 +137,20 @@
               </tr>
             </thead>
             <tbody>
-              {{--@forelse ($active as $intern)--}}
+              @forelse ($RemainingAmount as $RA)
               <tr class="">
 
-                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap"></span>1</td>
-                <td><span class="text-heading text-nowrap"><small></small>6000</span></td>
-                <td><span class="text-heading text-nowrap"></span>3000</td>
-                <td><span class="text-heading text-nowrap"></span>2026-03-15</td>
-                <td><span class="text-heading text-nowrap badge bg-warning"></span> Pending</td>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap"></span>{{$RA->id}}</td>
+                <td><span class="text-heading text-nowrap"><small></small>{{$RA->name}}</span></td>
+                <td><span class="text-heading text-nowrap"><small></small>{{$RA->email}}</span></td>
+                <td><span class="text-heading text-nowrap"><small></small>{{$RA->contact}}</span></td>
+                <td><span class="text-heading text-nowrap"><small></small>{{$RA->remaining_amount}}</span></td>
+   
               </tr>
-              {{--@empty
+              @empty
               <tr><td colspan="11">
                 <p class="text-center mb-0">No data available!</p></td></tr>
-              @endforelse--}}
+              @endforelse
 
 
 
@@ -160,46 +161,60 @@
             </tbody>
             <tfoot></tfoot>
           </table>
+           <div class="row mx-3 justify-content-between">
+        {{-- Info --}}
+        <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
+          <div class="dt-info" aria-live="polite">
+            Showing {{ $RemainingAmount->firstItem() ?? 0 }} to {{ $RemainingAmount->lastItem() ?? 0 }} of {{
+            $RemainingAmount->total() ??
+            0 }} entries
+          </div>
+        </div>
                   {{-- Pagination --}}
-       {{-- <div
-          class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
+        {{-- Pagination --}}
+        <div
+          class="d-md-flex align-items-center dt-layout-end mt-4 col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
           <div class="dt-paging">
             <nav aria-label="pagination">
               <ul class="pagination">
-                 First Page 
-                <li class="dt-paging-button page-item {{ $active->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $active->url(1) }}" aria-label="First">
+                {{-- First Page --}}
+                <li class="dt-paging-button page-item {{ $RemainingAmount->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $RemainingAmount->url(1) }}" aria-label="First">
                     <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
-                Previous Page 
-                <li class="dt-paging-button page-item {{ $active->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $active->previousPageUrl() }}" aria-label="Previous">
+                {{-- Previous Page --}}
+                <li class="dt-paging-button page-item {{ $RemainingAmount->onFirstPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $RemainingAmount->previousPageUrl() }}"
+                    aria-label="Previous">
                     <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
-                Page Numbers 
-                @foreach ($active->getUrlRange(max(1, $active->currentPage() - 2), min($active->lastPage(),
-                $active->currentPage() + 2)) as $page => $url)
-                <li class="dt-paging-button page-item {{ $page == $active->currentPage() ? 'active' : '' }}">
-                  <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                {{-- Page Numbers --}}
+                @foreach ($RemainingAmount->getUrlRange(max(1, $RemainingAmount->currentPage() - 2),
+                min($RemainingAmount->lastPage(),
+                $RemainingAmount->currentPage() + 2)) as $page => $url)
+                <li class="dt-paging-button page-item {{ $page == $RemainingAmount->currentPage() ? 'active' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $url }}">{{ $page }}</a>
                 </li>
                 @endforeach
 
-                Next Page 
+                {{-- Next Page --}}
                 <li
-                  class="dt-paging-button page-item {{ $active->currentPage() == $active->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $active->nextPageUrl() }}" aria-label="Next">
+                  class="dt-paging-button page-item {{ $RemainingAmount->currentPage() == $RemainingAmount->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $RemainingAmount->nextPageUrl() }}"
+                    aria-label="Next">
                     <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
-                Last Page 
+                {{-- Last Page --}}
                 <li
-                  class="dt-paging-button page-item {{ $active->currentPage() == $active->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $active->url($active->lastPage()) }}" aria-label="Last">
+                  class="dt-paging-button page-item {{ $RemainingAmount->currentPage() == $RemainingAmount->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $RemainingAmount->url($RemainingAmount->lastPage()) }}"
+                    aria-label="Last">
                     <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
@@ -207,8 +222,13 @@
             </nav>
           </div>
         </div>
-      </div>--}}
-        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
           
           
 @endsection

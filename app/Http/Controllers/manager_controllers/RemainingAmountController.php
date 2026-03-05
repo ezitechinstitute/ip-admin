@@ -3,33 +3,16 @@
 namespace App\Http\Controllers\manager_controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Illuminate\Http\Request;          // ✅ CORRECT
+use App\Models\AdminSetting;
+use App\Models\PaymentVoucher;
+use Illuminate\Support\Facades\DB;
 
 class RemainingAmountController extends Controller
 {
-    /**
-     * Show the Partial Payment & Remaining Balance page
-     */
     public function index()
     {
-        // Dummy data for frontend testing
-        $payments = [
-            [
-                'id' => 1,
-                'paid' => 3000,
-                'remaining' => 3000,
-                'due_date' => '2026-03-15',
-                'status' => 'Pending',
-            ],
-            [
-                'id' => 2,
-                'paid' => 6000,
-                'remaining' => 0,
-                'due_date' => '-',
-                'status' => 'Paid',
-            ],
-        ];
+        $RemainingAmount=DB::table('intern_remaining_amounts')->paginate(10);
 
-        return view('pages.manager.remainingBalance.remainingBalance');
-    }
-}
+        return view('pages.manager.remainingBalance.remainingBalance',compact('RemainingAmount'));
+}}
