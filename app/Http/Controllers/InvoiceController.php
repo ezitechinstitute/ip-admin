@@ -9,24 +9,25 @@ use Illuminate\Routing\Controller;
 
 class InvoiceController extends Controller
 {
-    public function invoice(Request $request){
-
+    public function invoice(Request $request)
+{
     $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     $query = invoice::query();
-    
 
-    // 🔍 Search
+    // 🔍 Search (Grouping orWhere is important!)
     if ($request->filled('search')) {
         $search = $request->search;
-        $query->where('name', 'like', "{$search}%"); 
-        $query->orWhere('inv_id', 'like', "{$search}%"); 
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "{$search}%")
+              ->orWhere('inv_id', 'like', "{$search}%");
+        });
     }
 
+    // 🔘 Status Mapping (0 = Pending, 1 = Approved)
     $status = $request->status ?? ''; 
-
-    if (!empty($status)) {
+    if ($request->filled('status')) {
         if (strtolower($status) === 'pending') {
             $query->where('status', 0);
         } elseif (strtolower($status) === 'approved') {
@@ -36,37 +37,26 @@ class InvoiceController extends Controller
         }
     }
 
+    // 🔘 Invoice Type Filter
+    if ($request->filled('invoice_type')) {
+        $query->where('invoice_type', $request->invoice_type);
+    }
+
+    // 💰 Calculate Totals AFTER all filters are applied
+    // English: Cloning the query ensures we get totals for the filtered results only
     $sumQuery = clone $query; 
     $totalAmount = $sumQuery->sum('total_amount');
     $receivedAmount = $sumQuery->sum('received_amount');
     $remainingAmount = $sumQuery->sum('remaining_amount');
 
-    // 📄 Pagination
+    // 📄 Pagination & Sorting
+    // English: latest('id') is faster than latest() without arguments
     $invoice = $query->latest('id')->paginate($perPage)->withQueryString();
 
-// 🔘 Invoice Type filter (NEW ADD)
-if ($request->filled('invoice_type')) {
-    $query->where('invoice_type', $request->invoice_type);
+    return view('pages.admin.invoice.invoice', compact(
+        'invoice', 'perPage', 'status', 'totalAmount', 'receivedAmount', 'remainingAmount'
+    ));
 }
-
-// Now calculate totals AFTER filters
-$totalAmount = $query->sum('total_amount');
-$receivedAmount = $query->sum('received_amount');
-$remainingAmount = $query->sum('remaining_amount');
-   
-    if(!empty($status)){
-        $query->where('status', strtolower($status));
-    }
-    
-   
-     $query->latest();
-    
-    $invoice = $query->paginate($perPage)->withQueryString();
-    
-    //dd($query->sum('total_amount'));
-
-    return view('pages.admin.invoice.invoice', compact('invoice', 'perPage', 'status', 'totalAmount','receivedAmount','remainingAmount'));
-    }
 
 
     public function exportInvoiceCSV(Request $request)
@@ -202,4 +192,3 @@ public function addPayment(Request $request, $id)
     return back()->with('success','Payment Added Successfully');
 }
 }
-
