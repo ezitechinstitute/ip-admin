@@ -29,14 +29,9 @@
 <!-- Users List Table -->
 <div class="col-12 mb-6">
   <h4 class="mt-6 mb-1">Withdraw</h4>
-  {{-- <p class="mb-0">Find all of your company’s administrator accounts and their associate roles.</p> --}}
 </div>
 <div class="card">
-  {{-- <div class="card-header border-bottom">
-    <h5 class="card-title mb-0">Interview Interns
-    </h5>
 
-  </div> --}}
   <div class="card-datatable">
     <div id="DataTables_Table_0_wrapper" class="dt-container dt-bootstrap5 dt-empty-footer">
       <div class="row m-3 my-0 justify-content-between">
@@ -52,7 +47,7 @@
                 <option value="100" {{ $perPage==100 ? 'selected' : '' }}>100</option>
               </select>
 
-              
+
               <!-- Keep search & status in query -->
               <input type="hidden" name="search" value="{{ request('search') }}">
               <input type="hidden" name="status" value="{{ request('status') }}">
@@ -65,22 +60,22 @@
 
         <div
           class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
-          <form method="GET"  id="filterForm" class="d-flex gap-2">
+          <form method="GET" id="filterForm" class="d-flex gap-2">
 
             <input type="search" name="search" id="searchInput" class="form-control" placeholder="Search Withdraw"
               value="{{ request('search') }}">
             <style>
-  input[type="search"]::-webkit-search-cancel-button,
-  input[type="search"]::-webkit-search-decoration {
-      -webkit-appearance: none;
-      appearance: none;
-  }
-</style>
-           <select name="status" id="statusFilter" class="form-select">
-  <option value="">Select Status</option>
-  <option value="1" {{ request('status')=='1' ? 'selected' : '' }}>Completed</option>
-  <option value="0" {{ request('status')=='0' ? 'selected' : '' }}>Pending</option>
-</select>
+              input[type="search"]::-webkit-search-cancel-button,
+              input[type="search"]::-webkit-search-decoration {
+                -webkit-appearance: none;
+                appearance: none;
+              }
+            </style>
+            <select name="status" id="statusFilter" class="form-select">
+              <option value="">Select Status</option>
+              <option value="1" {{ request('status')=='1' ? 'selected' : '' }}>Completed</option>
+              <option value="0" {{ request('status')=='0' ? 'selected' : '' }}>Pending</option>
+            </select>
 
             @php
             $adminSettings = \App\Models\AdminSetting::first();
@@ -126,10 +121,11 @@
         </div>
       </div>
       <div class="justify-content-between dt-layout-table">
-        <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto" style="max-height: 500px;">
+        <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto"
+          style="max-height: 500px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
-            
+
 
 
 
@@ -141,34 +137,34 @@
 
                 <th data-dt-column="1" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Profile Picture" tabindex="0"><span class="dt-column-title" role="button">Bank name
-                    </span><span class="dt-column-order"></span></th>
-                
-                    <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
+                  </span><span class="dt-column-order"></span></th>
+
+                <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Account number</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="3" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Account holder name
-</span><span
-                    class="dt-column-order"></span></th>
+                  </span><span class="dt-column-order"></span></th>
                 <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Description</span><span
                     class="dt-column-order"></span></th>
                 {{-- <th data-dt-column="6" rowspan="1" colspan="1"
                   class="dt-orderable-asc dt-orderable-desc text-nowrap" aria-label="Internship Duration" tabindex="0">
                   <span class="dt-column-title" role="button">Internship
-                    Duration</span><span class="dt-column-order"></span></th> --}}
+                    Duration</span><span class="dt-column-order"></span>
+                </th> --}}
                 <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
-                  aria-label="Join Date"><span class="dt-column-title">Date</span><span
-                    class="dt-column-order"></span></th>
-                    <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
+                  aria-label="Join Date"><span class="dt-column-title">Date</span><span class="dt-column-order"></span>
+                </th>
+                <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
                   aria-label="Join Date"><span class="dt-column-title">Amount</span><span
                     class="dt-column-order"></span></th>
-                  
+
                 <th data-dt-column="6" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
                   aria-label="Join Date"><span class="dt-column-title">STATUS</span><span
                     class="dt-column-order"></span></th>
 
-            
+
 
 
               </tr>
@@ -176,27 +172,28 @@
             <tbody>
               @forelse ($withdraws as $withdraw)
               <tr class="">
-              
-                <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->bank }}</span>
+
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->bank
+                    }}</span>
+                </td>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->ac_no
+                    }}</span>
+                </td>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->ac_name
+                    }}</span>
                 </td>
                 <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->ac_no }}</span>
+                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->description
+                    }}</span>
                 </td>
-                <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->ac_name }}</span>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->date
+                    }}</span>
                 </td>
-                <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->description }}</span>
                 </td>
-                <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->date }}</span>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->amount
+                    }}</span>
                 </td>
-                  </td>
-                <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->amount }}</span>
-                </td>
-               <td>
+                <td>
                   @php
                   // Map statuses to Bootstrap badge classes
                   $statusClasses = [
@@ -226,7 +223,7 @@
                   'freeze' => 'bg-label-danger',
                   ];
 
-                  $status = strtolower($projects->pstatus); 
+                  $status = strtolower($projects->pstatus);
                   $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
                   @endphp --}}
 
@@ -234,7 +231,7 @@
                 </td>
                 {{-- <td><span class="text-heading text-nowrap">{{$intern->duration}}</span></td> --}}
                 {{-- <td><span class="text-heading text-nowrap">1</span></td> --}}
-                
+
 
                 {{-- <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td> --}}
                 <td>
@@ -251,16 +248,13 @@
                     </form> --}}
 
                     {{-- <a href="javascript:void(0);"
-   class="btn btn-text-secondary rounded-pill waves-effect btn-icon edit-intern"
-   data-bs-toggle="modal"
-   data-bs-target="#editInternModal"
-   data-id="{{ $intern->int_id }}"
-   data-name="{{ $intern->name }}"
-   data-email="{{ $intern->email }}"
-   data-technology="{{ $intern->int_technology }}"
-   data-status="{{ strtolower($intern->int_status) }}">
-   <i class="icon-base ti tabler-edit icon-22px"></i>
-</a> --}}
+                      class="btn btn-text-secondary rounded-pill waves-effect btn-icon edit-intern"
+                      data-bs-toggle="modal" data-bs-target="#editInternModal" data-id="{{ $intern->int_id }}"
+                      data-name="{{ $intern->name }}" data-email="{{ $intern->email }}"
+                      data-technology="{{ $intern->int_technology }}"
+                      data-status="{{ strtolower($intern->int_status) }}">
+                      <i class="icon-base ti tabler-edit icon-22px"></i>
+                    </a> --}}
 
 
 
@@ -269,7 +263,8 @@
 
 
 
-                    {{-- <a href="https://demos.pixinvent.com/vuexy-html-laravel-admin-template/demo-1/app/user/view/account"
+                    {{-- <a
+                      href="https://demos.pixinvent.com/vuexy-html-laravel-admin-template/demo-1/app/user/view/account"
                       class="btn btn-text-secondary rounded-pill waves-effect btn-icon">
                       <i class="icon-base ti tabler-eye icon-22px"></i>
                     </a> --}}
@@ -302,7 +297,7 @@
         </div>
       </div>
       <div class="row mx-3 justify-content-between">
-      
+
         <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
           <div class="dt-info" aria-live="polite">
             Showing {{ $withdraws->firstItem() ?? 0 }} to {{ $withdraws->lastItem() ?? 0 }} of {{ $withdraws->total() ??
@@ -315,21 +310,21 @@
           <div class="dt-paging">
             <nav aria-label="pagination">
               <ul class="pagination">
-             
+
                 <li class="dt-paging-button page-item {{ $withdraws->onFirstPage() ? 'disabled' : '' }}">
                   <a class="page-link" href="{{ $withdraws->url(1) }}" aria-label="First">
                     <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
-                
+
                 <li class="dt-paging-button page-item {{ $withdraws->onFirstPage() ? 'disabled' : '' }}">
                   <a class="page-link" href="{{ $withdraws->previousPageUrl() }}" aria-label="Previous">
                     <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
 
-             
+
                 @foreach ($withdraws->getUrlRange(max(1, $withdraws->currentPage() - 2), min($withdraws->lastPage(),
                 $withdraws->currentPage() + 2)) as $page => $url)
                 <li class="dt-paging-button page-item {{ $page == $withdraws->currentPage() ? 'active' : '' }}">
@@ -337,7 +332,7 @@
                 </li>
                 @endforeach
 
-               
+
                 <li
                   class="dt-paging-button page-item {{ $withdraws->currentPage() == $withdraws->lastPage() ? 'disabled' : '' }}">
                   <a class="page-link" href="{{ $withdraws->nextPageUrl() }}" aria-label="Next">
@@ -345,7 +340,7 @@
                   </a>
                 </li>
 
-                
+
                 <li
                   class="dt-paging-button page-item {{ $withdraws->currentPage() == $withdraws->lastPage() ? 'disabled' : '' }}">
                   <a class="page-link" href="{{ $withdraws->url($withdraws->lastPage()) }}" aria-label="Last">
@@ -364,7 +359,7 @@
 </div>
 
 @push('scripts')
-  <script>
+<script>
   document.addEventListener('DOMContentLoaded', function () {
     const editModal = document.getElementById('editInternModal');
     
@@ -400,7 +395,7 @@
 @endpush
 
 @push('scripts')
-  <script>
+<script>
   let timer;
 
   document.getElementById('searchInput').addEventListener('keyup', function () {

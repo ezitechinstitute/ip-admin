@@ -92,7 +92,6 @@ if ($search) {
         return
             str_contains(strtolower($leave->name ?? ''), $s) ||
             str_contains(strtolower($leave->email ?? ''), $s) ||
-            str_contains(strtolower($leave->reason ?? ''), $s) ||
             str_contains((string)($leave->leave_id ?? ''), $s);
     });
 }

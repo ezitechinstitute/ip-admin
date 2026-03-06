@@ -641,7 +641,7 @@ Route::get('/get-template-preview/{templateId}/{internId}', [OfferLetterRequestC
          ->name('manager.get.template.preview');
 Route::post('/send-offer-letter', [OfferLetterRequestController::class, 'sendOfferLetter'])->name('send.offer.letter');
 
-
+Route::get('/download-offer-letter-pdf', [OfferLetterRequestController::class, 'downloadOfferLetterPdf'])->name('manager.download.pdf');
 
 
 

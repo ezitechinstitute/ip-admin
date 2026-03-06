@@ -4,13 +4,12 @@ namespace App\Http\Controllers\manager_controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminSetting;
-use App\Models\Intern;
 use App\Models\OfferLetterTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-
-
+use Illuminate\Support\Facades\DB;  // English: Correctly imported for DB transactions
+use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class OfferLetterRequestController extends Controller
@@ -138,28 +137,25 @@ public function updateStatus(Request $request)
 public function getTemplatePreview($templateId, $internId)
 {
     try {
-        // 1. Fetch Template (English: Using find() on Model)
-        $template = \App\Models\OfferLetterTemplate::find($templateId);
+        // 1. Fetch Template
+        $template = OfferLetterTemplate::find($templateId);
 
-        // 2. Fetch Request Data (English: Using where() to be safe with DB table)
-        $requestData = \DB::table('offer_letter_requests')->where('id', $internId)->first();
+        // 2. Fetch Request Data (Using the table you provided)
+        $requestData = DB::table('offer_letter_requests')->where('id', $internId)->first();
 
-        // 3. Validation Check
+        // 3. Validation
         if (!$template) {
-            return response()->json(['html' => '<p class="text-danger">Template not found (ID: '.$templateId.')</p>'], 404);
+            return response()->json(['html' => '<p class="text-danger">Template not found.</p>'], 404);
         }
         if (!$requestData) {
-            return response()->json(['html' => '<p class="text-danger">Intern data not found (ID: '.$internId.')</p>'], 404);
+            return response()->json(['html' => '<p class="text-danger">Intern data not found.</p>'], 404);
         }
 
-        // 4. Content Logic
-        $content = $template->content;
-
-        // 5. Replace Placeholders (English: Match these with your DB column names)
-        // Agar aapke table mein 'username' ki jagah 'name' hai toh usey change karein
-        $content = str_replace('{name}', $requestData->username ?? 'N/A', $content);
-        $content = str_replace('{email}', $requestData->email ?? 'N/A', $content);
-        $content = str_replace('{id}', $requestData->ezi_id ?? 'N/A', $content);
+        /** * 4. Content Replacement 
+         * English: We call the private helper method we created earlier 
+         * to handle all table columns (name, cnic, university, etc.)
+         */
+        $content = $this->replacePlaceholders($template->content, $requestData);
 
         return response()->json([
             'status' => 'success',
@@ -167,12 +163,11 @@ public function getTemplatePreview($templateId, $internId)
         ]);
 
     } catch (\Exception $e) {
-        // English: Log the exact error to storage/logs/laravel.log
-        \Log::error("Preview Error: " . $e->getMessage());
+        Log::error("Preview Error: " . $e->getMessage());
         
         return response()->json([
             'status' => 'error',
-            'html'   => '<p class="text-danger">Server Error: ' . $e->getMessage() . '</p>'
+            'html'   => '<div class="alert alert-danger">Server Error: ' . $e->getMessage() . '</div>'
         ], 500);
     }
 }
@@ -181,22 +176,172 @@ public function getTemplatePreview($templateId, $internId)
 
 public function sendOfferLetter(Request $request)
 {
-    // 1. Validation
-    $request->validate([
-        'intern_id'   => 'required',
-        'template_id' => 'required'
-    ]);
+    $request->validate(['intern_id' => 'required', 'template_id' => 'required']);
 
     try {
-        // English: Logic to fetch intern and template, then send email
-        // $intern = Intern::find($request->intern_id);
-        // $template = OfferLetterTemplate::find($request->template_id);
-        
-        // Email sending logic here...
+        $template = OfferLetterTemplate::findOrFail($request->template_id);
+
+        // English: Fetching data with joins as per your table structure
+        $intern = DB::table('offer_letter_requests')
+            ->leftJoin('intern_table', 'offer_letter_requests.username', '=', 'intern_table.name')
+            ->where('offer_letter_requests.id', $request->intern_id)
+            ->select('intern_table.*', 'offer_letter_requests.username as request_name', 'offer_letter_requests.email as request_email')
+            ->first();
+
+        if (!$intern) { return back()->with('error', 'Intern details not found.'); }
+
+        // 1. Process Content
+        $processedContent = $this->replacePlaceholders($template->content, $intern);
+
+        // 2. Build PDF HTML
+        // English: The "page-break-inside: avoid" rule is critical here
+        $pdfHtml = '
+        <html>
+        <head>
+            <style>
+                @page { margin: 0px; }
+                body { 
+                    margin: 0; padding: 0; 
+                    width: 100%; 
+                    font-family: "serif";
+                    line-height: 1.2; /* English: Reduced line height to save space */
+                }
+                .pdf-wrapper {
+                    width: 100%;
+                    page-break-inside: avoid; /* English: Forces everything to stay on one page */
+                }
+                table { 
+                    width: 100% !important; 
+                    border-collapse: collapse; 
+                }
+                [bgcolor="#003366"] {
+                    border-bottom-left-radius: 400px 80px !important;
+                    border-bottom-right-radius: 400px 80px !important;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="pdf-wrapper">
+                ' . $processedContent . '
+            </div>
+        </body>
+        </html>';
+
+        // 3. Generate PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($pdfHtml);
+        $pdf->setPaper('a4', 'portrait');
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true, 
+            'isRemoteEnabled' => true, 
+            'dpi' => 90
+        ]);
+
+        $pdfOutput = $pdf->output();
+
+        // 4. Email Body (Simple Wrapper)
+        $emailBody = '<div style="font-family: sans-serif; padding: 20px;">
+                        <p>Dear ' . ($intern->request_name ?? 'Intern') . ',</p>
+                        <p>Please find your Internship Offer Letter attached below.</p>
+                        <br>
+                        <p>Regards,<br>Ezline Software House Team</p>
+                      </div>';
+
+        // 5. Send Email
+        $emailTo = $intern->request_email ?? $intern->email;
+        $fileName = "Offer_Letter_" . str_replace(' ', '_', $intern->request_name) . ".pdf";
+
+        \Illuminate\Support\Facades\Mail::send([], [], function ($message) use ($emailTo, $emailBody, $pdfOutput, $fileName) {
+            $message->to($emailTo)
+                ->subject('Internship Offer Letter - Ezline Software House')
+                ->html($emailBody)
+                ->attachData($pdfOutput, $fileName, ['mime' => 'application/pdf']);
+        });
 
         return back()->with('success', 'Offer letter sent successfully!');
+
     } catch (\Exception $e) {
-        return back()->with('error', 'Something went wrong: ' . $e->getMessage());
+        return back()->with('error', 'Error: ' . $e->getMessage());
     }
 }
+
+
+
+
+
+    public function downloadOfferLetterPdf(Request $request)
+{
+    $template = OfferLetterTemplate::findOrFail($request->template_id);
+
+    $requestData = DB::table('offer_letter_requests')
+        ->leftJoin('intern_table', 'offer_letter_requests.username', '=', 'intern_table.name')
+        ->where('offer_letter_requests.id', $request->intern_id)
+        ->select('intern_table.*', 'offer_letter_requests.username as request_name', 'offer_letter_requests.email as request_email')
+        ->first();
+
+    if (!$requestData) {
+        return back()->with('error', 'Database Join Error: Intern details not found in intern_table for this request.');
+    }
+    
+    $content = $this->replacePlaceholders($template->content, $requestData);
+
+    $html = '
+    <html>
+    <head>
+        <style>
+            @page { margin: 0px; }
+            body { margin: 0; padding: 0; font-family: "Helvetica", sans-serif; font-size: 12px; background-color: white; }
+            .page-container { width: 100%; position: relative; }
+            .inner-content { width: 100%; margin: 0 auto; background-color: white; }
+            table { width: 100% !important; }
+            * { -webkit-print-color-adjust: exact; }
+        </style>
+    </head>
+    <body>
+        <div class="page-container">
+            <div class="inner-content">' . $content . '</div>
+        </div>
+    </body>
+    </html>';
+
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+    $pdf->setPaper('a4', 'portrait');
+    $pdf->setOptions([
+        'isHtml5ParserEnabled' => true, 
+        'isRemoteEnabled' => true,
+        'dpi' => 91
+    ]);
+
+   
+  $baseName = ($requestData->request_name ?? 'Intern') . ' Offer Letter';
+$fileName = str_replace(' ', '_', $baseName);
+    return $pdf->download($fileName . ".pdf");
+}
+
+private function replacePlaceholders($content, $data)
+{
+    $joinDateRaw = $data->join_date ?? null;
+    $join_date = $joinDateRaw ? date('d-M-Y', strtotime($joinDateRaw)) : date('d-M-Y');
+    
+    $duration = $data->duration ?? '3 Months';
+    $end_date = $joinDateRaw ? date('d-M-Y', strtotime($joinDateRaw . ' + ' . $duration)) : 'N/A';
+
+    $map = [
+        'name'        => $data->name ?? $data->request_name ?? 'Intern',
+        'email'       => $data->email ?? $data->request_email ?? 'N/A',
+        'join_date'   => $join_date,
+        'end_date'    => $end_date,
+        'technology'  => $data->technology ?? 'Development',
+        'duration'    => $duration,
+    ];
+
+    foreach ($map as $key => $value) {
+        $pattern = '/\{{1,2}\s*' . preg_quote($key, '/') . '\s*\}{1,2}/i';
+        $content = preg_replace($pattern, $value, $content);
+    }
+
+    return $content;
+}
+
+
+
 }

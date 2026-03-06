@@ -20,19 +20,29 @@ class InvoiceController extends Controller
     // 🔍 Search
     if ($request->filled('search')) {
         $search = $request->search;
-
-        $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%");
-                     });
+        $query->where('name', 'like', "{$search}%"); 
+        $query->orWhere('inv_id', 'like', "{$search}%"); 
     }
 
-    // 🔘 Status filter with default 'interview'
-    $status = $request->status; // raw status from request
-// 🔘 Status filter
-if ($request->filled('status')) {
-    $status = $request->status == 'approved' ? 1 : 0;
-    $query->where('status', $status);
-}
+    $status = $request->status ?? ''; 
+
+    if (!empty($status)) {
+        if (strtolower($status) === 'pending') {
+            $query->where('status', 0);
+        } elseif (strtolower($status) === 'approved') {
+            $query->where('status', 1);
+        } else {
+            $query->where('status', $status);
+        }
+    }
+
+    $sumQuery = clone $query; 
+    $totalAmount = $sumQuery->sum('total_amount');
+    $receivedAmount = $sumQuery->sum('received_amount');
+    $remainingAmount = $sumQuery->sum('remaining_amount');
+
+    // 📄 Pagination
+    $invoice = $query->latest('id')->paginate($perPage)->withQueryString();
 
 // 🔘 Invoice Type filter (NEW ADD)
 if ($request->filled('invoice_type')) {

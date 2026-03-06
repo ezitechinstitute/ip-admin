@@ -80,7 +80,7 @@ $menuDataFinal = [$menuData];
   }
 </style>
     <div class="app-brand demo">
-      <a href="{{ url('/') }}" class="app-brand-link">
+      {{-- <a href="{{ url('/') }}" class="app-brand-link"> --}}
         @php
           // Fetch dynamic logo from AdminSettings for both roles
           $settings = \App\Models\AdminSetting::first();
@@ -95,7 +95,7 @@ $menuDataFinal = [$menuData];
           {{-- 2. Small Logo (Collapsed state) --}}
           <img src="{{ asset('assets/img/branding/ezitech.png') }}" class="logo-small" style="display: none; width: 35px;">
         </span>
-      </a>
+      {{-- </a> --}}
 
       <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
         <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
