@@ -55,6 +55,9 @@
         });
     }, 5000); // 5 seconds
 </script>
+@php
+$manager = auth()->guard('manager')->user();
+@endphp
 <div class="card">
 
   <div class="card-datatable">
@@ -117,12 +120,15 @@
 
           @if($isAdminAllowed)
           <div class="btn-group" role="group">
+            @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'excel_manager_offer_letter_request'))
             <button id="btnGroupDrop1" type="button" class="btn add-new btn-outline-primary dropdown-toggle"
               data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <i class="icon-base ti tabler-dots-vertical icon-md d-sm-none"></i>
               <i class="icon-base ti tabler-upload icon-xs me-2"></i>
               <span class="d-none d-sm-block">Export</span>
             </button>
+            @endif
             <div class="dropdown-menu" style="z-index: 1021" aria-labelledby="btnGroupDrop1">
               <a class="dt-button dropdown-item" href="javascript:void(0);" onclick="downloadOfferLetterCSV()">
                 <span>
@@ -262,6 +268,11 @@
               </td>
 
               <td>
+                @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'accept_manager_offer_letter_request') || $manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'reject_manager_offer_letter_request') || $manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'offer_letter_send_manager_offer_letter_request') || $manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'view_reason_manager_offer_letter_request'))
 
                 <div class="dropdown">
                   <a href="javascript:;"
@@ -275,6 +286,8 @@
 
 
                     @if ($offerletter->status != 'accept' && $offerletter->status != 'reject')
+                    @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'accept_manager_offer_letter_request'))
                        <a href="javascript:void(0);" 
    class="dropdown-item status-update-btn" 
    data-id="{{ $offerletter->offer_letter_id }}" 
@@ -282,7 +295,10 @@
    data-name="{{ $offerletter->username }}">
    Accept
 </a>
+@endif
 
+@if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'reject_manager_offer_letter_request'))
 <a href="javascript:void(0);" 
    class="dropdown-item status-update-btn" 
    data-id="{{ $offerletter->offer_letter_id }}" 
@@ -290,6 +306,7 @@
    data-name="{{ $offerletter->username }}">
    Reject
 </a>
+@endif
                     @endif
                   
 
@@ -298,6 +315,9 @@
     <input type="hidden" name="id" id="update_id">
     <input type="hidden" name="status" id="update_status">
 </form>
+
+@if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'offer_letter_send_manager_offer_letter_request'))
                     <a href="javascript:;" 
    class="dropdown-item offer-letter-send" 
    data-bs-toggle="modal"
@@ -305,14 +325,17 @@
    data-id="{{ $offerletter->id }}"> 
    Offer Letter Send
 </a>
+@endif
 
-
+@if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+  'view_reason_manager_offer_letter_request'))
 
                     <a href="javascript:void(0);" class="dropdown-item view-reason-btn" data-bs-toggle="modal"
                       data-bs-target="#viewReasonModal" data-name="{{ $offerletter->username }}"
                       data-reason="{{ $offerletter->reason ?? 'No reason provided.' }}">
                       View Reason
                     </a>
+                    @endif
 
 
 
@@ -322,7 +345,7 @@
 
                   </div>
                 </div>
-
+@endif
               </td>
 
 
@@ -378,7 +401,7 @@
         {{-- Offer Letter Send Modal --}}
         <div class="modal fade" id="offerLetterSendModal" tabindex="-1" aria-hidden="true"
           style="z-index: 9999 !important;">
-          <div class="modal-dialog modal-md modal-simple modal-dialog-centered">
+          <div class="modal-dialog modal-lg modal-simple modal-dialog-centered">
             <div class="modal-content p-2">
               <div class="modal-body">
                 <button type="button" class="btn-close"
@@ -404,16 +427,15 @@
 
     <div>
         <h6>Preview Template</h6>
-        {{-- English: This div will hold the dynamic preview --}}
-        <div id="template_preview_area" class="border p-3 rounded bg-light" style="min-height: 150px; max-height: 300px; overflow-y: auto;">
-            <p class="text-muted text-center">Please select a template to see preview</p>
+        <div id="template_preview_area" class="border p-3 text-center content-center rounded" style="min-height: 150px; display: flex; justify-content: center; align-items: center; border: 1px dotted blue !important; background-color: #f6f9fc; max-height: 1000px; overflow-y: auto;">
+            <p class="text-center text-primary">Please select a template to see preview</p>
         </div>
     </div>
 
     <div class="col-12 text-end mt-4">
-        <button type="button" id="downloadPdfBtn" class="btn btn-sm btn-label-secondary me-2">Download PDF</button>
+        <button type="button" id="downloadPdfBtn" class="btn btn-outline-success btn-sm me-2"><i class="menu-icon icon-base ti tabler-file-download"></i> Download PDF</button>
         <span>Or</span>
-        <button type="submit" class="btn btn-sm btn-primary ms-2">Send Email</button>
+        <button type="submit" class="btn btn-sm btn-primary ms-2"><i class="menu-icon icon-base ti tabler-mail-forward"></i> Send Email</button>
     </div>
 </form>
               </div>
@@ -635,6 +657,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         });
     }
+});
+</script>
+
+
+<script>
+  document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+    // 1. Get IDs from the form/modal
+    const templateId = document.getElementById('template_select').value;
+    const internId = document.getElementById('offer_intern_id').value; // Hidden input value
+
+    // 2. Validation
+    if (!templateId) {
+        alert("Please select a template first.");
+        return;
+    }
+
+    // 3. Build URL with Query Parameters
+    // English: Redirecting the browser to the download route with necessary IDs
+    const baseUrl = "{{ route('manager.download.pdf') }}";
+    const downloadUrl = `${baseUrl}?template_id=${templateId}&intern_id=${internId}`;
+
+    // 4. Trigger Download
+    window.location.href = downloadUrl;
 });
 </script>
 @endpush

@@ -12,14 +12,13 @@ class WithdrawManagerController extends Controller
     public function index(Request $request)
 {
     $pageLimitSet = AdminSetting::first();
-    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('perPage', $pageLimitSet->pagination_limit ?? 15);
 
     $query = Withdraw::query();
 
     // 🔍 Search (Prefix search is much faster on large datasets)
     if ($request->filled('search')) {
         $search = $request->search;
-        // English: Using prefix search to leverage database indexes effectively
         $query->where('ac_name', 'like', "{$search}%");
     }
 

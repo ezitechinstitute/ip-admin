@@ -206,15 +206,7 @@
         <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto" style="max-height: 500px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
-            <colgroup>
-              <col data-dt-column="1" style="width: 63.5375px;">
-              <col data-dt-column="2" style="width: 326.863px;">
-              <col data-dt-column="3" style="width: 170.125px;">
-              <col data-dt-column="4" style="width: 131.825px;">
-              <col data-dt-column="5" style="width: 212.475px;">
-              <col data-dt-column="6" style="width: 126.662px;">
-              <col data-dt-column="7" style="width: 181.312px;">
-            </colgroup>
+            
 
 
 
@@ -265,36 +257,33 @@
                @forelse ($invoice as $invoices) 
               <tr class="">
                 <td><span class="text-heading text-nowrap">{{ $invoices->inv_id }}</span></td>
-                {{-- <td class="">
-                  <div class="d-flex justify-content-start align-items-center user-name">
-                    <div class="avatar-wrapper">
-                      @if ($intern->image)
-                      <div class="avatar avatar-md me-4">
-                        <img src="{{ $intern->image }}" alt="{{ $intern->name }}" class="rounded-circle" />
-                      </div>
-                      @else
-                      <div class="avatar avatar-md me-4">
-                        <span class="avatar-initial rounded-circle bg-label-warning">
-                          {{ strtoupper(substr($intern->name, 0, 2)) }}
-                        </span>
-                      </div>
-                      @endif
-                    </div>
-
-                    <div class="d-flex flex-column"><a
-                        href="https://demos.pixinvent.com/vuexy-html-laravel-admin-template/demo-1/app/user/view/account"
-                        class="text-heading text-truncate"></a></div>
-                  </div>
-                </td> --}}
+             
              
                 <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{ $invoices->name }}</span>
+                    class="text-truncate d-flex align-items-center text-heading text-nowrap">
+                    
+                    @if ($invoices->name)
+                {{$invoices->name}}
+                @else
+                N/A
+                @endif
+                   </span>
                 </td>
                 <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{ $invoices->contact }}</span>
+                    class="text-truncate d-flex align-items-center text-heading text-nowrap">
+                      @if ( $invoices->contact)
+                {{ $invoices->contact}}
+                @else
+                N/A
+                @endif</span>
                 </td>
                 <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{ $invoices->due_date}}</span>
+                    class="text-truncate d-flex align-items-center text-heading text-nowrap">
+                    @if ( $invoices->due_date)
+                {{ $invoices->due_date}}
+                @else
+                N/A
+                @endif</span>
                 </td>
                 <td><span
                     class="text-truncate d-flex align-items-center text-heading text-nowrap">{{ $invoices->total_amount }}</span>
@@ -305,9 +294,7 @@
                 <td><span
                     class="text-truncate d-flex align-items-center text-heading text-nowrap">{{ $invoices->remaining_amount }}</span>
                 </td>
-                {{-- <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{ $invoices->status}}</span>
-                </td> --}}
+              
 
  <td>
                   @php

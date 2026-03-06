@@ -14,23 +14,22 @@ class AllManagerInternController extends Controller
 {
     public function myInterns(Request $request)
 {
-    // English: Authenticate manager
+    // English: Fast Auth Check
     $manager = auth()->guard('manager')->user();
     if (!$manager) return redirect()->route('login');
 
-    // English: Authorization check
+    // English: Authorization check using Gate
     if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_my_interns')) {
-        return redirect()->route('manager.dashboard')
-                         ->withErrors(['access_denied' => 'Access Denied.']);
+        return redirect()->route('manager.dashboard')->withErrors(['access_denied' => 'Access Denied.']);
     }
 
-    // English: Cache manager permissions for 1 hour to save DB queries
+    // 1. English: Optimized Permission Fetching (Using pluck directly for speed)
     $cacheKey = 'mgr_perms_' . $manager->manager_id;
     $permissions = cache()->remember($cacheKey, 3600, function() use ($manager) {
         return DB::table('manager_permissions')
             ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
             ->where('manager_permissions.manager_id', $manager->manager_id)
-            ->where('technologies.status', 1) 
+            ->where('technologies.status', 1)
             ->select('technologies.technology', 'manager_permissions.interview_type')
             ->get();
     });
@@ -38,41 +37,46 @@ class AllManagerInternController extends Controller
     $allowedTechNames = $permissions->pluck('technology')->unique()->toArray();
     $allowedInternTypes = $permissions->pluck('interview_type')->map(fn($t) => trim($t))->unique()->toArray();
 
-    // English: Use base query with ONLY required columns
+    // 2. English: Base Query setup (Keeping only essential columns)
     $query = DB::table('intern_table')
-        ->select('id', 'name', 'email', 'technology', 'intern_type', 'status', 'created_at')
+        ->select('id', 'name', 'email', 'technology', 'intern_type', 'status', 'created_at', 'image', 'phone', 'city', 'join_date')
         ->whereIn('status', ['Interview', 'Test', 'Contact', 'Completed', 'Active'])
         ->whereIn('technology', $allowedTechNames)
         ->whereIn('intern_type', $allowedInternTypes);
 
-    // English: Apply Filters
+    // 3. English: Optimized Filtering
     if ($request->filled('search')) {
         $search = $request->search;
-        // Optimization: Trailing wildcard only to utilize B-Tree index
-        $query->where('name', 'LIKE', $search . '%'); 
+        // English: Grouped Where is crucial so it doesn't break the whereIn logic above
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'LIKE', $search . '%')
+              ->orWhere('email', 'LIKE', $search . '%');
+        });
     }
 
     if ($request->filled('intern_type')) $query->where('intern_type', $request->intern_type);
     if ($request->filled('status')) $query->where('status', $request->status);
     if ($request->filled('tech')) $query->where('technology', str_replace('-', ' ', $request->tech));
 
-    // English: Optimization - Simplified Counts
-    // We only run counts if explicitly needed or cache them for 5 minutes
+    // 4. English: Super Fast Statistics (Executing only 1 optimized query)
     $statusCounts = cache()->remember('counts_' . $manager->manager_id, 300, function() use ($query) {
+        // English: Clone to avoid affecting the main pagination query
         return (clone $query)->select('status', DB::raw('count(*) as total'))
-            ->groupBy('status')->pluck('total', 'status')->toArray();
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
     });
 
-    $statuses = ['Interview', 'Contact', 'Test', 'Completed'];
-    foreach ($statuses as $s) if (!isset($statusCounts[$s])) $statusCounts[$s] = 0;
+    // English: Ensure all keys exist to avoid Blade errors
+    $defaultStatuses = ['Interview', 'Contact', 'Test', 'Completed', 'Active'];
+    foreach ($defaultStatuses as $s) {
+        if (!isset($statusCounts[$s])) $statusCounts[$s] = 0;
+    }
 
-    // English: Pagination - Use simplePaginate if data is massive (removes total count overhead)
-    // But since you need page numbers, we stay with paginate but optimize the limit
-    $perPage = $request->input('per_page', 15);
-
+    // 5. English: Pagination (Optimized for performance)
+    $perPage = (int) $request->input('per_page', 15);
     
-    
-    // English: Final execution using indexed order
+    // English: Order by ID desc is fast on indexed primary keys
     $interns = $query->orderBy('id', 'desc')
                      ->paginate($perPage)
                      ->withQueryString();

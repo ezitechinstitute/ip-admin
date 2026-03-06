@@ -50,7 +50,7 @@ public function index(Request $request)
     // 📄 Pagination
     $feedback = $query->paginate($perPage)->withQueryString();
 
-    return view('pages.admin.feedback.feedback', compact('feedback', 'perPage'));
+    return view('pages.admin.feedback.feedBack', compact('feedback', 'perPage'));
 }
 public function resolve($id)
 {

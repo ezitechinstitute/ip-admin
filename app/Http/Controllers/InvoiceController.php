@@ -19,17 +19,21 @@ class InvoiceController extends Controller
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where('name', 'like', "{$search}%"); 
+        $query->orWhere('inv_id', 'like', "{$search}%"); 
     }
 
-    // 🔘 Status filter
-    $status = $request->status;
+    $status = $request->status ?? ''; 
+
     if (!empty($status)) {
-        $query->where('status', strtolower($status));
+        if (strtolower($status) === 'pending') {
+            $query->where('status', 0);
+        } elseif (strtolower($status) === 'approved') {
+            $query->where('status', 1);
+        } else {
+            $query->where('status', $status);
+        }
     }
 
-    /* English: Logic remains the same, but using clone() ensures 
-       the sums are calculated based on the current filters/search.
-    */
     $sumQuery = clone $query; 
     $totalAmount = $sumQuery->sum('total_amount');
     $receivedAmount = $sumQuery->sum('received_amount');

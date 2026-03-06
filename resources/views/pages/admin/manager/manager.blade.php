@@ -127,7 +127,13 @@
 
             <input type="search" name="search" id="searchInput" class="form-control" placeholder="Search manager"
               value="{{ request('search') }}">
-
+<style>
+              input[type="search"]::-webkit-search-cancel-button,
+              input[type="search"]::-webkit-search-decoration {
+                -webkit-appearance: none;
+                appearance: none;
+              }
+            </style>
             <select name="status" id="statusFilter" class="form-select text-capitalize">
               <option value="">Select Status</option>
 
@@ -277,13 +283,13 @@
                       <div class="privilege-masonry">
                         @foreach($privilegeGroups as $group)
                         <div class="masonry-item">
-                          <div class="card shadow-sm border-0 mb-2"
-                            style="border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb !important;">
+                          <div class="card shadow-sm border-0 border-light mb-2"
+                            >
 
                             <div
-                              class="card-header d-flex justify-content-between align-items-center border-0 px-3 py-3"
-                              style="background-color: #f8f9fa;">
-                              <h6 class="mb-0 fw-bold" style="color: #333;">{{ $group['title'] }}</h6>
+                              class="card-header d-flex justify-content-between align-items-center p-2 bg-light"
+                              >
+                              <span class="fw-bold small">{{ $group['title'] }}</span>
                               <div class="d-flex align-items-center">
                                 <input type="checkbox" class="form-check-input me-2 mt-0 select-all-group"
                                   id="selectAll_{{ $loop->index }}">
@@ -298,7 +304,7 @@
                                 <li class="list-group-item d-flex align-items-center py-2 px-3 border-light">
                                   <input type="checkbox" name="permissions[]" value="{{ $privilege['key'] }}"
                                     class="form-check-input me-3 mt-0 group-item">
-                                  <span style="color: #555; font-size: 14px;">{{ $privilege['title'] }}</span>
+                                  <span style="font-size: 13px;">{{ $privilege['title'] }}</span>
                                 </li>
                                 @endforeach
                               </ul>
@@ -350,33 +356,9 @@
                         placeholder="Enter manager email" />
                     </div>
 
-                    {{-- <div class="col-12 col-md-6 form-control-validation mb-3">
-                      <label class="form-label" for="edit_password">Password</label>
-                      <div class="input-group input-group-merge">
-                        <input type="password" id="edit_password" class="form-control" name="password"
-                          placeholder="············" />
-                        <span class="input-group-text cursor-pointer" id="toggleEditPassword" style="font-size: 20px;">
-                          <i class="ti tabler-eye-off"></i>
-                        </span>
-                      </div>
-                    </div> --}}
 
 
 
-
-
-
-                    {{-- <div class="col-12 col-md-6 form-control-validation mb-3">
-                      <label class="form-label" for="edit_contact">Phone</label>
-                      <input type="text" id="edit_contact" name="contact" class="form-control"
-                        placeholder="Enter manager phone" />
-                    </div> --}}
-
-                    {{-- <div class="col-12 col-md-6 form-control-validation mb-3">
-                      <label for="edit_flatpickr-date" class="form-label">Join Date</label>
-                      <input type="text" class="form-control" name='join_date' placeholder="YYYY-MM-DD"
-                        id="edit_flatpickr-date" />
-                    </div> --}}
 
                     <div class="col-12 col-md-12 form-control-validation mb-3">
                       <label class="form-label" for="edit_comission">Commission (Rs:)</label>
@@ -423,11 +405,17 @@
                       <div class="privilege-masonry">
                         @foreach($privilegeGroups as $group)
                         <div class="masonry-item mb-3">
-                          <div class="card shadow-sm border-0" style="border: 1px solid #e5e7eb !important;">
-                            <div class="card-header d-flex justify-content-between align-items-center p-2"
-                              style="background-color: #f8f9fa;">
+                          <div class="card shadow-sm border border-light">
+                            <div class="card-header d-flex justify-content-between align-items-center p-2 bg-light"
+                              >
                               <span class="fw-bold small">{{ $group['title'] }}</span>
-                              <input type="checkbox" class="form-check-input edit-select-all-group">
+
+                              <div class="d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input edit-select-all-group me-2"
+                                  >
+                                <label class="small text-muted mb-0" style="font-size: 13px; cursor: pointer;"
+                                  >All</label>
+                              </div>
                             </div>
                             <div class="card-body p-0">
                               <ul class="list-group list-group-flush">
@@ -1206,8 +1194,8 @@
       </i></td>
             <td class="text-end">
               <div class="form-check" style="display: flex; justify-content: end;">
-                <input class="form-check-input me-2" type="checkbox" id="selectAll">
-                <label for='selectAll' class="form-check-label">Select All</label>
+                <input class="form-check-input me-2" type="checkbox" id="selectAllPer">
+                <label for='selectAllPer' class="form-check-label">Select All</label>
               </div>
             </td>
           </tr>
@@ -1251,7 +1239,7 @@
         });
         // ✅ Auto-check Select All if all permissions are selected
 const allCheckboxes = document.querySelectorAll('.tech-checkbox');
-const selectAll = document.getElementById('selectAll');
+const selectAll = document.getElementById('selectAllPer');
 
 if (allCheckboxes.length > 0) {
   const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
@@ -1259,7 +1247,7 @@ if (allCheckboxes.length > 0) {
 }
 
         // Select all logic
-        document.getElementById('selectAll').addEventListener('change', function () {
+        document.getElementById('selectAllPer').addEventListener('change', function () {
           document.querySelectorAll('.tech-checkbox').forEach(cb => {
             cb.checked = this.checked;
           });

@@ -12,7 +12,7 @@ class TechnologyController extends Controller
     public function technologyData(Request $request)
 {
     $pageLimitSet = AdminSetting::first();
-    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    $perPage = $request->input('perPage', $pageLimitSet->pagination_limit ?? 15);
 
     $query = Technologies::query();
 

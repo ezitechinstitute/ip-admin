@@ -110,7 +110,7 @@
             <select name="status" id="statusFilter" class="form-select text-capitalize">
               <option value="">Select Status</option>
 
-              @foreach (['Ongoing','Expired', 'Completed'] as $status)
+              @foreach (['Ongoing','Expired', 'Completed', 'Approved', 'Rejected', 'Submitted'] as $status)
               @php $slug = strtolower($status); @endphp
 
               <option value="{{ $slug }}" {{ request('status')==$slug ? 'selected' : '' }}>
@@ -208,16 +208,42 @@
                     class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$task->task_title}}</span>
                 </td>
                 <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$task->task_start}}</span>
+                    class="text-truncate d-flex align-items-center text-heading text-nowrap">
+                    
+                    
+                    @if ($task->task_start)
+                {{$task->task_start}}
+                @else
+                N/A
+                @endif</span>
                 </td>
                 <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$task->task_end}}</span>
+                    class="text-truncate d-flex align-items-center text-heading text-nowrap">
+                    
+                    @if ($task->task_end)
+                {{$task->task_end}}
+                @else
+                N/A
+                @endif</span>
                 </td>
                 <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$task->task_duration}}</span>
+                    class="text-truncate d-flex align-items-center text-heading text-nowrap">
+                    
+                    @if ($task->task_duration)
+                {{$task->task_duration}}
+                @else
+                N/A
+                @endif
+                  </span>
                 </td>
 
-                <td><span class="text-heading text-nowrap">{{$task->task_days}}</span></td>
+                <td><span class="text-heading text-nowrap">
+                  
+                   @if ($task->task_days)
+                {{$task->task_days}}
+                @else
+                N/A
+                @endif</span></td>
                 <td>
                   @php
                   $statusClasses = [
