@@ -190,21 +190,7 @@
               </div>
             </div>
             @endif
-     <div class="mb-3">
-  <label for="invoiceTypeFilter" class="form-label d-block">
-    Invoice Type
-  </label>
-
-  <select name="invoice_type" id="invoiceTypeFilter" class="form-select">
-    <option value="">All Types</option>
-    <option value="internship" {{ request('invoice_type') == 'internship' ? 'selected' : '' }}>
-      Internship Invoice
-    </option>
-    <option value="course" {{ request('invoice_type') == 'course' ? 'selected' : '' }}>
-      Course Invoice
-    </option>
-  </select>
-</div>
+    
           </form>
 
 
