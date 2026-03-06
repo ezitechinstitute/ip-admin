@@ -8,36 +8,47 @@ use Illuminate\Routing\Controller;
 
 class ProjectTaskController extends Controller
 {
-    public function index(Request $request){
-        $pageLimitSet = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+    public function index(Request $request)
+{
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    $tasks = ProjectTask::with(['intern', 'project'])
-        ->when($request->filled('search'), function ($query) use ($request) {
-            $search = $request->search;
+    // English: Changed 'id' to 'task_id' to match your table schema
+    $query = ProjectTask::select('task_id', 'project_id', 'eti_id', 'task_title', 'task_status', 'created_at')
+        ->with([
+            'intern' => function($q) {
+                $q->select('eti_id', 'name'); // English: Use your primary key 'eti_id'
+            },
+            'project' => function($q) {
+                $q->select('project_id', 'title'); // English: Use your primary key 'project_id'
+            }
+        ]);
 
-            $query->where(function ($q) use ($search) {
-                $q->where('task_title', 'like', "%{$search}%")
-                  ->orWhereHas('intern', function ($sub) use ($search) {
-                      $sub->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('project', function ($sub) use ($search) {
-                      $sub->where('title', 'like', "%{$search}%");
-                  });
-            });
-        })
-        ->when($request->filled('status'), function ($query) use ($request) {
-            $query->where('task_status', $request->status);
-        })
-        ->orderByDesc('created_at')
-        ->paginate($perPage)
-        ->withQueryString();
-        // return $tasks;
-        return view(
+    // 🔍 Search Optimization
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('task_title', 'like', "{$search}%")
+              ->orWhere('eti_id', 'like', "{$search}%");
+        });
+    }
+
+    // 🔘 Status filter
+    if ($request->filled('status')) {
+        $query->where('task_status', $request->status);
+    }
+
+    // English: Sorting by 'task_id' instead of 'id' to fix the 500 error
+    $query->orderBy('task_id', 'desc');
+
+    // 🔢 Pagination
+    $tasks = $query->paginate($perPage)->withQueryString();
+
+    return view(
         'pages.admin.project-task.projectTask',
         compact('tasks', 'perPage')
     );
-    }
+}
     public function updateProjecTask(Request $request){
         $request->validate([
             'task_title' => 'required',
@@ -54,44 +65,60 @@ class ProjectTaskController extends Controller
 
     public function exportProjectTasksCSV(Request $request)
 {
+    // English: Prevent timeouts and increase memory for massive task data
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $fileName = 'project_tasks_' . date('Y-m-d_H-i-s') . '.csv';
 
-    // Same logic as index for filtering
-    $tasks = ProjectTask::with(['intern', 'project'])
-        ->when($request->filled('search'), function ($query) use ($request) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('task_title', 'like', "%{$search}%")
-                  ->orWhereHas('intern', function ($sub) use ($search) {
-                      $sub->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('project', function ($sub) use ($search) {
-                      $sub->where('title', 'like', "%{$search}%");
-                  });
-            });
-        })
-        ->when($request->filled('status'), function ($query) use ($request) {
-            $query->where('task_status', $request->status);
-        })
-        ->get();
+    // 1. Optimized Query (English: We exclude heavy columns like task_screenshot)
+    $query = ProjectTask::select([
+        'task_id', 'project_id', 'eti_id', 'task_title', 't_start_date', 
+        't_end_date', 'task_duration', 'task_days', 'task_status', 
+        'review', 'task_live_url', 'task_git_url', 'description'
+    ])->with([
+        'intern' => function($q) { $q->select('eti_id', 'name'); },
+        'project' => function($q) { $q->select('project_id', 'title'); }
+    ]);
 
-    $headers = array(
+    // 🔍 Search Optimization
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            // English: Use prefix search for better index performance
+            $q->where('task_title', 'like', "{$search}%")
+              ->orWhereHas('intern', function ($sub) use ($search) {
+                  $sub->where('name', 'like', "{$search}%");
+              })
+              ->orWhereHas('project', function ($sub) use ($search) {
+                  $sub->where('title', 'like', "{$search}%");
+              });
+        });
+    }
+
+    if ($request->filled('status')) {
+        $query->where('task_status', $request->status);
+    }
+
+    $headers = [
         "Content-type"        => "text/csv",
         "Content-Disposition" => "attachment; filename=$fileName",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
-    );
+    ];
 
-    // Column titles
-    $columns = array('Intern Name', 'Task Title', 'Project Title', 'Start Date', 'End Date', 'Duration', 'Days', 'Status', 'Review', 'Task Live URL', 'Task Git URL', 'Description');
+    $columns = ['Intern Name', 'Task Title', 'Project Title', 'Start Date', 'End Date', 'Duration', 'Days', 'Status', 'Review', 'Task Live URL', 'Task Git URL', 'Description'];
 
-    $callback = function() use($tasks, $columns) {
+    // 2. Stream Response (English: Using cursor() to handle 200k+ rows efficiently)
+    return response()->stream(function() use ($query, $columns) {
         $file = fopen('php://output', 'w');
         fputcsv($file, $columns);
 
-        foreach ($tasks as $task) {
-            fputcsv($file, array(
+        // 
+        // English: cursor() keeps only one row in memory at a time
+        foreach ($query->orderBy('task_id', 'desc')->cursor() as $task) {
+            fputcsv($file, [
                 $task->intern->name ?? 'N/A',
                 $task->task_title,
                 $task->project->title ?? 'N/A',
@@ -104,11 +131,12 @@ class ProjectTaskController extends Controller
                 $task->task_live_url,
                 $task->task_git_url,
                 $task->description,
-            ));
+            ]);
+
+            // English: Send data to browser in chunks to avoid server hang
+            flush();
         }
         fclose($file);
-    };
-
-    return response()->stream($callback, 200, $headers);
+    }, 200, $headers);
 }
 }

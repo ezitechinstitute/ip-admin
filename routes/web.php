@@ -463,6 +463,7 @@ Route::get('/invoice',[InvoiceController::class,'invoice'])->name('invoice-page'
 Route::get('/export-invoices', [InvoiceController::class, 'exportInvoiceCSV'])->name('admin.export-invoices');
 
 
+
 // Managers
 Route::get('managers', [ManagersController::class, 'managersData'])->name('managers');
 Route::post('add-manager', [ManagersController::class, 'addManager'])->name('add-manager');
@@ -473,6 +474,9 @@ Route::get('manager/{id}/permissions', [ManagersController::class, 'getManagerPe
     ->name('manager.permissions.get');
 Route::get('/managers/export-csv', [ManagersController::class, 'downloadManagerCSV'])->name('managers.export.admin');
 Route::get('/managers/permissions/{id}', [ManagersController::class, 'getManagerRoles'])->name('admin.managers.roles.permissions');
+Route::get('/manager/resend-email/{id}', [ManagersController::class, 'resendEmail'])->name('manager.resend-email');
+
+
 
 // Supervisors
 Route::get('supervisors', [SupervisorsController::class, 'index'])->name('supervisors.admin');
@@ -507,6 +511,7 @@ Route::get('/export-intern-tasks', [InternTaskController::class, 'exportInternTa
 // ✅ CORRECT (inside admin prefix)
 Route::get('leave', [AdminLeaveController::class, 'index'])
     ->name('admin.leave');
+    Route::get('/leaves/export', [AdminLeaveController::class, 'exportLeavesCSV'])->name('admin.leaves.export');
 
 Route::post('employee-leave/approve/{id}', [AdminLeaveController::class, 'approveEmployee'])
     ->name('employee.leave.approve');
@@ -617,6 +622,19 @@ Route::delete('/offer-letter-template/delete/{id}', [OfferLetterTemplateControll
      ->name('manager.offer.letter.template.delete');
 
         Route::get('/offer-letter-request', [OfferLetterRequestController::class, 'index'])->name('manager.offer.letter.request');
+Route::get('/offer-letter-request/export', [OfferLetterRequestController::class, 'exportCSV'])
+         ->name('manager.offer-letter.export');
+        Route::post('/offer-letter-request/update-status', [OfferLetterRequestController::class, 'updateStatus'])
+         ->name('manager.offer-letter.update-status');
+
+Route::get('/get-template-preview/{templateId}/{internId}', [OfferLetterRequestController::class, 'getTemplatePreview'])
+         ->name('manager.get.template.preview');
+Route::post('/send-offer-letter', [OfferLetterRequestController::class, 'sendOfferLetter'])->name('send.offer.letter');
+
+
+
+
+
 
 
     Route::get('/remainingamount', [RemainingAmountController::class, 'index'])->name('manager.remainingamount');
@@ -675,3 +693,6 @@ Route::get('/knowledge-base/export',
 
 
    
+Route::fallback(function (){
+    return view('pages.pageNotFound');
+});

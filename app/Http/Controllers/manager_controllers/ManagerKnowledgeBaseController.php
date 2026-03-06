@@ -19,6 +19,12 @@ class ManagerKnowledgeBaseController extends Controller
             return redirect()->route('manager.login');
         }
 
+        if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_manager_knowledge_base')) {
+        return redirect()->route('manager.dashboard')
+                     ->withErrors(['access_denied' => 'You do not have permission to access the Knowledge Base.']);
+    }
+    // --- Privilege Check End ---
+
         $query = KnowledgeBase::query();
 
         // Filter only articles visible to manager

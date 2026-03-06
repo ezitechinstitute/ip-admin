@@ -141,9 +141,9 @@ $manager = auth()->guard('manager')->user();
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($templates as $template)
+                    @forelse ($templates as $key => $template)
                     <tr>
-                        <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap"></span>1</td>
+                        <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{ $key + 1 }}</span></td>
                         <td><span class="text-heading text-nowrap">{{$template->title}}</span></td>
                         <td>
                             @php
@@ -337,7 +337,7 @@ $manager = auth()->guard('manager')->user();
                 <div class="text-start mb-6">
                     <h4 class="role-title">Add New Template</h4>
                 </div>
-
+                
                 <form method="POST" action="{{ route('manager.offer.letter.template.create') }}" class="row g-3"
                     id="createTemplateForm">
                     @csrf
@@ -348,7 +348,8 @@ $manager = auth()->guard('manager')->user();
                     </div>
 
                     <div class="col-12 form-control-validation mb-3">
-                        <label class="form-label" for="edit-description">Content <span
+                        <label class="form-label" for="edit-description"><i class="icon-base ti tabler-info-circle icon-xs" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Offer letter should be in html with inline css" data-bs-original-title="Offer letter should be in html with inline css generate through AI(ChatGPT, Gemini)">
+      </i> Content <span
                                 class="text-primary">(Placeholders: name, email, join_date, end_date, technology,
                                 duration)</span></label>
                         <textarea name="content" rows="10" id="content" class="form-control" placeholder="Write body..."

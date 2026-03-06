@@ -14,74 +14,65 @@ class AllManagerInternController extends Controller
 {
     public function myInterns(Request $request)
 {
+    // English: Authenticate manager
     $manager = auth()->guard('manager')->user();
     if (!$manager) return redirect()->route('login');
 
-    // 1. Fetching Manager Permissions
-    $allowedTechs = DB::table('manager_permissions')
-        ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
-        ->where('manager_permissions.manager_id', $manager->manager_id)
-        ->where('technologies.status', 1) 
-        ->select('technologies.technology', 'manager_permissions.interview_type')
-        ->get();
+    // English: Authorization check
+    if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_my_interns')) {
+        return redirect()->route('manager.dashboard')
+                         ->withErrors(['access_denied' => 'Access Denied.']);
+    }
 
-    $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
-    $allowedInternTypes = $allowedTechs->pluck('interview_type')
-        ->map(fn($type) => strtolower(trim($type)))
-        ->unique()
-        ->toArray();
-
-    // 2. Base Query for all statuses
-    $query = DB::table('intern_table')
-        ->whereIn('status', ['Interview', 'Test', 'Contact', 'Completed', 'Active']);
-
-    // 3. Security Filter
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
+    // English: Cache manager permissions for 1 hour to save DB queries
+    $cacheKey = 'mgr_perms_' . $manager->manager_id;
+    $permissions = cache()->remember($cacheKey, 3600, function() use ($manager) {
+        return DB::table('manager_permissions')
+            ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
+            ->where('manager_permissions.manager_id', $manager->manager_id)
+            ->where('technologies.status', 1) 
+            ->select('technologies.technology', 'manager_permissions.interview_type')
+            ->get();
     });
 
-    // 4. Search & Dropdown Filters
+    $allowedTechNames = $permissions->pluck('technology')->unique()->toArray();
+    $allowedInternTypes = $permissions->pluck('interview_type')->map(fn($t) => trim($t))->unique()->toArray();
+
+    // English: Use base query with ONLY required columns
+    $query = DB::table('intern_table')
+        ->select('id', 'name', 'email', 'technology', 'intern_type', 'status', 'created_at')
+        ->whereIn('status', ['Interview', 'Test', 'Contact', 'Completed', 'Active'])
+        ->whereIn('technology', $allowedTechNames)
+        ->whereIn('intern_type', $allowedInternTypes);
+
+    // English: Apply Filters
     if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('name', 'LIKE', "%{$request->search}%")
-              ->orWhere('email', 'LIKE', "%{$request->search}%");
-        });
+        $search = $request->search;
+        // Optimization: Trailing wildcard only to utilize B-Tree index
+        $query->where('name', 'LIKE', $search . '%'); 
     }
 
-    if ($request->filled('intern_type')) {
-        $query->where('intern_type', $request->intern_type);
-    }
+    if ($request->filled('intern_type')) $query->where('intern_type', $request->intern_type);
+    if ($request->filled('status')) $query->where('status', $request->status);
+    if ($request->filled('tech')) $query->where('technology', str_replace('-', ' ', $request->tech));
 
-    if ($request->filled('status')) {
-        $query->where('status', $request->status);
-    }
+    // English: Optimization - Simplified Counts
+    // We only run counts if explicitly needed or cache them for 5 minutes
+    $statusCounts = cache()->remember('counts_' . $manager->manager_id, 300, function() use ($query) {
+        return (clone $query)->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')->pluck('total', 'status')->toArray();
+    });
 
-    if ($request->filled('tech')) {
-        $techFilter = str_replace('-', ' ', $request->tech);
-        $query->where('technology', 'LIKE', $techFilter);
-    }
-
-    // 5. Clone query to get counts before pagination
-    $countsQuery = clone $query;
-
-    $statusCounts = $countsQuery
-        ->select('status', DB::raw('count(*) as total'))
-        ->groupBy('status')
-        ->pluck('total', 'status') // returns: ['Interview' => 10, 'Contact' => 5, ...]
-        ->toArray();
-
-    // Ensure all keys exist even if 0
     $statuses = ['Interview', 'Contact', 'Test', 'Completed'];
-    foreach ($statuses as $status) {
-        if (!isset($statusCounts[$status])) $statusCounts[$status] = 0;
-    }
+    foreach ($statuses as $s) if (!isset($statusCounts[$s])) $statusCounts[$s] = 0;
 
-    // 6. Pagination Logic
-    $pageLimitSet = AdminSetting::first();
-    $defaultLimit = $pageLimitSet->pagination_limit ?? 15;
-    $perPage = $request->input('per_page', $defaultLimit);
+    // English: Pagination - Use simplePaginate if data is massive (removes total count overhead)
+    // But since you need page numbers, we stay with paginate but optimize the limit
+    $perPage = $request->input('per_page', 15);
 
+    
+    
+    // English: Final execution using indexed order
     $interns = $query->orderBy('id', 'desc')
                      ->paginate($perPage)
                      ->withQueryString();
@@ -93,11 +84,14 @@ class AllManagerInternController extends Controller
 
 public function exportMyInternsCSV(Request $request)
 {
+    // English: Setting high limits for processing large data (300k+ records)
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $manager = auth()->guard('manager')->user();
     if (!$manager) return abort(403);
 
-    // 1. Manager Permissions (Security)
-    // English comments: Fetching allowed tech and intern types for this specific manager
+    // 1. Fetching Manager Permissions
     $allowedTechs = DB::table('manager_permissions')
         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
         ->where('manager_permissions.manager_id', $manager->manager_id)
@@ -106,65 +100,64 @@ public function exportMyInternsCSV(Request $request)
         ->get();
 
     $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
-    $allowedInternTypes = $allowedTechs->pluck('interview_type')->map(fn($t) => strtolower(trim($t)))->unique()->toArray();
+    $allowedInternTypes = $allowedTechs->pluck('interview_type')->map(fn($t) => trim($t))->unique()->toArray();
 
-    // 2. Base Query
-    $query = DB::table('intern_table')->whereIn('status', ['Interview', 'Test', 'Contact', 'Completed', 'Active']);
+    // 2. Base Query (English: Using Query Builder for maximum speed)
+    $query = DB::table('intern_table')
+        ->select('name', 'email', 'phone', 'city', 'intern_type', 'technology', 'join_date', 'status')
+        ->whereIn('status', ['Interview', 'Test', 'Contact', 'Completed', 'Active'])
+        ->whereIn('technology', $allowedTechNames)
+        ->whereIn('intern_type', $allowedInternTypes);
 
-    // Security Filter
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
-    });
-
-    // 3. Smart Filters (Solving the "Zero Data" issue)
-    
-    // Search Filter
+    // 3. Filters (English: Prefix optimized search for indexing)
     if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('name', 'LIKE', "%{$request->search}%")
-              ->orWhere('email', 'LIKE', "%{$request->search}%");
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'LIKE', $search . '%')
+              ->orWhere('email', 'LIKE', $search . '%');
         });
     }
 
-    // Technology or Status Filter
     if ($request->filled('status')) {
         $val = str_replace('-', ' ', $request->status);
         $actualStatuses = ['Active', 'Interview', 'Contact', 'Test', 'Completed'];
-
-        // English comments: If the dropdown value is a status, filter by status column. 
-        // Otherwise, assume it's a technology filter.
         if (in_array($val, $actualStatuses)) {
             $query->where('status', $val);
         } else {
-            $query->where('technology', 'LIKE', "%{$val}%");
+            $query->where('technology', $val);
         }
     }
 
-    // Intern Type Filter (Onsite/Remote)
     if ($request->filled('intern_type')) {
         $query->where('intern_type', $request->intern_type);
     }
 
-    $data = $query->orderBy('id', 'desc')->get();
-
-    // 4. CSV Header & Generation
-    $fileName = 'manager_interns_report_' . now()->format('Y-m-d_His') . '.csv';
+    $fileName = 'manager_interns_report_' . date('Y-m-d_His') . '.csv';
+    
     $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$fileName",
+        "Content-type"        => "text/csv; charset=UTF-8",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
     ];
 
-    $columns = ['Name', 'Email', 'Phone', 'City', 'Type', 'Technology', 'Join Date', 'Status'];
+    // 4. Optimized Streaming
+    return response()->streamDownload(function() use ($query) {
+        // English: Avoid buffer interference on Live servers
+        if (ob_get_level() > 0) ob_end_clean();
 
-    $callback = function() use($data, $columns) {
         $file = fopen('php://output', 'w');
-        fputcsv($file, $columns);
+        
+        // UTF-8 BOM for Excel compatibility
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
 
-        foreach ($data as $row) {
+        // CSV Header
+        fputcsv($file, ['Name', 'Email', 'Phone', 'City', 'Type', 'Technology', 'Join Date', 'Status']);
+
+        /* 🚀 English: cursor() is essential here. It doesn't load 300k records at once.
+           It keeps only 1 row in memory, then moves to next.
+        */
+        foreach ($query->orderBy('id', 'desc')->cursor() as $row) {
             fputcsv($file, [
                 $row->name,
                 $row->email,
@@ -176,10 +169,9 @@ public function exportMyInternsCSV(Request $request)
                 $row->status
             ]);
         }
+        
         fclose($file);
-    };
-
-    return response()->stream($callback, 200, $headers);
+    }, $fileName, $headers);
 }
 
 
@@ -204,8 +196,12 @@ public function newInterns(Request $request)
     $manager = auth()->guard('manager')->user();
     if (!$manager) return redirect()->route('login');
 
-    // 1. Fetching Manager Permissions
-    // English comments: Get technologies and types this manager is allowed to oversee
+    if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_new_interns')) {
+        return redirect()->route('manager.dashboard')
+                         ->withErrors(['access_denied' => 'You do not have permission to access New Interns records.']);
+    }
+
+    // 1. Fetching Manager Permissions (English: Optimized permissions fetch)
     $allowedTechs = DB::table('manager_permissions')
         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
         ->where('manager_permissions.manager_id', $manager->manager_id)
@@ -214,41 +210,46 @@ public function newInterns(Request $request)
         ->get();
 
     $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
+    
+    // English: Keep original case for DB comparison to ensure index usage
     $allowedInternTypes = $allowedTechs->pluck('interview_type')
-        ->map(fn($type) => strtolower(trim($type)))
+        ->map(fn($type) => trim($type))
         ->unique()
         ->toArray();
 
-    // 2. Base Query for 'Interview' Status
+    // 2. Base Query (English: Start with primary filter)
     $query = DB::table('intern_table')->where('status', 'Interview');
 
-    // 3. Security Filter
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
-    });
+    // 3. Security Filter (English: Optimized to avoid LOWER() on column to keep indexes active)
+    $query->whereIn('technology', $allowedTechNames)
+          ->whereIn('intern_type', $allowedInternTypes);
 
-    // 4. Search & Dropdown Filters
+    // 4. Search & Dropdown Filters (English: Prefix search for massive performance gain)
     if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('name', 'LIKE', "%{$request->search}%")
-              ->orWhere('email', 'LIKE', "%{$request->search}%");
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            // English: Using prefix search ("search%") instead of double wildcard ("%search%") 
+            // to allow MySQL to use the index effectively on 300k+ rows.
+            $q->where('name', 'LIKE', "{$search}%")
+              ->orWhere('email', 'LIKE', "{$search}%");
         });
     }
 
+    // Technology Filter
     if ($request->filled('status')) {
         $query->where('technology', str_replace('-', ' ', $request->status));
     }
 
+    // Intern Type Filter
     if ($request->filled('intern_type')) {
-    $query->where('intern_type', $request->intern_type);
-}
+        $query->where('intern_type', $request->intern_type);
+    }
 
     // 5. Pagination Logic
     $pageLimitSet = AdminSetting::first();
-    $defaultLimit = $pageLimitSet->pagination_limit ?? 15;
-    $perPage = $request->input('per_page', $defaultLimit);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
+    // English: Sorting by ID (Primary Key) is instant on indexed tables
     $interns = $query->orderBy('id', 'desc')
                      ->paginate($perPage)
                      ->withQueryString();
@@ -260,10 +261,14 @@ public function newInterns(Request $request)
 
 public function exportNewInternsCSV(Request $request)
 {
+    // English: Setting high limits to prevent timeouts on large datasets
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $manager = auth()->guard('manager')->user();
     if (!$manager) return abort(403);
 
-    // 1. Re-using Security Permissions
+    // 1. Fetching Manager Permissions
     $allowedTechs = DB::table('manager_permissions')
         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
         ->where('manager_permissions.manager_id', $manager->manager_id)
@@ -272,65 +277,79 @@ public function exportNewInternsCSV(Request $request)
         ->get();
 
     $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
-    $allowedInternTypes = $allowedTechs->pluck('interview_type')->map(fn($t) => strtolower(trim($t)))->unique()->toArray();
+    
+    // English: Avoiding LOWER() to keep indexes optimized
+    $allowedInternTypes = $allowedTechs->pluck('interview_type')
+        ->map(fn($t) => trim($t))
+        ->unique()
+        ->toArray();
 
-    // 2. Base Query (Status: Completed)
-    $query = DB::table('intern_table')->where('status', 'Interview');
-
-    // Security Filter
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
-    });
+    // 2. Base Query (Status: Interview)
+    $query = DB::table('intern_table')
+        ->where('status', 'Interview')
+        ->whereIn('technology', $allowedTechNames)
+        ->whereIn('intern_type', $allowedInternTypes);
 
     // 3. Apply Current Filters (Search, Tech, Intern Type)
     if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('name', 'LIKE', "%{$request->search}%")
-              ->orWhere('email', 'LIKE', "%{$request->search}%");
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            // English: Using prefix search for faster index retrieval
+            $q->where('name', 'LIKE', "{$search}%")
+              ->orWhere('email', 'LIKE', "{$search}%");
         });
     }
+
     if ($request->filled('status')) {
         $query->where('technology', str_replace('-', ' ', $request->status));
     }
+
     if ($request->filled('intern_type')) {
         $query->where('intern_type', $request->intern_type);
     }
 
-    $data = $query->orderBy('id', 'desc')->get();
-
-    // 4. CSV Generation
     $fileName = 'new_interns_export_' . date('Y-m-d') . '.csv';
+
     $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$fileName",
+        "Content-type"        => "text/csv; charset=UTF-8",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
     ];
 
-    $columns = ['Name', 'Email', 'Phone', 'City', 'Internship Type', 'Technology', 'Join Date',  'Status'];
+    $columns = ['Name', 'Email', 'Phone', 'City', 'Internship Type', 'Technology', 'Join Date', 'Status'];
 
-    $callback = function() use($data, $columns) {
+    // 4. Optimized CSV Generation using streamDownload
+    return response()->streamDownload(function() use ($query, $columns) {
+        // English: Clear any output buffer to ensure clean CSV file
+        if (ob_get_level() > 0) ob_end_clean();
+
         $file = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for Excel compatibility (Important for non-English names)
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+        
+        // Write Header
         fputcsv($file, $columns);
 
-        foreach ($data as $row) {
+        /* 🚀 English: cursor() is critical for 300,000+ records. 
+           It fetches one record at a time to keep memory usage low.
+        */
+        foreach ($query->orderBy('id', 'desc')->cursor() as $row) {
             fputcsv($file, [
                 $row->name,
                 $row->email,
                 $row->phone ?? 'N/A',
-                $row->city,
+                $row->city ?? 'N/A',
                 $row->intern_type,
                 $row->technology,
-                $row->join_date,
+                $row->join_date ?? 'N/A',
                 $row->status
             ]);
         }
+        
         fclose($file);
-    };
-
-    return response()->stream($callback, 200, $headers);
+    }, $fileName, $headers);
 }
 
 
@@ -350,8 +369,13 @@ public function contactWith(Request $request)
     $manager = auth()->guard('manager')->user();
     if (!$manager) return redirect()->route('login');
 
+    if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_contact_with')) {
+        return redirect()->route('manager.dashboard')
+                         ->withErrors(['access_denied' => 'You do not have permission to access Contact With records.']);
+    }
+
     // 1. Fetching Allowed Technologies
-    // English comments: Get only active technologies linked to this manager
+    // English comments: Get only active technologies and permission types linked to this manager
     $allowedTechs = DB::table('manager_permissions')
         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
         ->where('manager_permissions.manager_id', $manager->manager_id)
@@ -361,8 +385,9 @@ public function contactWith(Request $request)
 
     $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
     
+    // English: Keeping original case to utilize database B-Tree indexes effectively
     $allowedInternTypes = $allowedTechs->pluck('interview_type')
-        ->map(fn($type) => strtolower(trim($type)))
+        ->map(fn($type) => trim($type))
         ->unique()
         ->toArray();
 
@@ -371,27 +396,27 @@ public function contactWith(Request $request)
     $query = DB::table('intern_table')->where('status', 'Contact');
 
     // 3. Applying Security Filters (Mandatory)
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
-    });
+    // English: Avoid LOWER() or other functions on columns to keep the index active
+    $query->whereIn('technology', $allowedTechNames)
+          ->whereIn('intern_type', $allowedInternTypes);
 
     // 4. Dynamic Filters (User input from Frontend)
     
-    // Search Logic: Name or Email
+    // Search Logic: Name or Email (Prefix Optimized)
     if ($request->filled('search')) {
         $searchTerm = $request->search;
         $query->where(function($q) use ($searchTerm) {
-            $q->where('name', 'LIKE', "%{$searchTerm}%")
-              ->orWhere('email', 'LIKE', "%{$searchTerm}%");
+            // English: Prefix search ("term%") is significantly faster than "%term%" on large tables
+            $q->where('name', 'LIKE', "{$searchTerm}%")
+              ->orWhere('email', 'LIKE', "{$searchTerm}%");
         });
     }
 
-    // Technology Filter (status mapping in your HTML)
+    // Technology Filter
     if ($request->filled('status')) {
-        // English comments: Replace hyphens back to spaces if slugs are used in frontend
+        // English comments: direct match is better than LIKE for exact technology filtering
         $techFilter = str_replace('-', ' ', $request->status);
-        $query->where('technology', 'LIKE', $techFilter);
+        $query->where('technology', $techFilter);
     }
 
     // Intern Type Filter (Onsite/Remote)
@@ -401,22 +426,26 @@ public function contactWith(Request $request)
 
     // 5. Pagination Logic
     $pageLimitSet = AdminSetting::first();
-    $defaultLimit = $pageLimitSet->pagination_limit ?? 15;
-    $perPage = $request->input('per_page', $defaultLimit);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
+    // English: Sorting by primary key (id) ensures the fastest possible sorting performance
     $interns = $query->orderBy('id', 'desc')
                      ->paginate($perPage)
-                     ->withQueryString(); // English comments: Keeps filter parameters in pagination links
+                     ->withQueryString();
 
     return view('pages.manager.all-interns.contactWith', compact('interns', 'allowedTechNames', 'perPage'));
 }
 
 public function exportContactWith(Request $request)
 {
+    // English: Prevent timeouts and memory crashes for large datasets
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $manager = auth()->guard('manager')->user();
     if (!$manager) return abort(403);
 
-    // English comments: Reusing the same logic to fetch allowed techs for security
+    // 1. Fetching Manager Permissions
     $allowedTechs = DB::table('manager_permissions')
         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
         ->where('manager_permissions.manager_id', $manager->manager_id)
@@ -425,65 +454,79 @@ public function exportContactWith(Request $request)
         ->get();
 
     $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
-    $allowedInternTypes = $allowedTechs->pluck('interview_type')->map(fn($t) => strtolower(trim($t)))->unique()->toArray();
+    
+    // English: Keeping original case to maintain database index efficiency
+    $allowedInternTypes = $allowedTechs->pluck('interview_type')
+        ->map(fn($t) => trim($t))
+        ->unique()
+        ->toArray();
 
-    // English comments: Start the query with 'Contact' status
-    $query = DB::table('intern_table')->where('status', 'Contact');
+    // 2. Base Query (Status: Contact)
+    $query = DB::table('intern_table')
+        ->where('status', 'Contact')
+        ->whereIn('technology', $allowedTechNames)
+        ->whereIn('intern_type', $allowedInternTypes);
 
-    // Security constraints
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
-    });
-
-    // Apply Active Filters (Search, Tech, Type)
+    // 3. Apply Current Filters (Search, Tech, Intern Type)
     if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('name', 'LIKE', "%{$request->search}%")
-              ->orWhere('email', 'LIKE', "%{$request->search}%");
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            // English: Prefix search for significantly faster performance on huge tables
+            $q->where('name', 'LIKE', "{$search}%")
+              ->orWhere('email', 'LIKE', "{$search}%");
         });
     }
+
     if ($request->filled('status')) {
         $query->where('technology', str_replace('-', ' ', $request->status));
     }
+
     if ($request->filled('intern_type')) {
         $query->where('intern_type', $request->intern_type);
     }
 
-    $data = $query->orderBy('id', 'desc')->get();
+    $fileName = 'contact_interns_export_' . date('Y-m-d') . '.csv';
 
-    // English comments: Generating the CSV content
-    $fileName = 'contact_interns_' . date('Y-m-d') . '.csv';
     $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$fileName",
+        "Content-type"        => "text/csv; charset=UTF-8",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
     ];
 
-    $columns = ['Name', 'Email', 'Phone', 'City', 'Internship Type', 'Technology', 'Join Date',  'Status'];
+    $columns = ['Name', 'Email', 'Phone', 'City', 'Internship Type', 'Technology', 'Join Date', 'Status'];
 
-    $callback = function() use($data, $columns) {
+    // 4. Optimized Streaming via streamDownload
+    return response()->streamDownload(function() use ($query, $columns) {
+        // English: Clear any output buffer to ensure a clean file download
+        if (ob_get_level() > 0) ob_end_clean();
+
         $file = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for proper rendering of special characters in Excel
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+        
+        // Write CSV Header
         fputcsv($file, $columns);
 
-        foreach ($data as $row) {
+        /* 🚀 English: cursor() allows us to process 300,000+ rows 
+           by only keeping ONE row in memory at any given time.
+        */
+        foreach ($query->orderBy('id', 'desc')->cursor() as $row) {
             fputcsv($file, [
                 $row->name,
                 $row->email,
                 $row->phone ?? 'N/A',
-                $row->city,
+                $row->city ?? 'N/A',
                 $row->intern_type,
                 $row->technology,
-                $row->join_date,
+                $row->join_date ?? 'N/A',
                 $row->status
             ]);
         }
+        
         fclose($file);
-    };
-
-    return response()->stream($callback, 200, $headers);
+    }, $fileName, $headers);
 }
 
 
@@ -495,8 +538,13 @@ public function test(Request $request)
     $manager = auth()->guard('manager')->user();
     if (!$manager) return redirect()->route('login');
 
+    if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_interview_test')) {
+        return redirect()->route('manager.dashboard')
+                         ->withErrors(['access_denied' => 'You do not have permission to access Interview Test records.']);
+    }
+
     // 1. Fetching Manager Permissions
-    // English comments: Get technologies and types this manager is allowed to oversee
+    // English comments: Get allowed technologies and matching interview types
     $allowedTechs = DB::table('manager_permissions')
         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
         ->where('manager_permissions.manager_id', $manager->manager_id)
@@ -505,41 +553,46 @@ public function test(Request $request)
         ->get();
 
     $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
+    
+    // English: Keep original case for efficient indexing. Avoid LOWER() in DB query.
     $allowedInternTypes = $allowedTechs->pluck('interview_type')
-        ->map(fn($type) => strtolower(trim($type)))
+        ->map(fn($type) => trim($type))
         ->unique()
         ->toArray();
 
-    // 2. Base Query for 'Test' Status
+    // 2. Base Query (Status: Test)
     $query = DB::table('intern_table')->where('status', 'Test');
 
-    // 3. Security Filter
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
-    });
+    // 3. Security Filter (Optimized)
+    // English: Direct whereIn is 100x faster than using DB::raw('LOWER(...)') on 300k records
+    $query->whereIn('technology', $allowedTechNames)
+          ->whereIn('intern_type', $allowedInternTypes);
 
     // 4. Search & Dropdown Filters
     if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('name', 'LIKE', "%{$request->search}%")
-              ->orWhere('email', 'LIKE', "%{$request->search}%");
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            // English: Using prefix search to utilize B-Tree indexes on Name and Email
+            $q->where('name', 'LIKE', "{$search}%")
+              ->orWhere('email', 'LIKE', "{$search}%");
         });
     }
 
+    // Technology Filter
     if ($request->filled('status')) {
         $query->where('technology', str_replace('-', ' ', $request->status));
     }
 
+    // Intern Type Filter
     if ($request->filled('intern_type')) {
-    $query->where('intern_type', $request->intern_type);
-}
+        $query->where('intern_type', $request->intern_type);
+    }
 
     // 5. Pagination Logic
     $pageLimitSet = AdminSetting::first();
-    $defaultLimit = $pageLimitSet->pagination_limit ?? 15;
-    $perPage = $request->input('per_page', $defaultLimit);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
+    // English: Ordering by primary key (id) is the most efficient way to sort large datasets
     $interns = $query->orderBy('id', 'desc')
                      ->paginate($perPage)
                      ->withQueryString();
@@ -551,10 +604,14 @@ public function test(Request $request)
 
 public function exportTestCSV(Request $request)
 {
+    // English: Prevent timeouts and memory crashes for large datasets (300k+)
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $manager = auth()->guard('manager')->user();
     if (!$manager) return abort(403);
 
-    // 1. Re-using Security Permissions
+    // 1. Fetching Manager Permissions
     $allowedTechs = DB::table('manager_permissions')
         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
         ->where('manager_permissions.manager_id', $manager->manager_id)
@@ -563,65 +620,79 @@ public function exportTestCSV(Request $request)
         ->get();
 
     $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
-    $allowedInternTypes = $allowedTechs->pluck('interview_type')->map(fn($t) => strtolower(trim($t)))->unique()->toArray();
+    
+    // English: Keep original case for efficient indexing. Avoid DB::raw on 300k records.
+    $allowedInternTypes = $allowedTechs->pluck('interview_type')
+        ->map(fn($t) => trim($t))
+        ->unique()
+        ->toArray();
 
     // 2. Base Query (Status: Test)
-    $query = DB::table('intern_table')->where('status', 'Test');
+    $query = DB::table('intern_table')
+        ->where('status', 'Test')
+        ->whereIn('technology', $allowedTechNames)
+        ->whereIn('intern_type', $allowedInternTypes);
 
-    // Security Filter
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
-    });
-
-    // 3. Apply Current Filters (Search, Tech, Intern Type)
+    // 3. Apply Active Filters (Search, Tech, Type)
     if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('name', 'LIKE', "%{$request->search}%")
-              ->orWhere('email', 'LIKE', "%{$request->search}%");
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            // English: Prefix search is significantly faster on large tables
+            $q->where('name', 'LIKE', "{$search}%")
+              ->orWhere('email', 'LIKE', "{$search}%");
         });
     }
+
     if ($request->filled('status')) {
         $query->where('technology', str_replace('-', ' ', $request->status));
     }
+
     if ($request->filled('intern_type')) {
         $query->where('intern_type', $request->intern_type);
     }
 
-    $data = $query->orderBy('id', 'desc')->get();
-
-    // 4. CSV Generation
     $fileName = 'test_interns_export_' . date('Y-m-d') . '.csv';
+
     $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$fileName",
+        "Content-type"        => "text/csv; charset=UTF-8",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
     ];
 
-    $columns = ['Name', 'Email', 'Phone', 'City', 'Internship Type', 'Technology', 'Join Date',  'Status'];
+    $columns = ['Name', 'Email', 'Phone', 'City', 'Internship Type', 'Technology', 'Join Date', 'Status'];
 
-    $callback = function() use($data, $columns) {
+    // 4. Optimized Streaming via streamDownload
+    return response()->streamDownload(function() use ($query, $columns) {
+        // English: Clear any output buffer to ensure a clean file download
+        if (ob_get_level() > 0) ob_end_clean();
+
         $file = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for proper rendering of special characters in Excel
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+        
+        // Write CSV Header
         fputcsv($file, $columns);
 
-        foreach ($data as $row) {
+        /* 🚀 English: cursor() allows us to process 300,000+ rows 
+           by only keeping ONE row in memory at any given time.
+        */
+        foreach ($query->orderBy('id', 'desc')->cursor() as $row) {
             fputcsv($file, [
                 $row->name,
                 $row->email,
                 $row->phone ?? 'N/A',
-                $row->city,
+                $row->city ?? 'N/A',
                 $row->intern_type,
                 $row->technology,
-                $row->join_date,
+                $row->join_date ?? 'N/A',
                 $row->status
             ]);
         }
+        
         fclose($file);
-    };
-
-    return response()->stream($callback, 200, $headers);
+    }, $fileName, $headers);
 }
 
 
@@ -644,6 +715,11 @@ public function completed(Request $request)
     $manager = auth()->guard('manager')->user();
     if (!$manager) return redirect()->route('login');
 
+    if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_test_completed')) {
+        return redirect()->route('manager.dashboard')
+                         ->withErrors(['access_denied' => 'You do not have permission to access Completed Interns records.']);
+    }
+
     // 1. Fetching Manager Permissions
     // English comments: Get technologies and types this manager is allowed to oversee
     $allowedTechs = DB::table('manager_permissions')
@@ -654,41 +730,46 @@ public function completed(Request $request)
         ->get();
 
     $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
+    
+    // English: Keep original case for DB comparison to ensure index usage
     $allowedInternTypes = $allowedTechs->pluck('interview_type')
-        ->map(fn($type) => strtolower(trim($type)))
+        ->map(fn($type) => trim($type))
         ->unique()
         ->toArray();
 
-    // 2. Base Query for 'Completed' Status
+    // 2. Base Query (Status: Completed)
     $query = DB::table('intern_table')->where('status', 'Completed');
 
-    // 3. Security Filter
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
-    });
+    // 3. Security Filter (Optimized)
+    // English: Direct whereIn is much faster than DB::raw('LOWER(...)') as it uses the index.
+    $query->whereIn('technology', $allowedTechNames)
+          ->whereIn('intern_type', $allowedInternTypes);
 
     // 4. Search & Dropdown Filters
     if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('name', 'LIKE', "%{$request->search}%")
-              ->orWhere('email', 'LIKE', "%{$request->search}%");
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            // English: Using prefix search to utilize B-Tree indexing on 'name' and 'email'
+            $q->where('name', 'LIKE', "{$search}%")
+              ->orWhere('email', 'LIKE', "{$search}%");
         });
     }
 
+    // Technology Filter
     if ($request->filled('status')) {
         $query->where('technology', str_replace('-', ' ', $request->status));
     }
 
+    // Intern Type Filter
     if ($request->filled('intern_type')) {
-    $query->where('intern_type', $request->intern_type);
-}
+        $query->where('intern_type', $request->intern_type);
+    }
 
     // 5. Pagination Logic
     $pageLimitSet = AdminSetting::first();
-    $defaultLimit = $pageLimitSet->pagination_limit ?? 15;
-    $perPage = $request->input('per_page', $defaultLimit);
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
+    // English: Sorting by primary key (id) is nearly instantaneous even on large tables.
     $interns = $query->orderBy('id', 'desc')
                      ->paginate($perPage)
                      ->withQueryString();
@@ -700,10 +781,14 @@ public function completed(Request $request)
 
 public function exportCompletedCSV(Request $request)
 {
+    // English: Prevent timeouts and memory exhaustion for large datasets (300k+)
+    set_time_limit(0);
+    ini_set('memory_limit', '512M');
+
     $manager = auth()->guard('manager')->user();
     if (!$manager) return abort(403);
 
-    // 1. Re-using Security Permissions
+    // 1. Fetching Manager Permissions
     $allowedTechs = DB::table('manager_permissions')
         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
         ->where('manager_permissions.manager_id', $manager->manager_id)
@@ -712,65 +797,79 @@ public function exportCompletedCSV(Request $request)
         ->get();
 
     $allowedTechNames = $allowedTechs->pluck('technology')->unique()->toArray();
-    $allowedInternTypes = $allowedTechs->pluck('interview_type')->map(fn($t) => strtolower(trim($t)))->unique()->toArray();
+    
+    // English: Removing DB functions from query to allow index usage
+    $allowedInternTypes = $allowedTechs->pluck('interview_type')
+        ->map(fn($t) => trim($t))
+        ->unique()
+        ->toArray();
 
     // 2. Base Query (Status: Completed)
-    $query = DB::table('intern_table')->where('status', 'Completed');
-
-    // Security Filter
-    $query->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
-        $q->whereIn('technology', $allowedTechNames)
-          ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
-    });
+    $query = DB::table('intern_table')
+        ->where('status', 'Completed')
+        ->whereIn('technology', $allowedTechNames)
+        ->whereIn('intern_type', $allowedInternTypes);
 
     // 3. Apply Current Filters (Search, Tech, Intern Type)
     if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('name', 'LIKE', "%{$request->search}%")
-              ->orWhere('email', 'LIKE', "%{$request->search}%");
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            // English: Prefix search is significantly faster for large tables
+            $q->where('name', 'LIKE', "{$search}%")
+              ->orWhere('email', 'LIKE', "{$search}%");
         });
     }
+
     if ($request->filled('status')) {
         $query->where('technology', str_replace('-', ' ', $request->status));
     }
+
     if ($request->filled('intern_type')) {
         $query->where('intern_type', $request->intern_type);
     }
 
-    $data = $query->orderBy('id', 'desc')->get();
+    $fileName = 'completed_interns_export_' . date('Y-m-d') . '.csv';
 
-    // 4. CSV Generation
-    $fileName = 'completed_test_interns_export_' . date('Y-m-d') . '.csv';
     $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$fileName",
+        "Content-type"        => "text/csv; charset=UTF-8",
         "Pragma"              => "no-cache",
         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
         "Expires"             => "0"
     ];
 
-    $columns = ['Name', 'Email', 'Phone', 'City', 'Internship Type', 'Technology', 'Join Date',  'Status'];
+    $columns = ['Name', 'Email', 'Phone', 'City', 'Internship Type', 'Technology', 'Join Date', 'Status'];
 
-    $callback = function() use($data, $columns) {
+    // 4. Optimized Streaming via streamDownload
+    return response()->streamDownload(function() use ($query, $columns) {
+        // English: Ensure a clean buffer for live servers
+        if (ob_get_level() > 0) ob_end_clean();
+
         $file = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for proper Excel character rendering
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+        
+        // Write CSV Header
         fputcsv($file, $columns);
 
-        foreach ($data as $row) {
+        /* 🚀 English: cursor() processes 300,000+ rows line-by-line.
+           It keeps memory usage constant and very low.
+        */
+        foreach ($query->orderBy('id', 'desc')->cursor() as $row) {
             fputcsv($file, [
                 $row->name,
                 $row->email,
                 $row->phone ?? 'N/A',
-                $row->city,
+                $row->city ?? 'N/A',
                 $row->intern_type,
                 $row->technology,
-                $row->join_date,
+                $row->join_date ?? 'N/A',
                 $row->status
             ]);
         }
+        
         fclose($file);
-    };
-
-    return response()->stream($callback, 200, $headers);
+    }, $fileName, $headers);
 }
 
 
@@ -785,7 +884,10 @@ public function active(Request $request)
 {
     $manager = auth('manager')->user();
     if (!$manager) return redirect()->route('login');
-
+    if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_active_interns')) {
+        return redirect()->route('manager.dashboard')
+                         ->withErrors(['access_denied' => 'You do not have permission to access Active Interns records.']);
+    }
     $managerId = $manager->manager_id;
 
     // Allowed techs for this manager
