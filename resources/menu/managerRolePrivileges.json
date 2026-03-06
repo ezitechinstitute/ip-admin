@@ -207,6 +207,26 @@
         {
           "key": "view_manager_offer_letter_request",
           "title": "View Offer Letter Request"
+        },
+        {
+          "key": "excel_manager_offer_letter_request",
+          "title": "Download Excel"
+        },
+        {
+          "key": "accept_manager_offer_letter_request",
+          "title": "Accept Request"
+        },
+        {
+          "key": "reject_manager_offer_letter_request",
+          "title": "Reject Request"
+        },
+        {
+          "key": "offer_letter_send_manager_offer_letter_request",
+          "title": "Offer Letter Send"
+        },
+        {
+          "key": "view_reason_manager_offer_letter_request",
+          "title": "View Reason"
         }
       ]
     },

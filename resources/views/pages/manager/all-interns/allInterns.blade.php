@@ -281,25 +281,21 @@ $manager = auth()->guard('manager')->user();
               <tr class="">
                 <td class="">
                   <div class="d-flex justify-content-start align-items-center user-name">
-                    <div class="avatar-wrapper">
-                      @if ($intern->image)
-                      <div class="avatar avatar-md me-4">
-                        <img src="{{ 
-    $intern->image
-        ? (str_starts_with($intern->image, 'data:image')
-            ? $intern->image
-            : asset($intern->image)) 
-        : '' 
-    }}" alt="{{ $intern->name }}" class="rounded-circle" />
-                      </div>
-                      @else
-                      <div class="avatar avatar-md me-4">
-                        <span class="avatar-initial rounded-circle bg-label-warning">
-                          {{ strtoupper(substr($intern->name, 0, 2)) }}
-                        </span>
-                      </div>
-                      @endif
-                    </div>
+                   {{-- Replace the avatar-wrapper content with this --}}
+<div class="avatar-wrapper">
+    @if (isset($intern->image) && $intern->image)
+        <div class="avatar avatar-md me-4">
+            <img src="{{ str_starts_with($intern->image, 'data:image') ? $intern->image : asset($intern->image) }}" 
+                 alt="{{ $intern->name }}" class="rounded-circle" />
+        </div>
+    @else
+        <div class="avatar avatar-md me-4">
+            <span class="avatar-initial rounded-circle bg-label-warning">
+                {{ strtoupper(substr($intern->name ?? 'U', 0, 2)) }}
+            </span>
+        </div>
+    @endif
+</div>
 
                   </div>
                 </td>
@@ -345,8 +341,9 @@ $manager = auth()->guard('manager')->user();
                 </td>
                 <td>
                   @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-                      'edit_status_my_interns') || $manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-                      'remove_my_interns'))
+                  'edit_status_my_interns') || $manager &&
+                  \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
+                  'remove_my_interns'))
                   <div class="dropdown">
                     <a href="javascript:;"
                       class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"

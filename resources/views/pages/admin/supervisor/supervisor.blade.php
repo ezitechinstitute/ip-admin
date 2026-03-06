@@ -104,7 +104,13 @@
 
             <input type="search" name="search" id="searchInput" class="form-control" placeholder="Search supervisor"
               value="{{ request('search') }}">
-
+<style>
+              input[type="search"]::-webkit-search-cancel-button,
+              input[type="search"]::-webkit-search-decoration {
+                -webkit-appearance: none;
+                appearance: none;
+              }
+            </style>
             <select name="status" id="statusFilter" class="form-select text-capitalize">
               <option value="">Select Status</option>
 
@@ -118,7 +124,7 @@
             </select>
 
 
-          @php
+            @php
             $adminSettings = \App\Models\AdminSetting::first();
 
             if (!$adminSettings) {
@@ -158,7 +164,7 @@
                 class="icon-base ti tabler-plus me-0 me-sm-1 icon-16px"></i><span class="d-none d-sm-inline-block">Add
                 Supervisor</span></span></button>
 
-                
+
           <!-- Add supervisor Modal -->
           <div class="modal fade" id="AddSupervisorModel" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-simple modal-dialog-centered modal-add-new-role">
@@ -711,8 +717,8 @@
     }
 
     function validatePassword() {
-        passwordInput.value.length < 6
-            ? showError(passwordInput, 'Minimum 6 characters required')
+        passwordInput.value.length < 5
+            ? showError(passwordInput, 'Minimum 5 characters required')
             : removeError(passwordInput);
     }
 
@@ -861,8 +867,8 @@
   }
 
   // 2️⃣ Changed but too short
-  if (value !== originalPassword && value.length < 6) {
-    showError(editPasswordInput, 'Minimum 6 characters required');
+  if (value !== originalPassword && value.length < 5) {
+    showError(editPasswordInput, 'Minimum 5 characters required');
     return;
   }
 
@@ -934,8 +940,8 @@
   document.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', function () {
       const d = this.dataset;
-
-      editForm.action = `/admin/supervisor/update/${d.id}`;
+      let url = "{{ route('update-supervisor.admin', ':id') }}";
+      editForm.action = url.replace(':id', d.id);
 
       edit_supervisor_id.value = d.id;
       edit_name.value = d.name;

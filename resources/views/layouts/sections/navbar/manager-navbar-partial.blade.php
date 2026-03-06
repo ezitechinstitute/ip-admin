@@ -56,7 +56,7 @@ use Illuminate\Support\Facades\Route;
     @endif
 
     <!-- Language -->
-    <li class="nav-item dropdown-language dropdown">
+    {{-- <li class="nav-item dropdown-language dropdown">
       <a class="nav-link dropdown-toggle hide-arrow btn btn-icon btn-text-secondary rounded-pill"
         href="javascript:void(0);" data-bs-toggle="dropdown">
         <i class="icon-base ti tabler-language icon-22px text-heading"></i>
@@ -87,7 +87,7 @@ use Illuminate\Support\Facades\Route;
           </a>
         </li>
       </ul>
-    </li>
+    </li> --}}
     <!--/ Language -->
 
     @if ($configData['hasCustomizer'] == true)
@@ -132,10 +132,10 @@ use Illuminate\Support\Facades\Route;
         <div class="dropdown-menu-header border-bottom">
           <div class="dropdown-header d-flex align-items-center py-3">
             <h6 class="mb-0 me-auto">Shortcuts</h6>
-            <a href="javascript:void(0)"
+            {{-- <a href="javascript:void(0)"
               class="dropdown-shortcuts-add py-2 btn btn-text-secondary rounded-pill btn-icon" data-bs-toggle="tooltip"
               data-bs-placement="top" title="Add shortcuts"><i
-                class="icon-base ti tabler-plus icon-20px text-heading"></i></a>
+                class="icon-base ti tabler-plus icon-20px text-heading"></i></a> --}}
           </div>
         </div>
         

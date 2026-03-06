@@ -83,7 +83,7 @@
           <div class="dt-length mb-md-6 mb-0 d-flex">
 
             <form id="perPageForm" method="GET">
-              <select name="per_page" id="dt-length-0" class="form-select ms-0"
+              <select name="perPage" id="dt-length-0" class="form-select ms-0"
                 onchange="document.getElementById('perPageForm').submit()">
                 <option value="15" {{ $perPage==15 ? 'selected' : '' }}>15</option>
                 <option value="25" {{ $perPage==25 ? 'selected' : '' }}>25</option>
@@ -105,10 +105,16 @@
         <div
           class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
           <form method="GET" action="{{ route('technology') }}" id="filterForm" class="d-flex gap-2">
-
+            <input type="hidden" name="perPage" value="{{ $perPage }}">
             <input type="search" name="search" id="searchInput" class="form-control" placeholder="Search technology"
               value="{{ request('search') }}">
-
+            <style>
+              input[type="search"]::-webkit-search-cancel-button,
+              input[type="search"]::-webkit-search-decoration {
+                -webkit-appearance: none;
+                appearance: none;
+              }
+            </style>
             <select name="status" id="statusFilter" class="form-select text-capitalize">
               <option value="">Select Status</option>
 
@@ -122,7 +128,7 @@
             </select>
 
 
-        @php
+            @php
             $adminSettings = \App\Models\AdminSetting::first();
 
             if (!$adminSettings) {
@@ -217,57 +223,57 @@
           </div>
           <!-- Add Technology -->
           <!-- Edit Technology Modal -->
-         <div class="modal fade" id="editTechnologyModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-md modal-dialog-centered">
-    <div class="modal-content p-3">
+          <div class="modal fade" id="editTechnologyModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-md modal-dialog-centered">
+              <div class="modal-content p-3">
 
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Technology</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
+                <div class="modal-header">
+                  <h5 class="modal-title">Edit Technology</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
 
-      <form id="editTechnologyForm" method="POST" action="{{ route('edit-technology') }}">
-        @csrf
-        @method('PUT')
+                <form id="editTechnologyForm" method="POST" action="{{ route('edit-technology') }}">
+                  @csrf
+                  @method('PUT')
 
-        <!-- REQUIRED -->
-        <input type="hidden" name="id" id="editTechId">
+                  <!-- REQUIRED -->
+                  <input type="hidden" name="id" id="editTechId">
 
-        <div class="modal-body">
+                  <div class="modal-body">
 
-          <div class="mb-3 form-control-validation">
-            <label class="form-label">Technology Name</label>
-            <input type="text" id="editTechnologyName" required name="technology" class="form-control">
-          </div>
+                    <div class="mb-3 form-control-validation">
+                      <label class="form-label">Technology Name</label>
+                      <input type="text" id="editTechnologyName" required name="technology" class="form-control">
+                    </div>
 
-          <div class="mb-3 form-control-validation">
-            <label class="form-label">Status</label>
+                    <div class="mb-3 form-control-validation">
+                      <label class="form-label">Status</label>
 
-            <div class="d-flex gap-4 mt-2">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="status" id="editStatusActive" value="1">
-                <label class="form-check-label" for="editStatusActive">Active</label>
-              </div>
+                      <div class="d-flex gap-4 mt-2">
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="status" id="editStatusActive" value="1">
+                          <label class="form-check-label" for="editStatusActive">Active</label>
+                        </div>
 
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="status" id="editStatusFreeze" value="0">
-                <label class="form-check-label" for="editStatusFreeze">Freeze</label>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="status" id="editStatusFreeze" value="0">
+                          <label class="form-check-label" for="editStatusFreeze">Freeze</label>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                  </div>
+
+                </form>
+
               </div>
             </div>
           </div>
-
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Update</button>
-        </div>
-
-      </form>
-
-    </div>
-  </div>
-</div>
 
 
 
@@ -284,12 +290,7 @@
           style="max-height: 600px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
-            <colgroup>
-              <col data-dt-column="1" style="width: 63.5375px;">
-              <col data-dt-column="2" style="width: 326.863px;">
-              <col data-dt-column="3" style="width: 170.125px;">
-              <col data-dt-column="4" style="width: 131.825px;">
-            </colgroup>
+         
             <thead class="border-top sticky-top bg-card">
               <tr>
 
@@ -318,9 +319,9 @@
                 <td><span class="text-heading text-nowrap"><small>{{$technology->tech_id}}</small></span>
                 </td>
 
-                <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap"><i class="icon-base ti tabler-cpu me-1 text-primary icon-22px"></i>
-{{$technology->technology}}</span>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap"><i
+                      class="icon-base ti tabler-cpu me-1 text-primary icon-22px"></i>
+                    {{$technology->technology}}</span>
                 </td>
 
                 <td>
@@ -349,12 +350,11 @@
 
 
                     <a href="javascript:void(0)"
-   class="btn btn-text-secondary rounded-pill waves-effect btn-icon edit-technology"
-   data-id="{{ $technology->tech_id }}"
-   data-name="{{ $technology->technology }}"
-   data-status="{{ $technology->status }}">
-   <i class="icon-base ti tabler-edit icon-22px"></i>
-</a>
+                      class="btn btn-text-secondary rounded-pill waves-effect btn-icon edit-technology"
+                      data-id="{{ $technology->tech_id }}" data-name="{{ $technology->technology }}"
+                      data-status="{{ $technology->status }}">
+                      <i class="icon-base ti tabler-edit icon-22px"></i>
+                    </a>
 
 
                   </div>
@@ -554,7 +554,7 @@
 
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function () {
 
   document.querySelectorAll('.edit-technology').forEach(btn => {
     btn.addEventListener('click', function () {
@@ -584,9 +584,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <script>
-
-
-function downloadTechnologiesCSV() {
+  function downloadTechnologiesCSV() {
     // Get current filter values
     const search = document.getElementById('searchInput').value;
     const status = document.getElementById('statusFilter').value;

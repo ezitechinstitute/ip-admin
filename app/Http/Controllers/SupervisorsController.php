@@ -49,7 +49,7 @@ class SupervisorsController extends Controller
     $request->validate([
         'name'      => 'required|string|max:255',
         'email'     => 'required|email|unique:manager_accounts,email',
-        'password'  => 'required|min:6',
+        'password'  => 'required|min:5',
         'join_date' => 'required|date',
         'image'     => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         'department'      => 'required|string|max:255',
@@ -92,7 +92,7 @@ public function update(Request $request, $id)
         'comission' => 'required|numeric',
         'status'    => 'required|in:0,1',
         'department'      => 'required|string|max:255',
-        'password'   => 'nullable|min:6',
+        'password'   => 'nullable|min:5',
     ]);
 
     // Find Supervisor
