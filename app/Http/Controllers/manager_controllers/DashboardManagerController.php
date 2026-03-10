@@ -47,7 +47,18 @@ class DashboardManagerController extends Controller
         foreach ($allStatuses as $status) {
             if (!isset($statusCounts[$status])) $statusCounts[$status] = 0;
         }
+        $managerId = $manager->manager_id;
 
-        return view('pages.manager.dashboard.dashboard', compact('manager', 'statusCounts'));
+        $allowedTechsData = DB::table('manager_permissions')
+        ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
+        ->where('manager_permissions.manager_id', $managerId)
+        ->where('technologies.status', 1)
+        ->select('technologies.technology')
+        ->get();
+        $totalInterns = DB::table('intern_accounts')
+        ->whereIn('int_technology', $allowedTechsData->pluck('technology'))
+        ->count();
+
+        return view('pages.manager.dashboard.dashboard', compact('manager', 'statusCounts', 'totalInterns'));
     }
 }

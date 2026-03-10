@@ -10,8 +10,10 @@ $firstSegment = Request::segment(1);
 // 1. Menu file decide karein
 if ($firstSegment == 'admin') {
     $menuPath = base_path('resources/menu/verticalMenu.json');
-} else {
+} else if($firstSegment == 'manager') {
     $menuPath = base_path('resources/menu/managerMenu.json');
+} else{
+    $menuPath = base_path('resources/menu/supervisorMenu.json');
 }
 
 if (!file_exists($menuPath)) {

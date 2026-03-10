@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\ValidUser;
 use App\Http\Middleware\ValidManager; // English comments: Import the Manager middleware
+use App\Http\Middleware\ValidSupervisor; // English comments: Import the Manager middleware
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\LocaleMiddleware;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'validUser' => ValidUser::class,
             'validManager' => ValidManager::class,
+            'ValidSupervisor' => ValidSupervisor::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
