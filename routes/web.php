@@ -497,6 +497,7 @@ Route::get('supervisors', [SupervisorsController::class, 'index'])->name('superv
 Route::post('add-supervisor', [SupervisorsController::class, 'addSupervisor'])->name('add-supervisor.admin');
 Route::put('/supervisor/update/{id}', [SupervisorsController::class, 'update'])->name('update-supervisor.admin');
 Route::post('/supervisor-permissions/store', [SupervisorsController::class, 'storePermissions'])->name('supervisor.permissions.store');
+Route::post('/supervisor.assign-manager', [SupervisorsController::class, 'assignSupervisor'])->name('supervisor.assign-manager');
 Route::get('supervisor/{id}/permissions', [SupervisorsController::class, 'getSupervisorPermissions'])
     ->name('supervisor.permissions.get');
     // routes/web.php

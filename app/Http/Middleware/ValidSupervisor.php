@@ -15,8 +15,8 @@ class ValidSupervisor
     public function handle(Request $request, Closure $next): Response
     {
         // Check if user is authenticated via manager guard
-        if (Auth::guard('manager')->check()) {
-            $manager = Auth::guard('manager')->user();
+        if (Auth::guard('supervisor')->check()) {
+            $supervisor = Auth::guard('supervisor')->user();
 
             // Check if the manager is logged in as Supervisor
             if ($manager->loginas === 'Supervisor') {
