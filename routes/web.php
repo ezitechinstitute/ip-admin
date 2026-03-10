@@ -135,6 +135,7 @@ use App\Http\Controllers\manager_controllers\OfferLetterTemplateController;
 use App\Http\Controllers\manager_controllers\PaymentReceiptController;
 use App\Http\Controllers\manager_controllers\ProfileSettingsController;
 use App\Http\Controllers\manager_controllers\RemainingAmountController;
+use App\Http\Controllers\manager_controllers\Supervisorcontroller;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\modal\ModalExample;
@@ -696,7 +697,18 @@ Route::get('/knowledge-base', [ManagerKnowledgeBaseController::class, 'index'])-
 Route::get('/knowledge-base/export',
     [ManagerKnowledgeBaseController::class, 'exportKnowledgeBaseCSV']
 )->name('manager.knowledge-base.export');
+
+
+
+
+//supervisor routes
+
+Route::get('Supervisor',[Supervisorcontroller::class,'index'])->name('manager.supervisor');
 });
+
+
+
+
 
 
 

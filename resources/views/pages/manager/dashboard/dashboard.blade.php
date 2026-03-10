@@ -354,7 +354,7 @@ $configData = Helper::appClasses();
 </div>
 
 @endif
-  {{--<div class="col-xxl-6 col-md-6">
+  <div class="col-xxl-6 col-md-6">
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
         <div class="card-title mb-0">
@@ -379,24 +379,24 @@ $configData = Helper::appClasses();
                 class="ti tabler-building-community ti-xs"></i></span>
             <div>
               <p class="mb-0 small">Onsite</p>
-              <h6 class="mb-0" id="onsite-total-display">{{ $totalOnsite }}</h6>
+              <h6 class="mb-0" id="onsite-total-display">{{ $totalOnsite?? 0 }}</h6>
             </div>
           </div>
           <div class="d-flex align-items-center">
             <span class="badge bg-label-info p-1_5 rounded me-2"><i class="ti tabler-device-laptop ti-xs"></i></span>
             <div>
               <p class="mb-0 small">Remote</p>
-              <h6 class="mb-0" id="remote-total-display">{{ $totalRemote }}</h6>
+              <h6 class="mb-0" id="remote-total-display">{{ $totalRemote?? 0 }}</h6>
             </div>
           </div>
         </div>
         <div id="internshipModeChart"></div>
       </div>
     </div>
-  </div>--}}
+  </div>
 
 
- {{-- <div class="col-6">
+ <div class="col-6">
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Communication Panel</h5>
@@ -458,7 +458,7 @@ $configData = Helper::appClasses();
 
 
 
-</div>--}}
+</div>
 @endsection
 
 @push('scripts')
@@ -483,7 +483,7 @@ document.querySelectorAll('.counter').forEach(counter => {
 </script>
 
 
-{{--<script>
+<script>
   document.addEventListener('DOMContentLoaded', function () {
     const chartEl = document.querySelector('#internshipModeChart');
     const onsiteTotalEl = document.getElementById('onsite-total-display');
@@ -572,7 +572,7 @@ document.querySelectorAll('.counter').forEach(counter => {
         });
     });
 });
-</script>--}}
+</script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
