@@ -177,18 +177,14 @@ $manager = auth()->guard('manager')->user();
               {{-- <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                 aria-label="City" tabindex="0"><span class="dt-column-title" role="button">REASON</span><span
                   class="dt-column-order"></span></th> --}}
-              <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                aria-label="City" tabindex="0"><span class="dt-column-title" role="button">STATUS</span><span
-                  class="dt-column-order"></span></th>
+              
               {{-- <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                 aria-label="City" tabindex="0"><span class="dt-column-title" role="button">CREATED AT</span><span
                   class="dt-column-order"></span></th> --}}
 
 
 
-              <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
-                  class="dt-column-title">Action</span><span class="dt-column-order"></span></th>
-
+              
 
             </tr>
           </thead>
@@ -212,13 +208,7 @@ $manager = auth()->guard('manager')->user();
                   class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$Sup->comission}}</span>
               </td>
 
-              <td><span
-                  class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$Sup->status}}</span>
-              </td>
-              <td><span
-                  class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$Sup->action}}</span>
-              </td>
-              <td>
+          
                 {{-- @php
                 $statusClasses = [
                 'ongoing' => 'bg-label-primary',
