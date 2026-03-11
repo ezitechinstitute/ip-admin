@@ -17,8 +17,16 @@ class ValidManager
     public function handle(Request $request, Closure $next): Response
     {
         // Check if the manager is authenticated via the manager guard
-        if (Auth::guard('manager')->check()) {
-            return $next($request);
+        // if (Auth::guard('manager')->check()) {
+        //     return $next($request);
+        // }
+         if (Auth::guard('manager')->check()) {
+            $manager = Auth::guard('manager')->user();
+
+            // Check if the manager is logged in as Supervisor
+            if ($manager->loginas === 'Manager') {
+                return $next($request); // Allow access
+            }
         }
 
         // Redirect to manager login if not authenticated

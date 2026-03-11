@@ -42,19 +42,24 @@ class LoginCover extends Controller
                             ->where('password', $request->password)
                             ->first();
 
-if ($manager) {
-    // English comments: Check if the manager account is active (status == 1)
-    if ($manager->status != 1) {
-        return back()->withErrors([
-            'email' => 'Your account is deactivated. Please contact the Admin!',
-        ])->onlyInput('email');
-    }
+    if ($manager) {
+        // English comments: Check if the manager account is active (status == 1)
+        if ($manager->status != 1) {
+            return back()->withErrors([
+                'email' => 'Your account is deactivated. Please contact the Admin!',
+            ])->onlyInput('email');
+        }
 
-    // English comments: If active, proceed with login
-    Auth::guard('manager')->login($manager);
-    $request->session()->regenerate();
-    return redirect()->route('manager.dashboard');
-}
+        // English comments: If active, proceed with login
+        Auth::guard('manager')->login($manager);
+        $request->session()->regenerate();
+        // return redirect()->route('manager.dashboard');
+        if ($manager->loginas === 'Manager') {
+        return redirect()->route('manager.dashboard');
+        } else {
+            return redirect()->route('supervisor.dashboard');
+        }
+    }
 
     // 3. Fallback if both fail
     return back()->withErrors([

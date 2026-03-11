@@ -188,8 +188,12 @@ use App\Http\Controllers\wizard_example\Checkout as WizardCheckout;
 use App\Http\Controllers\wizard_example\CreateDeal;
 use App\Http\Controllers\wizard_example\PropertyListing;
 use App\Http\Middleware\validManager;
+use App\Http\Middleware\ValidSupervisor;
 use App\Http\Middleware\ValidUser;
 use Illuminate\Support\Facades\Route;
+
+
+use App\Http\Controllers\supervisor_controllers\DashboardSupervisorController;
 
 
 
@@ -706,9 +710,15 @@ Route::get('/knowledge-base/export',
 Route::get('Supervisor',[Supervisorcontroller::class,'index'])->name('manager.supervisor');
 });
 
+// manager route end here
 
 
 
+// supervisor route
+
+Route::prefix('/supervisor')->middleware(['ValidSupervisor'])->group(function () {
+    Route::get('/dashboard', [DashboardSupervisorController :: class, 'index'])->name('supervisor.dashboard');
+});
 
 
 
