@@ -56,6 +56,17 @@
       "url": "manager/international-interns",
       "permission": "view_manager_international_interns"
     },
+
+    {
+      "menuHeader" :"Supervisor"
+    },
+    {
+      "name" : "Supervisor",
+      "icon": "menu-icon icon-base ti tabler-cash",
+      "slug": "manager/Supervisor",
+      "url": "manager/Supervisor"
+    },
+
     {
       "menuHeader": "Reports & Logs"
     },
