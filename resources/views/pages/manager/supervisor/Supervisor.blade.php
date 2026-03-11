@@ -313,7 +313,7 @@ $manager = auth()->guard('manager')->user();
                     <a href="javascript:;" 
    class="dropdown-item offer-letter-send" 
    data-bs-toggle="modal"
-   data-bs-target="#offerLetterSendModal" 
+   data-bs-target="#supervisorsendModal" 
    data-id="{{ $offerletter->id }}"> 
    Offer Letter Send
 </a>
@@ -391,7 +391,7 @@ $manager = auth()->guard('manager')->user();
 
 
         {{-- Offer Letter Send Modal --}}
-        {{-- <div class="modal fade" id="offerLetterSendModal" tabindex="-1" aria-hidden="true"
+        {{-- <div class="modal fade" id="supervisorsendModal" tabindex="-1" aria-hidden="true"
           style="z-index: 9999 !important;">
           <div class="modal-dialog modal-lg modal-simple modal-dialog-centered">
             <div class="modal-content p-2">
@@ -437,61 +437,61 @@ $manager = auth()->guard('manager')->user();
 
 
       </div>
-    </div>
-    <div class="row mx-3 justify-content-between"> --}}
+    </div> --}}
+    <div class="row mx-3 justify-content-between"> 
       
-      {{-- <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
+    <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
         <div class="dt-info" aria-live="polite">
-          Showing {{ $offerletters->firstItem() ?? 0 }} to {{ $offerletters->lastItem() ?? 0 }} of {{
-          $offerletters->total() ??
+          Showing {{ $supervisors->firstItem() ?? 0 }} to {{ $supervisors->lastItem() ?? 0 }} of {{
+          $supervisors->total() ??
           0 }} entries
         </div>
-      </div> --}}
+    </div> 
 
       {{-- Pagination --}}
-      {{-- <div
+       <div
         class="d-md-flex align-items-center dt-layout-end mt-4 col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
         <div class="dt-paging">
           <nav aria-label="pagination">
             <ul class="pagination">
               {{-- First Page --}}
-              {{-- <li class="dt-paging-button page-item {{ $offerletters->onFirstPage() ? 'disabled' : '' }}">
-                <a class="page-link" style="border-radius: 5px;" href="{{ $offerletters->url(1) }}" aria-label="First">
+               <li class="dt-paging-button page-item {{ $supervisors->onFirstPage() ? 'disabled' : '' }}">
+                <a class="page-link" style="border-radius: 5px;" href="{{ $supervisors->url(1) }}" aria-label="First">
                   <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                 </a>
-              </li> --}} 
+              </li> 
 
               {{-- Previous Page --}}
-              {{-- <li class="dt-paging-button page-item {{ $offerletters->onFirstPage() ? 'disabled' : '' }}">
-                <a class="page-link" style="border-radius: 5px;" href="{{ $offerletters->previousPageUrl() }}"
+              <li class="dt-paging-button page-item {{ $supervisors->onFirstPage() ? 'disabled' : '' }}">
+                <a class="page-link" style="border-radius: 5px;" href="{{ $supervisors->previousPageUrl() }}"
                   aria-label="Previous">
                   <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                 </a>
-              </li> --}}
+              </li>
 
               {{-- Page Numbers --}}
-              {{-- @foreach ($offerletters->getUrlRange(max(1, $offerletters->currentPage() - 2),
-              min($offerletters->lastPage(),
-              $offerletters->currentPage() + 2)) as $page => $url)
-              <li class="dt-paging-button page-item {{ $page == $offerletters->currentPage() ? 'active' : '' }}">
+              @foreach ($supervisors->getUrlRange(max(1, $supervisors->currentPage() - 2),
+              min($supervisors->lastPage(),
+              $supervisors->currentPage() + 2)) as $page => $url)
+              <li class="dt-paging-button page-item {{ $page == $supervisors->currentPage() ? 'active' : '' }}">
                 <a class="page-link" style="border-radius: 5px;" href="{{ $url }}">{{ $page }}</a>
               </li>
-              @endforeach --}}
+              @endforeach
 
               {{-- Next Page --}}
-              {{-- <li
-                class="dt-paging-button page-item {{ $offerletters->currentPage() == $offerletters->lastPage() ? 'disabled' : '' }}">
-                <a class="page-link" style="border-radius: 5px;" href="{{ $offerletters->nextPageUrl() }}"
+              <li
+                class="dt-paging-button page-item {{ $supervisors->currentPage() == $supervisors->lastPage() ? 'disabled' : '' }}">
+                <a class="page-link" style="border-radius: 5px;" href="{{ $supervisors->nextPageUrl() }}"
                   aria-label="Next">
                   <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
                 </a>
-              </li> --}}
+              </li>
 
               {{-- Last Page --}}
-              {{-- <li
-                class="dt-paging-button page-item {{ $offerletters->currentPage() == $offerletters->lastPage() ? 'disabled' : '' }}">
+              <li
+                class="dt-paging-button page-item {{ $supervisors->currentPage() == $supervisors->lastPage() ? 'disabled' : '' }}">
                 <a class="page-link" style="border-radius: 5px;"
-                  href="{{ $offerletters->url($offerletters->lastPage()) }}" aria-label="Last">
+                  href="{{ $supervisors->url($supervisors->lastPage()) }}" aria-label="Last">
                   <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
                 </a>
               </li>
@@ -502,7 +502,7 @@ $manager = auth()->guard('manager')->user();
     </div>
 
   </div>
-</div> --}}
+</div>
 
 </div>
 
