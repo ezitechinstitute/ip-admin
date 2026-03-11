@@ -16,36 +16,36 @@
       "slug": "manager/my-interns",
       "url": "manager/my-interns",
       "permission": "view_my_interns",
-      "submenu": [
-        {
-          "url": "manager/all-interns/active",
-          "name": "Active Interns",
-          "slug": "manager/all-interns/active",
-          "permission": "view_active_interns"
-        },
+      "submenu": [        
         {
           "url": "manager/all-interns/newInterns",
-          "name": "New Interns",
+          "name": "Interview",
           "slug": "manager/all-interns/newInterns",
           "permission": "view_new_interns"
         },
         {
           "url": "manager/all-interns/contact",
-          "name": "Contact With",
+          "name": "Contact",
           "slug": "manager/all-interns/contact",
           "permission": "view_contact_with"
         },
         {
           "url": "manager/all-interns/test",
-          "name": "Interview Test",
+          "name": "Test",
           "slug": "manager/all-interns/test",
           "permission": "view_interview_test"
         },
         {
           "url": "manager/all-interns/completed",
-          "name": "Test Completed",
+          "name": "Completed",
           "slug": "manager/all-interns/completed",
           "permission": "view_test_completed"
+        },
+        {
+          "url": "manager/all-interns/active",
+          "name": "Active Interns",
+          "slug": "manager/all-interns/active",
+          "permission": "view_active_interns"
         }
       ]
     },
