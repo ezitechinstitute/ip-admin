@@ -16,7 +16,7 @@
       "slug": "manager/my-interns",
       "url": "manager/my-interns",
       "permission": "view_my_interns",
-      "submenu": [        
+      "submenu": [
         {
           "url": "manager/all-interns/newInterns",
           "name": "Interview",
@@ -58,38 +58,45 @@
     },
 
     {
-      "menuHeader" :"Supervisor"
+      "menuHeader": "Supervisor"
     },
     {
-      "name" : "Supervisor",
+      "name": "Supervisor",
       "icon": "menu-icon icon-base ti tabler-cash",
       "slug": "manager/Supervisor",
       "url": "manager/Supervisor"
     },
     {
-    "menuHeader": "Attend & Leaves"
-  },
-  {
-    "name": "Intern Leaves",
-    "icon": "menu-icon icon-base ti tabler-user-check",
-    "slug": "manager/attendance/intern-leaves",
-    "url": "manager/attendance/intern-leaves",
-    "permission": "view_intern_leaves"
-  },
-  {
-    "name": "Supervisor Leaves",
-    "icon": "menu-icon icon-base ti tabler-checklist",
-    "slug": "manager/attendance/supervisor-leaves",
-    "url": "manager/attendance/supervisor-leaves",
-    "permission": "approve_supervisor_leaves"
-  },
-  {
-    "name": "Attendance Calendar",
-    "icon": "menu-icon icon-base ti tabler-calendar",
-    "slug": "manager/attendance-calendar",
-    "url": "manager/attendance-calendar",
-    "permission": "view_attendance_calendar"
-  },
+      "menuHeader": "Attend & Leaves"
+    },
+    {
+      "name": "Intern Leaves",
+      "icon": "menu-icon icon-base ti tabler-user-check",
+      "slug": "manager/attendance/intern-leaves",
+      "url": "manager/attendance/intern-leaves",
+      "permission": "view_intern_leaves"
+    },
+    {
+      "name": "Supervisor Leaves",
+      "icon": "menu-icon icon-base ti tabler-checklist",
+      "slug": "manager/attendance/supervisor-leaves",
+      "url": "manager/attendance/supervisor-leaves",
+      "permission": "approve_supervisor_leaves"
+    },
+    {
+      "name": "Supervisor Attendance",
+      "icon": "menu-icon icon-base ti tabler-calendar-check",
+      "slug": "manager/attendance/supervisor-attendance",
+      "url": "manager/attendance/supervisor-attendance",
+      "permission": "view_supervisor_attendance"
+    },
+    {
+      "name": "Attendance Calendar",
+      "icon": "menu-icon icon-base ti tabler-calendar",
+      "slug": "manager/attendance-calendar",
+      "url": "manager/attendance-calendar",
+      "permission": "view_attendance_calendar"
+    },
     {
       "menuHeader": "Reports & Logs"
     },

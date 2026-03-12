@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Offer-Letter-Request')
+@section('title', 'Leave & Attendance Management')
 
 @section('vendor-style')
 <link rel="stylesheet" href="path-to/datatables.bootstrap5.css">
@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="path-to/form-validation.css">
 <link rel="stylesheet" href="path-to/animate.css">
 <link rel="stylesheet" href="path-to/sweetalert2.css">
+<link rel="stylesheet" href="path-to/flatpickr.css">
+<link rel="stylesheet" href="path-to/fullcalendar.css">
 @endsection
 
 @section('vendor-script')
@@ -19,592 +21,613 @@
 <script src="path-to/form-validation.js"></script>
 <script src="path-to/cleave-zen.js"></script>
 <script src="path-to/sweetalert2.js"></script>
+<script src="path-to/flatpickr.js"></script>
+<script src="path-to/fullcalendar.js"></script>
 @endsection
 
 @section('content')
-<!-- Users List Table -->
-<div class="col-12 mb-6">
-  <h4 class="mt-6 mb-1">Supervisor</h4>
+<div class="row">
+    <div class="col-12 mb-6">
+        <h4 class="mt-6 mb-1">Leave & Attendance Management</h4>
+        <p class="text-muted">Manage supervisor leave requests and view attendance records</p>
+    </div>
 </div>
-{{-- Error Messages --}}
-@if($errors->any())
-@foreach($errors->all() as $error)
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
-  {{ $error }}
-  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-@endforeach
-@endif
 
-{{-- Success Message --}}
 @if(session('success'))
 <div class="alert alert-success alert-dismissible fade show" role="alert">
-  {{ session('success') }}
-  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 @endif
 
-{{-- Auto-hide script --}}
 <script>
-  setTimeout(function() {
+    setTimeout(function() {
         const alerts = document.querySelectorAll('.alert');
         alerts.forEach(alert => {
             alert.classList.remove('show');
             alert.classList.add('hide');
             setTimeout(() => alert.remove(), 500);
         });
-    }, 5000); // 5 seconds
+    }, 5000);
 </script>
-@php
-$manager = auth()->guard('manager')->user();
-@endphp
-<div class="card">
 
-  <div class="card-datatable">
-    
-      <div >
-        <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
-          
-
-            {{-- <form id="perPageForm" method="GET">
-              <select name="perpage" class="form-select" onchange="this.form.submit()">
-                @foreach([15, 25, 50, 100] as $val)
-                <option value="{{ $val }}" {{ request('perpage', 15)==$val ? 'selected' : '' }}>
-                  {{ $val }}
-                </option>
-                @endforeach
-              </select>
-              </select>
-              <input type="hidden" name="search" value="{{ request('search') }}">
-              <input type="hidden" name="status" value="{{ request('status') }}">
-              <input type="hidden" name="intern_type" value="{{ request('intern_type') }}">
-            </form> --}}
-
-
-
-            <label for="dt-length-0"></label>
-          </div>
-        </div>
-
-
-        <div class="d-md-flex align-items-center col-md-auto ms-auto d-flex gap-2 flex-wrap" class="form-control">
-
-          <form method="GET"  id="filterForm"
-            class="d-flex align-items-center gap-2">
-
-            <!-- Search -->
-            {{-- <input type="search" name="search" id="searchInput" class="form-control"
-              style="width: 200px;" placeholder="Search..." value="{{ request('search') }}"> --}}
-
-            <!-- Status Filter -->
-            {{-- <select name="status" id="statusFilter" class="form-select" onchange="this.form.submit()">
-              <option value="">Status</option>
-              <option value="pending" {{ request('status')=='pending' ? 'selected' : '' }}>Pending</option>
-              <option value="accept" {{ request('status')=='accept' ? 'selected' : '' }}>Accept</option>
-            </select> --}}
-
-            <!-- Keep Perpage -->
-            <input type="hidden" name="perpage" value="{{ request('perpage', 15) }}">
-
-          </form>
-          {{-- @php
-          $adminSettings = \App\Models\AdminSetting::first();
-
-          if (!$adminSettings) {
-          $isAdminAllowed = true;
-          } else {
-          $permissions = $adminSettings->export_permissions;
-          $isAdminAllowed = isset($permissions['manager']) && $permissions['manager'] == 1;
-          }
-          @endphp
-
-          @if($isAdminAllowed)
-          <div class="btn-group" role="group">
-            @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'excel_manager_offer_letter_request'))
-            <button id="btnGroupDrop1" type="button" class="btn add-new btn-outline-primary dropdown-toggle"
-              data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <i class="icon-base ti tabler-dots-vertical icon-md d-sm-none"></i>
-              <i class="icon-base ti tabler-upload icon-xs me-2"></i>
-              <span class="d-none d-sm-block">Export</span>
-            </button>
-            @endif
-            <div class="dropdown-menu" style="z-index: 1021" aria-labelledby="btnGroupDrop1">
-              <a class="dt-button dropdown-item" href="javascript:void(0);" onclick="downloadOfferLetterCSV()">
-                <span>
-                  <span class="d-flex align-items-center">
-                    <i class="icon-base ti tabler-file-spreadsheet me-1"></i>CSV / Excel
-                  </span>
-                </span>
-              </a>
-            </div>
-          </div>
-          @endif --}}
-        </div>
-
-
-
-
-
-
-
-
-
-        </form>
-      </div>
-    </div>
-
-    <div class="justify-content-between dt-layout-table">
-      <div class="table-responsive overflow-auto" style="max-height: 700px;">
-        <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
-          aria-describedby="DataTables_Table_0_info" style="width: 100%;">
-
-          <thead class="border-top sticky-top bg-card">
-            <tr>
-              <th data-dt-column="3" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                aria-label="Full Name" tabindex="0"><span class="dt-column-title" role="button">ETI‑ID</span><span
-                  class="dt-column-order"></span></th>
-              <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Name</span><span
-                  class="dt-column-order"></span></th>
-              <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Join date</span><span
-                  class="dt-column-order"></span></th>
-              <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Commission</span><span
-                  class="dt-column-order"></span></th>
-          
-              {{-- <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                aria-label="City" tabindex="0"><span class="dt-column-title" role="button">REASON</span><span
-                  class="dt-column-order"></span></th> --}}
-              
-              {{-- <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                aria-label="City" tabindex="0"><span class="dt-column-title" role="button">CREATED AT</span><span
-                  class="dt-column-order"></span></th> --}}
-
-
-
-              
-
-            </tr>
-          </thead>
-          <tbody>
-            @forelse ($supervisors as $Sup)
-            <tr class="">
-              <td><span
-                  class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$Sup->eti_id}}</span>
-              </td>
-
-
-              <td><span
-                  class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$Sup->name}}</span>
-              </td>
-
-              <td><span
-                  class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$Sup->join_date}}</span>
-              </td>
-
-              <td><span
-                  class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$Sup->comission}}</span>
-              </td>
-
-          
-                {{-- @php
-                $statusClasses = [
-                'ongoing' => 'bg-label-primary',
-                'contact' => 'bg-label-info',
-                'expired' => 'bg-label-danger',
-                'completed' => 'bg-label-success',
-                'active' => 'bg-label-success',
-                'removed' => 'bg-label-danger',
-                'freeze' => 'bg-label-danger',
-                'submitted' => 'bg-label-warning',
-                'approved' => 'bg-label-success',
-                'rejected' => 'bg-label-danger',
-                ];
-
-                $status = strtolower($offerletter->intern_status);
-                $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
-                @endphp
-
-                <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span>
-              </td>
-              <td><span class="text-heading text-nowrap"><small><i <td><span
-                        class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$offerletter->tech}}</span>
-              </td> --}}
-
-
-              {{-- <td><span class="text-heading text-nowrap"><small><i></i>{{$offerletter->reason}}</small></span></td>
-              --}}
-
-              {{-- <td>
-                @php
-                $statusClasses = [
-                'ongoing' => 'bg-label-primary',
-                'contact' => 'bg-label-info',
-                'pending' => 'bg-label-warning',
-                'accept' => 'bg-label-success',
-                'active' => 'bg-label-success',
-                'removed' => 'bg-label-danger',
-                'freeze' => 'bg-label-danger',
-                'submitted' => 'bg-label-warning',
-                'approved' => 'bg-label-success',
-                'reject' => 'bg-label-danger',
-                ];
-
-                $status = strtolower($offerletter->status);
-                $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
-                @endphp
-
-                <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span>
-              </td> --}}
-
-              {{-- <td>
-                @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'accept_manager_offer_letter_request') || $manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'reject_manager_offer_letter_request') || $manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'offer_letter_send_manager_offer_letter_request') || $manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'view_reason_manager_offer_letter_request'))
-
-                <div class="dropdown">
-                  <a href="javascript:;"
-                    class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
-                  </a>
-
-                  <div class="dropdown-menu dropdown-menu-end m-0">
-
-
-
-                    @if ($offerletter->status != 'accept' && $offerletter->status != 'reject')
-                    @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'accept_manager_offer_letter_request'))
-                       <a href="javascript:void(0);" 
-   class="dropdown-item status-update-btn" 
-   data-id="{{ $offerletter->offer_letter_id }}" 
-   data-status="accept"
-   data-name="{{ $offerletter->username }}">
-   Accept
-</a>
-@endif
-
-@if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'reject_manager_offer_letter_request'))
-<a href="javascript:void(0);" 
-   class="dropdown-item status-update-btn" 
-   data-id="{{ $offerletter->offer_letter_id }}" 
-   data-status="reject"
-   data-name="{{ $offerletter->username }}">
-   Reject
-</a>
-@endif
-                    @endif
-                  
-
-<form id="statusUpdateForm" action="{{ route('manager.offer-letter.update-status') }}" method="POST" style="display: none;">
-    @csrf
-    <input type="hidden" name="id" id="update_id">
-    <input type="hidden" name="status" id="update_status">
-</form>
-
-@if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'offer_letter_send_manager_offer_letter_request'))
-                    <a href="javascript:;" 
-   class="dropdown-item offer-letter-send" 
-   data-bs-toggle="modal"
-   data-bs-target="#supervisorsendModal" 
-   data-id="{{ $offerletter->id }}"> 
-   Offer Letter Send
-</a>
-@endif
-
-@if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
-  'view_reason_manager_offer_letter_request'))
-
-                    <a href="javascript:void(0);" class="dropdown-item view-reason-btn" data-bs-toggle="modal"
-                      data-bs-target="#viewReasonModal" data-name="{{ $offerletter->username }}"
-                      data-reason="{{ $offerletter->reason ?? 'No reason provided.' }}">
-                      View Reason
-                    </a>
-                    @endif
-
-
-
-                  
-
-
-
-                  </div>
-                </div>
-@endif
-              </td>
-
-
-
-            </tr> --}}
-
-
-
-            @empty
-            <tr>
-              <td colspan="11">
-                <p class="text-center mb-0">No data available!</p>
-              </td>
-            </tr>
-            @endforelse
-
-
-
-
-
-
-
-          </tbody>
-          <tfoot></tfoot>
-        </table>
-  {{-- <div class="modal fade" id="viewReasonModal" tabindex="-1" aria-hidden="true">
-                      <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                          <div class="modal-header">
-                            <h5 class="modal-title">Request Reason</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                          </div>
-                          <div class="modal-body">
-                            <div class="mb-3">
-                              <label class="form-label fw-bold">Intern Name:</label>
-                              <p id="modalUserName" class="text-muted"></p>
-                            </div>
-                            <hr>
-                            <div class="mb-3">
-                              <label class="form-label fw-bold">Reason for Request:</label>
-                              <div id="modalReasonText" class="p-3 bg-light border rounded"
-                                style="white-space: pre-wrap;"></div>
-                            </div>
-                          </div>
-                          <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                          </div>
+<!-- Attendance Summary Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div class="card-info">
+                        <p class="card-text mb-2">Present Today</p>
+                        <div class="d-flex align-items-end mb-2">
+                            <h4 class="card-title mb-0 me-2">{{ $presentToday ?? 0 }}</h4>
+                            <small class="text-success">of {{ $totalSupervisors ?? 0 }}</small>
                         </div>
-                      </div>
-                    </div> --}}
-
-
-        {{-- Offer Letter Send Modal --}}
-        {{-- <div class="modal fade" id="supervisorsendModal" tabindex="-1" aria-hidden="true"
-          style="z-index: 9999 !important;">
-          <div class="modal-dialog modal-lg modal-simple modal-dialog-centered">
-            <div class="modal-content p-2">
-              <div class="modal-body">
-                <button type="button" class="btn-close"
-                  style="inset-block-start: 0rem !important; inset-inline-end: 0rem !important;" data-bs-dismiss="modal"
-                  aria-label="Close"></button>
-                <div class="text-start mb-6">
-                  <h4 class="role-title">Send Offer Letter</h4>
-                </div> --}}
-
-                {{-- <form id="offerLetterForm" action="{{ route('send.offer.letter') }}" method="POST">
-    @csrf 
-    <input type="hidden" id="offer_intern_id" name="intern_id">
-
-    <div class="col-12 mb-3">
-        <label class="form-label" for="template_select">Select Offer Letter Template</label>
-        <select name="template_id" id="template_select" required class="form-select">
-            <option value="">Select a Template</option>
-            @foreach($templates as $template)
-                <option value="{{ $template->id }}">{{ $template->title }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    <div>
-        <h6>Preview Template</h6>
-        <div id="template_preview_area" class="border p-3 text-center content-center rounded" style="min-height: 150px; display: flex; justify-content: center; align-items: center; border: 1px dotted blue !important; background-color: #f6f9fc; max-height: 1000px; overflow-y: auto;">
-            <p class="text-center text-primary">Please select a template to see preview</p>
-        </div>
-    </div>
-
-    <div class="col-12 text-end mt-4">
-        <button type="button" id="downloadPdfBtn" class="btn btn-outline-success btn-sm me-2"><i class="menu-icon icon-base ti tabler-file-download"></i> Download PDF</button>
-        <span>Or</span>
-        <button type="submit" class="btn btn-sm btn-primary ms-2"><i class="menu-icon icon-base ti tabler-mail-forward"></i> Send Email</button>
-    </div>
-</form>
-              </div>
+                        <small>Supervisors checked in</small>
+                    </div>
+                    <div class="card-icon">
+                        <span class="badge bg-label-primary rounded p-2">
+                            <i class="icon-base ti tabler-clock-check icon-28px"></i>
+                        </span>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-
-
-      </div>
-    </div> --}}
-    <div class="row mx-3 justify-content-between"> 
-      
-    <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
-        <div class="dt-info" aria-live="polite">
-          Showing {{ $supervisors->firstItem() ?? 0 }} to {{ $supervisors->lastItem() ?? 0 }} of {{
-          $supervisors->total() ??
-          0 }} entries
-        </div>
-    </div> 
-
-      {{-- Pagination --}}
-       <div
-        class="d-md-flex align-items-center dt-layout-end mt-4 col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
-        <div class="dt-paging">
-          <nav aria-label="pagination">
-            <ul class="pagination">
-              {{-- First Page --}}
-               <li class="dt-paging-button page-item {{ $supervisors->onFirstPage() ? 'disabled' : '' }}">
-                <a class="page-link" style="border-radius: 5px;" href="{{ $supervisors->url(1) }}" aria-label="First">
-                  <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
-                </a>
-              </li> 
-
-              {{-- Previous Page --}}
-              <li class="dt-paging-button page-item {{ $supervisors->onFirstPage() ? 'disabled' : '' }}">
-                <a class="page-link" style="border-radius: 5px;" href="{{ $supervisors->previousPageUrl() }}"
-                  aria-label="Previous">
-                  <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
-                </a>
-              </li>
-
-              {{-- Page Numbers --}}
-              @foreach ($supervisors->getUrlRange(max(1, $supervisors->currentPage() - 2),
-              min($supervisors->lastPage(),
-              $supervisors->currentPage() + 2)) as $page => $url)
-              <li class="dt-paging-button page-item {{ $page == $supervisors->currentPage() ? 'active' : '' }}">
-                <a class="page-link" style="border-radius: 5px;" href="{{ $url }}">{{ $page }}</a>
-              </li>
-              @endforeach
-
-              {{-- Next Page --}}
-              <li
-                class="dt-paging-button page-item {{ $supervisors->currentPage() == $supervisors->lastPage() ? 'disabled' : '' }}">
-                <a class="page-link" style="border-radius: 5px;" href="{{ $supervisors->nextPageUrl() }}"
-                  aria-label="Next">
-                  <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
-                </a>
-              </li>
-
-              {{-- Last Page --}}
-              <li
-                class="dt-paging-button page-item {{ $supervisors->currentPage() == $supervisors->lastPage() ? 'disabled' : '' }}">
-                <a class="page-link" style="border-radius: 5px;"
-                  href="{{ $supervisors->url($supervisors->lastPage()) }}" aria-label="Last">
-                  <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </div>
     </div>
 
-  </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div class="card-info">
+                        <p class="card-text mb-2">Pending Leaves</p>
+                        <div class="d-flex align-items-end mb-2">
+                            <h4 class="card-title mb-0 me-2">{{ $pendingLeaves ?? 0 }}</h4>
+                            <small class="text-warning">awaiting</small>
+                        </div>
+                        <small>{{ $approvedLeaves ?? 0 }} approved this month</small>
+                    </div>
+                    <div class="card-icon">
+                        <span class="badge bg-label-warning rounded p-2">
+                            <i class="icon-base ti tabler-calendar-time icon-28px"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div class="card-info">
+                        <p class="card-text mb-2">On Leave Today</p>
+                        <div class="d-flex align-items-end mb-2">
+                            <h4 class="card-title mb-0 me-2">{{ $onLeaveToday ?? 0 }}</h4>
+                            <small class="text-info">supervisors</small>
+                        </div>
+                        <small>{{ $upcomingLeaves ?? 0 }} upcoming</small>
+                    </div>
+                    <div class="card-icon">
+                        <span class="badge bg-label-info rounded p-2">
+                            <i class="icon-base ti tabler-user-off icon-28px"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div class="card-info">
+                        <p class="card-text mb-2">Avg. Work Hours</p>
+                        <div class="d-flex align-items-end mb-2">
+                            <h4 class="card-title mb-0 me-2">{{ $avgWorkHours ?? '7.5' }}</h4>
+                            <small class="text-secondary">hours</small>
+                        </div>
+                        <small>this week</small>
+                    </div>
+                    <div class="card-icon">
+                        <span class="badge bg-label-secondary rounded p-2">
+                            <i class="icon-base ti tabler-chart-bar icon-28px"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+<!-- Tabs Navigation -->
+<div class="nav-tabs-top mb-4">
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="leave-requests-tab" data-bs-toggle="tab" data-bs-target="#leave-requests" type="button" role="tab" aria-controls="leave-requests" aria-selected="true">
+                <i class="icon-base ti tabler-calendar me-1"></i> Leave Requests
+                @if(($pendingLeaves ?? 0) > 0)
+                <span class="badge bg-danger ms-1">{{ $pendingLeaves }}</span>
+                @endif
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance" type="button" role="tab" aria-controls="attendance" aria-selected="false">
+                <i class="icon-base ti tabler-clock me-1"></i> Attendance Overview
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar" type="button" role="tab" aria-controls="calendar" aria-selected="false">
+                <i class="icon-base ti tabler-calendar-week me-1"></i> Calendar View
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content border-0 p-0 pt-4">
+        <!-- Leave Requests Tab -->
+        <div class="tab-pane fade show active" id="leave-requests" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Supervisor Leave Requests</h5>
+                </div>
+                <div class="card-datatable">
+                    <div id="DataTables_Table_0_wrapper" class="dt-container dt-bootstrap5 dt-empty-footer">
+                        <div class="row m-3 my-0 justify-content-between">
+                            <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
+                                <div class="dt-length mb-md-6 mb-0 d-flex items-center mt-5">
+                                    <form id="perPageForm" method="GET">
+                                        <input type="hidden" name="tab" value="leave-requests">
+                                        <select name="per_page" class="form-select" onchange="this.form.submit()">
+                                            @foreach([15, 25, 50, 100] as $val)
+                                            <option value="{{ $val }}" {{ request('per_page',15)==$val ? 'selected' : '' }}>{{ $val }}</option>
+                                            @endforeach
+                                        </select>
+                                        <input type="hidden" name="search" value="{{ request('search') }}">
+                                        <input type="hidden" name="status" value="{{ request('status') }}">
+                                        <input type="hidden" name="supervisor_id" value="{{ request('supervisor_id') }}">
+                                    </form>
+                                    <label for="dt-length-0"></label>
+                                </div>
+                            </div>
+
+                            <div class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
+                                <form method="GET" action="{{ route('manager.leave.requests') }}" id="filterForm" class="d-flex gap-2">
+                                    <input type="hidden" name="tab" value="leave-requests">
+                                    <input type="search" name="search" id="searchInput" class="form-control"
+                                        placeholder="Search by Name, Email or ID" value="{{ request('search') }}">
+                                    <style>
+                                        input[type="search"]::-webkit-search-cancel-button,
+                                        input[type="search"]::-webkit-search-decoration {
+                                            -webkit-appearance: none;
+                                            appearance: none;
+                                        }
+                                    </style>
+
+                                    <select name="supervisor_id" id="supervisorFilter" class="form-select select2" style="min-width: 180px;">
+                                        <option value="">All Supervisors</option>
+                                        @foreach($supervisors ?? [] as $supervisor)
+                                        <option value="{{ $supervisor->id }}" {{ request('supervisor_id') == $supervisor->id ? 'selected' : '' }}>
+                                            {{ $supervisor->name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+
+                                    <select name="status" id="statusFilter" class="form-select text-capitalize" style="min-width: 130px;">
+                                        <option value="">All Status</option>
+                                        <option value="pending" {{ request('status')=='pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Approved</option>
+                                        <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Rejected</option>
+                                    </select>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="justify-content-between dt-layout-table">
+                            <div class="table-responsive overflow-auto" style="max-height: 700px;">
+                                <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
+                                    aria-describedby="DataTables_Table_0_info" style="width: 100%;">
+                                    <thead class="border-top sticky-top bg-card">
+                                        <tr>
+                                            <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Leave ID</th>
+                                            <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Supervisor</th>
+                                            <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Contact</th>
+                                            <th class="dt-orderable-asc dt-orderable-desc text-nowrap">From Date</th>
+                                            <th class="dt-orderable-asc dt-orderable-desc text-nowrap">To Date</th>
+                                            <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Days</th>
+                                            <th class="dt-orderable-none">Reason</th>
+                                            <th class="dt-orderable-none">Status</th>
+                                            <th class="dt-orderable-none">Requested On</th>
+                                            <th class="dt-orderable-none">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($leaves ?? [] as $leave)
+                                        <tr>
+                                            <td><span class="text-heading text-nowrap fw-medium">#{{ $leave->leave_id }}</span></td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar avatar-sm me-2">
+                                                        <span class="avatar-initial rounded-circle bg-label-primary">
+                                                            {{ substr($leave->name, 0, 1) }}
+                                                        </span>
+                                                    </div>
+                                                    <span class="text-heading text-nowrap">{{ $leave->name }}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="text-heading text-nowrap">
+                                                    <small><i class="icon-base ti tabler-mail me-1 text-danger icon-18px"></i>{{ $leave->email }}</small>
+                                                </span>
+                                            </td>
+                                            <td><span class="text-heading text-nowrap">{{ \Carbon\Carbon::parse($leave->from_date)->format('d M Y') }}</span></td>
+                                            <td><span class="text-heading text-nowrap">{{ \Carbon\Carbon::parse($leave->to_date)->format('d M Y') }}</span></td>
+                                            <td><span class="badge bg-label-info">{{ $leave->days }} days</span></td>
+                                            <td>
+                                                <span class="text-heading text-wrap" style="max-width: 200px; display: inline-block;">
+                                                    {{ Str::limit($leave->reason, 50) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @php
+                                                $statusClass = 'bg-label-warning';
+                                                $statusText = 'Pending';
+
+                                                if($leave->leave_status === 1){
+                                                    $statusClass = 'bg-label-success';
+                                                    $statusText = 'Approved';
+                                                }
+                                                elseif($leave->leave_status === 0 || $leave->leave_status === null){
+                                                    $statusClass = 'bg-label-danger';
+                                                    $statusText = 'Rejected';
+                                                }
+                                                @endphp
+                                                <span class="badge {{ $statusClass }}">{{ $statusText }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-heading text-nowrap">
+                                                    {{ $leave->created_at ? \Carbon\Carbon::parse($leave->created_at)->format('d M Y') : 'N/A' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <a href="javascript:;"
+                                                        class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
+                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-end m-0">
+                                                        @if($leave->leave_status === null || $leave->leave_status === 0)
+                                                        <a href="{{ route('manager.leave.approve', $leave->leave_id) }}"
+                                                            class="dropdown-item text-success"
+                                                            onclick="event.preventDefault(); confirmAction('approve', '{{ $leave->leave_id }}')">
+                                                            <i class="icon-base ti tabler-check me-1"></i> Approve
+                                                        </a>
+                                                        <a href="{{ route('manager.leave.reject', $leave->leave_id) }}"
+                                                            class="dropdown-item text-danger"
+                                                            onclick="event.preventDefault(); confirmAction('reject', '{{ $leave->leave_id }}')">
+                                                            <i class="icon-base ti tabler-x me-1"></i> Reject
+                                                        </a>
+                                                        <div class="dropdown-divider"></div>
+                                                        @endif
+                                                        <a href="javascript:;" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#viewLeaveModal{{ $leave->leave_id }}">
+                                                            <i class="icon-base ti tabler-eye me-1"></i> View Details
+                                                        </a>
+                                                    </div>
+                                                </div>
+
+                                                <!-- View Leave Modal -->
+                                                <div class="modal fade" id="viewLeaveModal{{ $leave->leave_id }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Leave Request Details</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-bold">Supervisor</label>
+                                                                    <p>{{ $leave->name }}</p>
+                                                                </div>
+                                                                <div class="row mb-3">
+                                                                    <div class="col-6">
+                                                                        <label class="form-label fw-bold">From Date</label>
+                                                                        <p>{{ \Carbon\Carbon::parse($leave->from_date)->format('d M Y') }}</p>
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <label class="form-label fw-bold">To Date</label>
+                                                                        <p>{{ \Carbon\Carbon::parse($leave->to_date)->format('d M Y') }}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-bold">Total Days</label>
+                                                                    <p>{{ $leave->days }} days</p>
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-bold">Reason</label>
+                                                                    <p>{{ $leave->reason }}</p>
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-bold">Status</label>
+                                                                    <p><span class="badge {{ $statusClass }}">{{ $statusText }}</span></p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="10" class="text-center py-4">
+                                                <div class="d-flex flex-column align-items-center">
+                                                    <i class="icon-base ti tabler-calendar-off icon-48px text-muted mb-2"></i>
+                                                    <p class="mb-0">No Leave Requests Found</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        @if(isset($leaves) && $leaves->total() > 0)
+                        <div class="row mx-3 justify-content-between">
+                            <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
+                                <div class="dt-info" aria-live="polite">
+                                    Showing {{ $leaves->firstItem() ?? 0 }} to {{ $leaves->lastItem() ?? 0 }} of {{ $leaves->total() ?? 0 }} entries
+                                </div>
+                            </div>
+
+                            <div class="d-md-flex align-items-center dt-layout-end mt-4 col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
+                                <div class="dt-paging">
+                                    <nav aria-label="pagination">
+                                        <ul class="pagination">
+                                            <li class="dt-paging-button page-item {{ $leaves->onFirstPage() ? 'disabled' : '' }}">
+                                                <a class="page-link" href="{{ $leaves->url(1) }}" aria-label="First">
+                                                    <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
+                                                </a>
+                                            </li>
+                                            <li class="dt-paging-button page-item {{ $leaves->onFirstPage() ? 'disabled' : '' }}">
+                                                <a class="page-link" href="{{ $leaves->previousPageUrl() }}" aria-label="Previous">
+                                                    <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
+                                                </a>
+                                            </li>
+                                            @foreach ($leaves->getUrlRange(max(1, $leaves->currentPage() - 2), min($leaves->lastPage(), $leaves->currentPage() + 2)) as $page => $url)
+                                            <li class="dt-paging-button page-item {{ $page == $leaves->currentPage() ? 'active' : '' }}">
+                                                <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                            </li>
+                                            @endforeach
+                                            <li class="dt-paging-button page-item {{ $leaves->currentPage() == $leaves->lastPage() ? 'disabled' : '' }}">
+                                                <a class="page-link" href="{{ $leaves->nextPageUrl() }}" aria-label="Next">
+                                                    <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
+                                                </a>
+                                            </li>
+                                            <li class="dt-paging-button page-item {{ $leaves->currentPage() == $leaves->lastPage() ? 'disabled' : '' }}">
+                                                <a class="page-link" href="{{ $leaves->url($leaves->lastPage()) }}" aria-label="Last">
+                                                    <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Overview Tab -->
+        <div class="tab-pane fade" id="attendance" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Supervisor Attendance Records</h5>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="attendanceDatePicker" class="form-control" style="width: 200px;" placeholder="Select Date" value="{{ request('date', date('Y-m-d')) }}">
+                            <button class="btn btn-primary" onclick="exportAttendance()">
+                                <i class="icon-base ti tabler-download me-1"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-datatable">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Supervisor</th>
+                                <th>Email</th>
+                                <th>Date</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Total Hours</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($attendanceRecords ?? [] as $record)
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-2">
+                                            <span class="avatar-initial rounded-circle bg-label-{{ $record->check_in ? 'success' : 'secondary' }}">
+                                                {{ substr($record->supervisor_name ?? 'S', 0, 1) }}
+                                            </span>
+                                        </div>
+                                        <span>{{ $record->supervisor_name ?? 'Unknown' }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ $record->supervisor_email ?? 'N/A' }}</td>
+                                <td>{{ \Carbon\Carbon::parse($record->date)->format('d M Y') }}</td>
+                                <td>
+                                    @if($record->check_in)
+                                    <span class="badge bg-label-success">{{ \Carbon\Carbon::parse($record->check_in)->format('h:i A') }}</span>
+                                    @else
+                                    <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($record->check_out)
+                                    <span class="badge bg-label-info">{{ \Carbon\Carbon::parse($record->check_out)->format('h:i A') }}</span>
+                                    @else
+                                    <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($record->check_in && $record->check_out)
+                                    @php
+                                    $checkIn = \Carbon\Carbon::parse($record->check_in);
+                                    $checkOut = \Carbon\Carbon::parse($record->check_out);
+                                    $hours = $checkOut->diffInHours($checkIn);
+                                    $minutes = $checkOut->diffInMinutes($checkIn) % 60;
+                                    @endphp
+                                    <span>{{ $hours }}h {{ $minutes }}m</span>
+                                    @elseif($record->check_in)
+                                    <span class="text-warning">In Progress</span>
+                                    @else
+                                    <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($record->check_in && $record->check_out)
+                                    <span class="badge bg-label-success">Completed</span>
+                                    @elseif($record->check_in)
+                                    <span class="badge bg-label-warning">Working</span>
+                                    @else
+                                    <span class="badge bg-label-secondary">Absent</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <i class="icon-base ti tabler-clock-off icon-48px text-muted mb-2"></i>
+                                        <p class="mb-0">No attendance records found for this date</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar View Tab -->
+        <div class="tab-pane fade" id="calendar" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Leave & Attendance Calendar</h5>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-{{-- <script>
-  let timer;
-
-  document.getElementById('searchInput').addEventListener('keyup', function () {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      document.getElementById('filterForm').submit();
-    }, 500); // wait 500ms after typing
-  });
-
-  document.getElementById('statusFilter').addEventListener('change', function () {
-    document.getElementById('filterForm').submit();
-  });
-</script> --}}
-
-{{-- @push('scripts')
 <script>
-  function downloadOfferLetterCSV() {
-    // English: Get all current URL parameters (search, perpage, etc.)
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // English: Define the base export route
-    const baseRoute = "{{ route('manager.offer-letter.export') }}";
-    
-    // English: Combine route with current filters and redirect for download
-    const finalUrl = baseRoute + '?' + urlParams.toString();
-    
-    // English: Redirect to trigger the streamDownload controller
-    window.location.href = finalUrl;
-}
-</script>
-@endpush --}}
+    // Auto-submit filters
+    let timer;
+    document.getElementById('searchInput')?.addEventListener('keyup', function() {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            document.getElementById('filterForm').submit();
+        }, 500);
+    });
 
+    document.getElementById('statusFilter')?.addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
 
-@push('scripts')
+    document.getElementById('supervisorFilter')?.addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
 
-<script>
-  /**
- * English: Listens for clicks on 'View Reason' buttons 
- * and populates the modal with the specific row's data.
- */
-// document.querySelectorAll('.view-reason-btn').forEach(button => {
-//     button.addEventListener('click', function() {
-//         // English: Get data from the clicked button's attributes
-//         const userName = this.getAttribute('data-name');
-//         const reason = this.getAttribute('data-reason');
+    // Initialize Select2
+    $(document).ready(function() {
+        $('.select2').select2({
+            dropdownParent: $('#leave-requests')
+        });
+    });
 
-//         // English: Inject data into the modal elements
-//         document.getElementById('modalUserName').innerText = userName;
-//         document.getElementById('modalReasonText').innerText = reason;
-//     });
-});
-</script>
-{{-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-  document.addEventListener('click', function (event) {
-    if (event.target.classList.contains('status-update-btn')) {
-        const id = event.target.getAttribute('data-id');
-        const status = event.target.getAttribute('data-status');
-        const name = event.target.getAttribute('data-name');
-        
-        const isAccept = (status === 'accept');
+    // Date picker for attendance
+    flatpickr('#attendanceDatePicker', {
+        dateFormat: 'Y-m-d',
+        defaultDate: '{{ request('date', date('Y-m-d')) }}',
+        onChange: function(selectedDates, dateStr) {
+            window.location.href = '{{ route("manager.leave.requests") }}?tab=attendance&date=' + dateStr;
+        }
+    });
 
+    // Initialize Calendar
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: [
+                    // Leave events
+                    @foreach($leaves ?? [] as $leave)
+                    {
+                        title: '{{ $leave->name }} - Leave',
+                        start: '{{ $leave->from_date }}',
+                        end: '{{ \Carbon\Carbon::parse($leave->to_date)->addDay()->format('Y-m-d') }}',
+                        color: '{{ $leave->leave_status === 1 ? "#28a745" : ($leave->leave_status === 0 ? "#dc3545" : "#ffc107") }}',
+                        textColor: '#ffffff',
+                        description: '{{ addslashes($leave->reason) }}'
+                    },
+                    @endforeach
+                ],
+                eventClick: function(info) {
+                    Swal.fire({
+                        title: info.event.title,
+                        text: info.event.extendedProps.description || 'No description',
+                        icon: 'info',
+                        confirmButtonText: 'Close'
+                    });
+                }
+            });
+            calendar.render();
+        }
+    });
+
+    // Confirm action
+    function confirmAction(action, leaveId) {
+        const actionText = action.charAt(0).toUpperCase() + action.slice(1);
         Swal.fire({
-            title: isAccept ? 'Are you sure?' : 'Reject Request?',
-            text: `You want to ${status} the offer letter request for ${name}.`,
-            icon: isAccept ? 'success' : 'warning',
+            title: `Are you sure?`,
+            text: `Do you want to ${action} this leave request?`,
+            icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: isAccept ? '#28a745' : '#dc3545',
-            cancelButtonColor: '#6e7881',
-            confirmButtonText: isAccept ? 'Yes, Accept it!' : 'Yes, Reject it!',
-            customClass: {
-                confirmButton: 'btn btn-primary me-3',
-                cancelButton: 'btn btn-label-secondary'
-            },
-            buttonsStyling: false
+            confirmButtonColor: action === 'approve' ? '#28a745' : '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Yes, ${action} it!`
         }).then((result) => {
             if (result.isConfirmed) {
-                // English: Fill the hidden form and submit
-                document.getElementById('update_id').value = id;
-                document.getElementById('update_status').value = status;
-                document.getElementById('statusUpdateForm').submit();
+                window.location.href = action === 'approve' 
+                    ? '{{ route("manager.leave.approve", "") }}/' + leaveId
+                    : '{{ route("manager.leave.reject", "") }}/' + leaveId;
             }
         });
     }
-});
-</script> --}}
-<style>
-  /* English comments: Force the SweetAlert2 container to be on top of everything */
-  .swal2-container {
-    z-index: 9999 !important;
-  }
-</style>
 
-
-
-
-
-
-@endpush
-
+    // Export attendance
+    function exportAttendance() {
+        const date = document.getElementById('attendanceDatePicker').value;
+        window.location.href = '{{ route("manager.attendance.export") }}?date=' + date;
+    }
+</script>
 @endsection

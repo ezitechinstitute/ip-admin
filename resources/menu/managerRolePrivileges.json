@@ -299,6 +299,10 @@
           "title": "Approve Supervisor Leaves"
         },
         {
+          "key": "view_supervisor_attendance",
+          "title": "View Supervisor Attendance"
+        },
+        {
           "key": "view_attendance_calendar",
           "title": "View Attendance Calendar"
         }

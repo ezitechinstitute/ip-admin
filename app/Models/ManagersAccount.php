@@ -35,4 +35,8 @@ class ManagersAccount extends Authenticatable
         'password',
         'remember_token',
     ];
+    public function attendance()
+    {
+        return $this->hasMany(SupervisorAttendance::class, 'supervisor_id', 'manager_id');
+    }
 }

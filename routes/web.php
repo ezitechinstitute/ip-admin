@@ -137,6 +137,7 @@ use App\Http\Controllers\manager_controllers\ProfileSettingsController;
 use App\Http\Controllers\manager_controllers\RemainingAmountController;
 use App\Http\Controllers\manager_controllers\Supervisorcontroller;
 use App\Http\Controllers\manager_controllers\ManagerLeaveController;
+use App\Http\Controllers\manager_controllers\ManagerAttendanceController;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\modal\ModalExample;
@@ -613,8 +614,11 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     Route::get('/attendance/intern-leaves', [ManagerLeaveController::class, 'intern'])->name('manager.attendance.intern');
     Route::get('/leave/approve/{id}', [ManagerLeaveController::class,'approve'])->name('manager.leave.approve');
     Route::get('/leave-reject/{id}', [ManagerLeaveController::class, 'reject'])->name('manager.leave.reject');
+    Route::get('/manager/attendance/export', [ManagerLeaveController::class, 'reject'])->name('manager.attendance.export');
 
-    Route::get('/attendance/supervisor-attendance', [ManagerLeaveController::class, 'supervisor'])->name('manager.supervisor.attendance');
+    Route::get('/attendance-calendar', [ManagerAttendanceController::class, 'attendanceCalendar'])->name('manager.attendance-calendar');
+
+    Route::get('/attendance/supervisor-attendance', [ManagerAttendanceController::class, 'supervisorAttendance'])->name('manager.supervisor.attendance');
     Route::get('/attendance/supervisor-leaves', [ManagerLeaveController::class, 'supervisor'])->name('manager.supervisor.attendance');
     Route::patch('leaves/{leave}/approve', [ManagerLeaveController::class, 'approve'])->name('manager.leave.approve');
     Route::patch('leaves/{leave}/reject', [ManagerLeaveController::class, 'reject'])->name('manager.leave.reject');
