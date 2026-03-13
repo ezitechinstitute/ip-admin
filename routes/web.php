@@ -579,6 +579,15 @@ Route::put('/transactions/update/{id}', [AccountsController::class, 'updateTrans
 Route::get('withdraw',[WithdrawManagerController::class,'index'])->name('admin.withdraw');
 Route::get('withdraw/export-csv', [WithdrawManagerController::class, 'exportWithdrawCSV'])->name('admin.withdraw.export');
 
+    // Approve or Reject Withdraw Requests testing umair
+    Route::post('/withdraw/approve/{id}',
+        [WithdrawManagerController::class,'approve']
+    )->name('admin.withdraw.approve');
+
+    Route::post('/withdraw/reject/{id}',
+        [WithdrawManagerController::class,'reject']
+    )->name('admin.withdraw.reject');
+
 // Feeback & complaint
 Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.admin');
 Route::post('/feedback/resolve/{id}', [FeedbackController::class, 'resolve'])
@@ -605,6 +614,18 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 
 
 Route::prefix('/manager')->middleware(['validManager'])->group(function(){
+
+
+    // Manager Withdraw Request
+        Route::get('/withdraw-request',[WithdrawManagerController::class,'create'])->name('manager.withdraw.create');
+
+        Route::post('/withdraw-request',
+            [WithdrawManagerController::class,'store']
+        )->name('manager.withdraw.store');
+
+
+
+
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/my-interns', [AllManagerInternController::class, 'myInterns']) ->name('manager.myInterns');
@@ -701,6 +722,10 @@ Route::get('/knowledge-base/export',
     [ManagerKnowledgeBaseController::class, 'exportKnowledgeBaseCSV']
 )->name('manager.knowledge-base.export');
 });
+
+
+
+
 
 // manager route end here
 

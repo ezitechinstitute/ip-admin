@@ -12,6 +12,15 @@ class DashboardManagerController extends Controller
     public function index()
     {
         $manager = Auth::guard('manager')->user();
+
+
+        // Fetch manager balance from manager_accounts table
+        // $managerAccount = DB::table('manager_accounts')
+        //     ->where('manager_id', $manager->manager_id)
+        //     ->first();
+
+        // $balance = $managerAccount->balance ?? 0;
+
         if (!$manager) return redirect()->route('manager.login');
 
         // 1️⃣ Fetch manager permissions (tech + interview type)

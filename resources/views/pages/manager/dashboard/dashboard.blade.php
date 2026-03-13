@@ -82,9 +82,11 @@ $configData = Helper::appClasses();
             <h5 class="card-title mb-0">Congratulations 🎉 {{$manager->name}}!</h5>
             <p class="mb-2 text-success">You have earned in Feb</p>
             <div style="display: flex; flex-direction: column" class="mb-1">
-              <h3 class="mb-0">PKR : 40,000</h3>
+              <h3 class="mb-0">PKR {{ number_format($monthlyRevenue) }}</h3>
             </div>
-            <a href="{{route('intern-accounts-admin')}}" class="btn btn-primary">Withraw Amount</a>
+            <a href="{{ route('manager.withdraw.create') }}" class="btn btn-success">
+                Withdraw Amount
+            </a>
           </div>
         </div>
         <div class="col-5 text-center text-sm-left">

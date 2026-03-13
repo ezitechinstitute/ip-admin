@@ -146,7 +146,10 @@
                   aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Account holder name
                   </span><span class="dt-column-order"></span></th>
                 <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Description</span><span
+                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Description</span>
+                  <th class="text-nowrap">
+                  <span class="dt-column-title">Period</span>
+                  </th><span
                     class="dt-column-order"></span></th>
                 {{-- <th data-dt-column="6" rowspan="1" colspan="1"
                   class="dt-orderable-asc dt-orderable-desc text-nowrap" aria-label="Internship Duration" tabindex="0">
@@ -163,6 +166,9 @@
                 <th data-dt-column="6" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
                   aria-label="Join Date"><span class="dt-column-title">STATUS</span><span
                     class="dt-column-order"></span></th>
+
+
+                    <th class="text-nowrap">Action</th>
 
 
 
@@ -186,6 +192,14 @@
                     class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->description
                     }}</span>
                 </td>
+
+                <td>
+                  <span class="text-truncate d-flex align-items-center text-heading text-nowrap">
+                  {{$withdraw->period}}
+                  </span>
+                </td>
+
+
                 <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->date
                     }}</span>
                 </td>
@@ -198,19 +212,53 @@
                   // Map statuses to Bootstrap badge classes
                   $statusClasses = [
                   '1' => 'bg-label-success',
-                  '0' => 'bg-label-danger',
+                  '2' => 'bg-label-danger',
+                  '0' => 'bg-label-warning',
                   ];
 
                   $status = strtolower($withdraw->req_status); // ensure lowercase
                   $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
                   @endphp
 
-                  <span class="badge {{ $badgeClass }} text-capitalize">@if ($withdraw->req_status == 1)
-                    Completed
+                  <td>
+
+                    @if ($withdraw->req_status == 1)
+
+                    <span class="badge bg-label-success">Completed</span>
+
+                    @elseif ($withdraw->req_status == 2)
+
+                    <span class="badge bg-label-danger">Rejected</span>
+
                     @else
-                    pending
-                    @endif</span>
-                <td>
+
+                    <span class="badge bg-label-warning">Pending</span>
+
+                    @endif
+
+                  </td>
+
+{{-- adding action buttons for pending requests --}}
+
+                  <td>
+                    @if($withdraw->req_status == 0)
+
+                    <form method="POST" action="{{ route('admin.withdraw.approve', $withdraw->req_id) }}">
+                    @csrf
+                    <button class="btn btn-success btn-sm">Approve</button>
+                    </form>
+
+                    <form method="POST" action="{{ route('admin.withdraw.reject', $withdraw->req_id) }}" style="display:inline;">
+                    @csrf
+                    <button class="btn btn-danger btn-sm">
+                    Reject
+                    </button>
+                    </form>
+
+                    @else
+                    <span class="text-muted">No Action</span>
+                    @endif
+                    </td>
                   {{-- @php
                   // Map statuses to Bootstrap badge classes
                   $statusClasses = [
