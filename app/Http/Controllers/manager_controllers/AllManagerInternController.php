@@ -25,18 +25,23 @@ class AllManagerInternController extends Controller
 
     // 1. English: Optimized Permission Fetching (Using pluck directly for speed)
     $cacheKey = 'mgr_perms_' . $manager->manager_id;
-    $permissions = cache()->remember($cacheKey, 3600, function() use ($manager) {
-        return DB::table('manager_permissions')
+    // $permissions = cache()->remember($cacheKey, 3600, function() use ($manager) {
+    //     return DB::table('manager_permissions')
+    //         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
+    //         ->where('manager_permissions.manager_id', $manager->manager_id)
+    //         ->where('technologies.status', 1)
+    //         ->select('technologies.technology', 'manager_permissions.interview_type')
+    //         ->get();
+    // });
+    $permissions = DB::table('manager_permissions')
             ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
             ->where('manager_permissions.manager_id', $manager->manager_id)
             ->where('technologies.status', 1)
             ->select('technologies.technology', 'manager_permissions.interview_type')
             ->get();
-    });
 
     $allowedTechNames = $permissions->pluck('technology')->unique()->toArray();
     $allowedInternTypes = $permissions->pluck('interview_type')->map(fn($t) => trim($t))->unique()->toArray();
-
     // 2. English: Base Query setup (Keeping only essential columns)
     $query = DB::table('intern_table')
         ->select('id', 'name', 'email', 'technology', 'intern_type', 'status', 'created_at', 'image', 'phone', 'city', 'join_date')

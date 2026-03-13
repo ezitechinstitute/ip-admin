@@ -56,6 +56,13 @@
       "url": "manager/international-interns",
       "permission": "view_manager_international_interns"
     },
+    {
+      "name": "Curriculum Management",
+      "icon": "menu-icon icon-base ti tabler-layout-grid",
+      "slug": "manager/curriculum",
+      "url": "manager/curriculum",
+      "permission": "view_manager_curriculum"
+    },
 
     {
       "menuHeader": "Supervisor"

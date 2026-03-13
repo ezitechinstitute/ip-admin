@@ -173,7 +173,8 @@ $manager = auth()->guard('manager')->user();
               <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                 aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Commission</span><span
                   class="dt-column-order"></span></th>
-          
+              <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Status"><span class="dt-column-title" role="button">Status</span><span class="dt-column-order"></span></th>
+              <th data-dt-column="6" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Action"><span class="dt-column-title" role="button">Action</span><span class="dt-column-order"></span></th>          
               {{-- <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                 aria-label="City" tabindex="0"><span class="dt-column-title" role="button">REASON</span><span
                   class="dt-column-order"></span></th> --}}
@@ -204,10 +205,32 @@ $manager = auth()->guard('manager')->user();
                   class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$Sup->join_date}}</span>
               </td>
 
-              <td><span
-                  class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$Sup->comission}}</span>
+              <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{ $Sup->comission }}</span></td>
+              <td>
+                @php
+                  $statusClasses = ['1' => 'bg-label-success', '0' => 'bg-label-danger'];
+                  $badgeClass = $statusClasses[$Sup->status] ?? 'bg-label-secondary';
+                @endphp
+                <span class="badge {{ $badgeClass }} text-capitalize">{{ $Sup->status ? 'Active' : 'Frozen' }}</span>
               </td>
-
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="dropdown">
+                    <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end m-0">
+                      <a href="{{ route('manager.supervisor.show', $Sup->manager_id) }}" class="dropdown-item">Details</a>
+                      <a href="{{ route('manager.supervisor.activityLog', $Sup->manager_id) }}" class="dropdown-item">Activity Log</a>
+                      <form action="{{ route('manager.supervisor.toggleFreeze', $Sup->manager_id) }}" method="POST" class="m-0">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="dropdown-item">{{ $Sup->status ? 'Freeze' : 'Unfreeze' }}</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </td>
           
                 {{-- @php
                 $statusClasses = [

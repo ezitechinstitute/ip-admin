@@ -287,6 +287,32 @@
       ]
     },
     {
+      "key": "manager_curriculum",
+      "title": "Curriculum Management",
+      "privileges": [
+        {
+          "key": "view_manager_curriculum",
+          "title": "View Curriculum"
+        },
+        {
+          "key": "create_manager_curriculum",
+          "title": "Create Curriculum"
+        },
+        {
+          "key": "edit_manager_curriculum",
+          "title": "Edit Curriculum"
+        },
+        {
+          "key": "delete_manager_curriculum",
+          "title": "Delete Curriculum"
+        },
+        {
+          "key": "manage_manager_curriculum_projects",
+          "title": "Manage Curriculum Projects"
+        }
+      ]
+    },
+    {
       "key": "manager_attendance_logs",
       "title": "Attendance & Leaves",
       "privileges": [

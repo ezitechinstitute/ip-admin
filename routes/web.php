@@ -138,6 +138,8 @@ use App\Http\Controllers\manager_controllers\RemainingAmountController;
 use App\Http\Controllers\manager_controllers\Supervisorcontroller;
 use App\Http\Controllers\manager_controllers\ManagerLeaveController;
 use App\Http\Controllers\manager_controllers\ManagerAttendanceController;
+use App\Http\Controllers\manager_controllers\ManagerCurriculumController;
+use App\Http\Controllers\manager_controllers\ManagerCurriculumProjectController;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\modal\ModalExample;
@@ -628,7 +630,12 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     Route::get('/my-interns', [AllManagerInternController::class, 'myInterns']) ->name('manager.myInterns');
     Route::get('/my-interns/export', [AllManagerInternController::class, 'exportMyInternsCSV'])->name('manager.myInterns.export');
 
-    
+    // Curriculum management
+    Route::resource('/curriculum', ManagerCurriculumController::class, ['as' => 'manager']);
+    Route::post('/curriculum/project', [ManagerCurriculumProjectController::class, 'store'])->name('manager.curriculum.project.store');
+    Route::put('/curriculum/project/{id}', [ManagerCurriculumProjectController::class, 'update'])->name('manager.curriculum.project.update');
+    Route::delete('/curriculum/project/{id}', [ManagerCurriculumProjectController::class, 'destroy'])->name('manager.curriculum.project.destroy');
+
     // Active Interns submenu page
     Route::get('/all-interns', [AllManagerInternController::class, 'index']) ->name('manager.allInterns');
     Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])->name('manager.activeInterns');
@@ -725,6 +732,10 @@ Route::get('/knowledge-base/export',
 //supervisor routes
 
 Route::get('Supervisor',[Supervisorcontroller::class,'index'])->name('manager.supervisor');
+Route::get('Supervisor/{id}', [Supervisorcontroller::class, 'show'])->name('manager.supervisor.show');
+Route::post('Supervisor/{id}/reassign-intern', [Supervisorcontroller::class, 'reassignIntern'])->name('manager.supervisor.reassignIntern');
+Route::patch('Supervisor/{id}/toggle-freeze', [Supervisorcontroller::class, 'toggleFreeze'])->name('manager.supervisor.toggleFreeze');
+Route::get('Supervisor/{id}/activity-log', [Supervisorcontroller::class, 'activityLog'])->name('manager.supervisor.activityLog');
 });
 
 // manager route end here
