@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Intern Projects')
+@section('title', 'Withdraw Requests')
 
 @section('vendor-style')
 @vite(['resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
@@ -20,24 +20,49 @@
 'resources/assets/vendor/libs/sweetalert2/sweetalert2.js'])
 @endsection
 
-@section('page-script')
-{{-- @vite(['resources/assets/js/extended-ui-sweetalert2.js']) --}}
-@endsection
-
 @section('content')
-
 <!-- Users List Table -->
 <div class="col-12 mb-6">
-  <h4 class="mt-6 mb-1">Withdraw</h4>
+  <h4 class="mt-6 mb-1">Withdraw Requests</h4>
+  <p class="mb-6">Manage and process withdrawal requests from managers</p>
 </div>
-<div class="card">
 
+{{-- Error Messages --}}
+@if($errors->any())
+@foreach($errors->all() as $error)
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  {{ $error }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endforeach
+@endif
+
+{{-- Success Message --}}
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+  {{ session('success') }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
+
+{{-- Auto-hide script --}}
+<script>
+  setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      alert.classList.remove('show');
+      alert.classList.add('hide');
+      setTimeout(() => alert.remove(), 500);
+    });
+  }, 5000);
+</script>
+
+<div class="card">
   <div class="card-datatable">
     <div id="DataTables_Table_0_wrapper" class="dt-container dt-bootstrap5 dt-empty-footer">
       <div class="row m-3 my-0 justify-content-between">
         <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
-          <div class="dt-length mb-md-6 mb-0 d-flex">
-
+          <div class="dt-length mb-md-6 mb-0 d-flex items-center mt-5">
             <form id="perPageForm" method="GET" action="{{route('admin.withdraw')}}">
               <select name="perPage" id="dt-length-0" class="form-select ms-0"
                 onchange="document.getElementById('perPageForm').submit()">
@@ -46,24 +71,17 @@
                 <option value="50" {{ $perPage==50 ? 'selected' : '' }}>50</option>
                 <option value="100" {{ $perPage==100 ? 'selected' : '' }}>100</option>
               </select>
-
-
-              <!-- Keep search & status in query -->
               <input type="hidden" name="search" value="{{ request('search') }}">
               <input type="hidden" name="status" value="{{ request('status') }}">
             </form>
-
-
             <label for="dt-length-0"></label>
           </div>
         </div>
 
-        <div
-          class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
+        <div class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
           <form method="GET" id="filterForm" class="d-flex gap-2">
-
-            <input type="search" name="search" id="searchInput" class="form-control" placeholder="Search Withdraw"
-              value="{{ request('search') }}">
+            <input type="search" name="search" id="searchInput" class="form-control" 
+                   placeholder="Search by bank or account holder" value="{{ request('search') }}">
             <style>
               input[type="search"]::-webkit-search-cancel-button,
               input[type="search"]::-webkit-search-decoration {
@@ -71,20 +89,20 @@
                 appearance: none;
               }
             </style>
-            <select name="status" id="statusFilter" class="form-select">
-              <option value="">Select Status</option>
-              <option value="1" {{ request('status')=='1' ? 'selected' : '' }}>Completed</option>
+            <select name="status" id="statusFilter" class="form-select text-capitalize" onchange="this.form.submit()">
+              <option value="">All Status</option>
               <option value="0" {{ request('status')=='0' ? 'selected' : '' }}>Pending</option>
+              <option value="1" {{ request('status')=='1' ? 'selected' : '' }}>Completed</option>
+              <option value="2" {{ request('status')=='2' ? 'selected' : '' }}>Rejected</option>
             </select>
 
             @php
             $adminSettings = \App\Models\AdminSetting::first();
-
             if (!$adminSettings) {
-            $isAdminAllowed = true;
+              $isAdminAllowed = true;
             } else {
-            $permissions = $adminSettings->export_permissions;
-            $isAdminAllowed = isset($permissions['admin']) && $permissions['admin'] == 1;
+              $permissions = $adminSettings->export_permissions;
+              $isAdminAllowed = isset($permissions['admin']) && $permissions['admin'] == 1;
             }
             @endphp
 
@@ -107,291 +125,127 @@
               </div>
             </div>
             @endif
-
           </form>
-
-
-
-
-
-
-
-
-
         </div>
       </div>
+
       <div class="justify-content-between dt-layout-table">
-        <div class="d-md-flex justify-content-between align-items-center dt-layout-full table-responsive overflow-auto"
-          style="max-height: 500px;">
+        <div class="table-responsive overflow-auto" style="max-height: 600px;">
           <table class="datatables-users table dataTable dtr-column" id="DataTables_Table_0"
             aria-describedby="DataTables_Table_0_info" style="width: 100%;">
-
-
-
-
             <thead class="border-top sticky-top bg-card">
               <tr>
-                <th data-dt-column="0" class="control dt-orderable-none dtr-hidden" rowspan="1" colspan="1"
-                  aria-label="" style="display: none;"><span class="dt-column-title"></span><span
-                    class="dt-column-order"></span></th>
-
-                <th data-dt-column="1" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Profile Picture" tabindex="0"><span class="dt-column-title" role="button">Bank name
-                  </span><span class="dt-column-order"></span></th>
-
-                <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Account number</span><span
-                    class="dt-column-order"></span></th>
-                <th data-dt-column="3" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Account holder name
-                  </span><span class="dt-column-order"></span></th>
-                <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">Description</span>
-                  <th class="text-nowrap">
-                  <span class="dt-column-title">Period</span>
-                  </th><span
-                    class="dt-column-order"></span></th>
-                {{-- <th data-dt-column="6" rowspan="1" colspan="1"
-                  class="dt-orderable-asc dt-orderable-desc text-nowrap" aria-label="Internship Duration" tabindex="0">
-                  <span class="dt-column-title" role="button">Internship
-                    Duration</span><span class="dt-column-order"></span>
-                </th> --}}
-                <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
-                  aria-label="Join Date"><span class="dt-column-title">Date</span><span class="dt-column-order"></span>
-                </th>
-                <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
-                  aria-label="Join Date"><span class="dt-column-title">Amount</span><span
-                    class="dt-column-order"></span></th>
-
-                <th data-dt-column="6" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
-                  aria-label="Join Date"><span class="dt-column-title">STATUS</span><span
-                    class="dt-column-order"></span></th>
-
-
-                    <th class="text-nowrap">Action</th>
-
-
-
-
+                <th class="text-nowrap">Bank Name</th>
+                <th class="text-nowrap">Account Number</th>
+                <th class="text-nowrap">Account Holder</th>
+                <th class="text-nowrap">Description</th>
+                <th class="text-nowrap">Period</th>
+                <th class="text-nowrap">Date</th>
+                <th class="text-nowrap">Amount</th>
+                <th class="text-nowrap">Status</th>
+                <th class="text-nowrap">Action</th>
               </tr>
             </thead>
             <tbody>
               @forelse ($withdraws as $withdraw)
-              <tr class="">
-
-                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->bank
-                    }}</span>
-                </td>
-                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->ac_no
-                    }}</span>
-                </td>
-                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->ac_name
-                    }}</span>
-                </td>
-                <td><span
-                    class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->description
-                    }}</span>
-                </td>
-
+              <tr>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->bank}}</span></td>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->ac_no}}</span></td>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->ac_name}}</span></td>
                 <td>
-                  <span class="text-truncate d-flex align-items-center text-heading text-nowrap">
-                  {{$withdraw->period}}
+                  <span class="text-truncate d-flex align-items-center text-heading text-nowrap" 
+                        title="{{$withdraw->description}}">
+                    {{-- {{ Str::limit($withdraw->description, 30) }} --}}
                   </span>
                 </td>
-
-
-                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->date
-                    }}</span>
-                </td>
-                </td>
-                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->amount
-                    }}</span>
-                </td>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$withdraw->period}}</span></td>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap">{{ \Carbon\Carbon::parse($withdraw->date)->format('d M Y') }}</span></td>
+                <td><span class="text-truncate d-flex align-items-center text-heading text-nowrap fw-bold">৳ {{ number_format($withdraw->amount, 2) }}</span></td>
                 <td>
-                  @php
-                  // Map statuses to Bootstrap badge classes
-                  $statusClasses = [
-                  '1' => 'bg-label-success',
-                  '2' => 'bg-label-danger',
-                  '0' => 'bg-label-warning',
-                  ];
-
-                  $status = strtolower($withdraw->req_status); // ensure lowercase
-                  $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
-                  @endphp
-
-                  <td>
-
-                    @if ($withdraw->req_status == 1)
-
+                  @if ($withdraw->req_status == 1)
                     <span class="badge bg-label-success">Completed</span>
-
-                    @elseif ($withdraw->req_status == 2)
-
+                  @elseif ($withdraw->req_status == 2)
                     <span class="badge bg-label-danger">Rejected</span>
-
-                    @else
-
+                  @else
                     <span class="badge bg-label-warning">Pending</span>
-
-                    @endif
-
-                  </td>
-
-{{-- adding action buttons for pending requests --}}
-
-                  <td>
-                    @if($withdraw->req_status == 0)
-
-                    <form method="POST" action="{{ route('admin.withdraw.approve', $withdraw->req_id) }}">
-                    @csrf
-                    <button class="btn btn-success btn-sm">Approve</button>
-                    </form>
-
-                    <form method="POST" action="{{ route('admin.withdraw.reject', $withdraw->req_id) }}" style="display:inline;">
-                    @csrf
-                    <button class="btn btn-danger btn-sm">
-                    Reject
-                    </button>
-                    </form>
-
-                    @else
-                    <span class="text-muted">No Action</span>
-                    @endif
-                    </td>
-                  {{-- @php
-                  // Map statuses to Bootstrap badge classes
-                  $statusClasses = [
-                  'ongoing' => 'bg-label-primary',
-                  'contact' => 'bg-label-info',
-                  'expired' => 'bg-label-danger',
-                  'completed' => 'bg-label-success',
-                  'active' => 'bg-label-success',
-                  'removed' => 'bg-label-danger',
-                  'freeze' => 'bg-label-danger',
-                  ];
-
-                  $status = strtolower($projects->pstatus);
-                  $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
-                  @endphp --}}
-
-                  {{-- <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span> --}}
+                  @endif
                 </td>
-                {{-- <td><span class="text-heading text-nowrap">{{$intern->duration}}</span></td> --}}
-                {{-- <td><span class="text-heading text-nowrap">1</span></td> --}}
-
-
-                {{-- <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td> --}}
-                <td>
-                  <div class="d-flex align-items-center">
-                    {{-- <a href="javascript:;"
-                      class="btn btn-text-secondary rounded-pill waves-effect btn-icon delete-record"
-                      data-id="{{ $intern->id }}">
-                      <i class="icon-base ti tabler-trash icon-22px"></i>
-                    </a>
-                    <form id="delete-form-{{ $intern->id }}" action="{{ route('interns.destroy', $intern->int_id) }}"
-                      method="POST" style="display: none;">
-                      @csrf
-                      @method('DELETE')
-                    </form> --}}
-
-                    {{-- <a href="javascript:void(0);"
-                      class="btn btn-text-secondary rounded-pill waves-effect btn-icon edit-intern"
-                      data-bs-toggle="modal" data-bs-target="#editInternModal" data-id="{{ $intern->int_id }}"
-                      data-name="{{ $intern->name }}" data-email="{{ $intern->email }}"
-                      data-technology="{{ $intern->int_technology }}"
-                      data-status="{{ strtolower($intern->int_status) }}">
-                      <i class="icon-base ti tabler-edit icon-22px"></i>
-                    </a> --}}
-
-
-
-
-
-
-
-
-                    {{-- <a
-                      href="https://demos.pixinvent.com/vuexy-html-laravel-admin-template/demo-1/app/user/view/account"
-                      class="btn btn-text-secondary rounded-pill waves-effect btn-icon">
-                      <i class="icon-base ti tabler-eye icon-22px"></i>
-                    </a> --}}
-                  </div>
-
-                </td>
-
+               <td>
+                <div class="d-flex align-items-center">
+                  @if($withdraw->req_status == 0)
+                    <div class="dropdown">
+                      <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
+                      </a>
+                      <div class="dropdown-menu dropdown-menu-end m-0">
+                        <form method="POST" action="{{ route('admin.withdraw.approve', $withdraw->req_id) }}" class="m-0">
+                          @csrf
+                          <button type="submit" class="dropdown-item" onclick="return confirm('Are you sure you want to approve this request?')">
+                            <i class="icon-base ti tabler-check me-1"></i>Approve
+                          </button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.withdraw.reject', $withdraw->req_id) }}" class="m-0">
+                          @csrf
+                          <button type="submit" class="dropdown-item" onclick="return confirm('Are you sure you want to reject this request?')">
+                            <i class="icon-base ti tabler-x me-1"></i>Reject
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  @else
+                    <span class="text-muted">—</span>
+                  @endif
+                </div>
+              </td>
               </tr>
-
-
               @empty
               <tr>
-                <td colspan="11">
-                  <p class="text-center mb-0">No data available!</p>
+                <td colspan="9" class="text-center py-4">
+                  <div class="d-flex flex-column align-items-center">
+                    <i class="icon-base ti tabler-wallet-off icon-48px text-muted mb-2"></i>
+                    <p class="mb-0">No withdrawal requests found!</p>
+                  </div>
                 </td>
               </tr>
               @endforelse
-
-
-
-
-
-
             </tbody>
-            <tfoot></tfoot>
           </table>
-
-
-
         </div>
       </div>
-      <div class="row mx-3 justify-content-between">
 
+      <div class="row mx-3 justify-content-between mt-4">
         <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
           <div class="dt-info" aria-live="polite">
-            Showing {{ $withdraws->firstItem() ?? 0 }} to {{ $withdraws->lastItem() ?? 0 }} of {{ $withdraws->total() ??
-            0 }} entries
+            Showing {{ $withdraws->firstItem() ?? 0 }} to {{ $withdraws->lastItem() ?? 0 }} of {{ $withdraws->total() ?? 0 }} entries
           </div>
         </div>
 
-        <div
-          class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
+        <div class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
           <div class="dt-paging">
             <nav aria-label="pagination">
               <ul class="pagination">
-
                 <li class="dt-paging-button page-item {{ $withdraws->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $withdraws->url(1) }}" aria-label="First">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $withdraws->url(1) }}" aria-label="First">
                     <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
-
-
                 <li class="dt-paging-button page-item {{ $withdraws->onFirstPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $withdraws->previousPageUrl() }}" aria-label="Previous">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $withdraws->previousPageUrl() }}" aria-label="Previous">
                     <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
-
-
-                @foreach ($withdraws->getUrlRange(max(1, $withdraws->currentPage() - 2), min($withdraws->lastPage(),
-                $withdraws->currentPage() + 2)) as $page => $url)
+                @foreach ($withdraws->getUrlRange(max(1, $withdraws->currentPage() - 2), min($withdraws->lastPage(), $withdraws->currentPage() + 2)) as $page => $url)
                 <li class="dt-paging-button page-item {{ $page == $withdraws->currentPage() ? 'active' : '' }}">
-                  <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $url }}">{{ $page }}</a>
                 </li>
                 @endforeach
-
-
-                <li
-                  class="dt-paging-button page-item {{ $withdraws->currentPage() == $withdraws->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $withdraws->nextPageUrl() }}" aria-label="Next">
+                <li class="dt-paging-button page-item {{ $withdraws->currentPage() == $withdraws->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $withdraws->nextPageUrl() }}" aria-label="Next">
                     <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
-
-
-                <li
-                  class="dt-paging-button page-item {{ $withdraws->currentPage() == $withdraws->lastPage() ? 'disabled' : '' }}">
-                  <a class="page-link" href="{{ $withdraws->url($withdraws->lastPage()) }}" aria-label="Last">
+                <li class="dt-paging-button page-item {{ $withdraws->currentPage() == $withdraws->lastPage() ? 'disabled' : '' }}">
+                  <a class="page-link" style="border-radius: 5px;" href="{{ $withdraws->url($withdraws->lastPage()) }}" aria-label="Last">
                     <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
                   </a>
                 </li>
@@ -400,86 +254,32 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
-
 </div>
-
-@push('scripts')
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const editModal = document.getElementById('editInternModal');
-    
-    if (editModal) {
-        editModal.addEventListener('show.bs.modal', function (event) {
-            // Button that triggered the modal
-            const button = event.relatedTarget;
-            
-            // Extract info from data-* attributes
-            const id = button.getAttribute('data-id');
-            const name = button.getAttribute('data-name');
-            const email = button.getAttribute('data-email');
-            const technology = button.getAttribute('data-technology');
-            const status = button.getAttribute('data-status');
-
-            // Update the modal's content
-            const modalBody = editModal.querySelector('.modal-body');
-            
-            modalBody.querySelector('#int_id').value = id;
-            modalBody.querySelector('#name').value = name;
-            modalBody.querySelector('#email').value = email;
-            modalBody.querySelector('#int_technology').value = technology;
-            
-            // Set the dropdown value
-            const statusSelect = modalBody.querySelector('#int_status');
-            if (statusSelect) {
-                statusSelect.value = status;
-            }
-        });
-    }
-});
-</script>
-@endpush
 
 @push('scripts')
 <script>
   let timer;
 
-  document.getElementById('searchInput').addEventListener('keyup', function () {
+  document.getElementById('searchInput')?.addEventListener('keyup', function () {
     clearTimeout(timer);
     timer = setTimeout(() => {
       document.getElementById('filterForm').submit();
-    }, 500); // wait 500ms after typing
+    }, 500);
   });
 
-  document.getElementById('statusFilter').addEventListener('change', function () {
+  document.getElementById('statusFilter')?.addEventListener('change', function () {
     document.getElementById('filterForm').submit();
   });
-</script>
 
-<script>
   function downloadWithdrawCSV() {
-    // Current filter values collect karein
     const search = document.getElementById('searchInput').value;
     const status = document.getElementById('statusFilter').value;
-
-    // URL parameters banayein
-    const params = new URLSearchParams({
-        search: search,
-        status: status
-    });
-
-    // Export route par redirect karein
+    const params = new URLSearchParams({ search: search, status: status });
     window.location.href = "{{ route('admin.withdraw.export') }}?" + params.toString();
-}
+  }
 </script>
 @endpush
-
-
-
-
-
-
 
 @endsection
