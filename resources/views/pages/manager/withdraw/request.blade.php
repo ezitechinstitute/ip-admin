@@ -123,7 +123,7 @@ $configData = Helper::appClasses();
               <div class="mb-3">
                 <label class="form-label" for="amount">Amount (BDT) <span class="text-danger">*</span></label>
                 <div class="input-group">
-                  <span class="input-group-text">৳</span>
+                  <span class="input-group-text">RS</span>
                   <input type="number" 
                          name="amount" 
                          id="amount"
