@@ -585,6 +585,15 @@ Route::put('/transactions/update/{id}', [AccountsController::class, 'updateTrans
 Route::get('withdraw',[WithdrawManagerController::class,'index'])->name('admin.withdraw');
 Route::get('withdraw/export-csv', [WithdrawManagerController::class, 'exportWithdrawCSV'])->name('admin.withdraw.export');
 
+    // Approve or Reject Withdraw Requests testing umair
+    Route::post('/withdraw/approve/{id}',
+        [WithdrawManagerController::class,'approve']
+    )->name('admin.withdraw.approve');
+
+    Route::post('/withdraw/reject/{id}',
+        [WithdrawManagerController::class,'reject']
+    )->name('admin.withdraw.reject');
+
 // Feeback & complaint
 Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.admin');
 Route::post('/feedback/resolve/{id}', [FeedbackController::class, 'resolve'])
@@ -610,9 +619,8 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 
 
 
-Route::prefix('/manager')->middleware(['validManager'])->group(function(){
-
-    //atendance route
+    Route::prefix('/manager')->middleware(['validManager'])->group(function(){
+    // Attendance routes
     Route::get('/attendance/intern-leaves', [ManagerLeaveController::class, 'intern'])->name('manager.attendance.intern');
     Route::get('/leave/approve/{id}', [ManagerLeaveController::class,'approve'])->name('manager.leave.approve');
     Route::get('/leave-reject/{id}', [ManagerLeaveController::class, 'reject'])->name('manager.leave.reject');
@@ -625,6 +633,9 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     Route::patch('leaves/{leave}/approve', [ManagerLeaveController::class, 'approve'])->name('manager.leave.approve');
     Route::patch('leaves/{leave}/reject', [ManagerLeaveController::class, 'reject'])->name('manager.leave.reject');
 
+    // Manager Withdraw Request
+    Route::get('/withdraw-request',[WithdrawManagerController::class,'create'])->name('manager.withdraw.create');
+    Route::post('/withdraw-request',[WithdrawManagerController::class,'store'])->name('manager.withdraw.store');
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/my-interns', [AllManagerInternController::class, 'myInterns']) ->name('manager.myInterns');
@@ -737,6 +748,10 @@ Route::post('Supervisor/{id}/reassign-intern', [Supervisorcontroller::class, 're
 Route::patch('Supervisor/{id}/toggle-freeze', [Supervisorcontroller::class, 'toggleFreeze'])->name('manager.supervisor.toggleFreeze');
 Route::get('Supervisor/{id}/activity-log', [Supervisorcontroller::class, 'activityLog'])->name('manager.supervisor.activityLog');
 });
+
+
+
+
 
 // manager route end here
 

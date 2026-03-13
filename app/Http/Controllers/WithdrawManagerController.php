@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\AdminSetting;
 use App\Models\Withdraw;
+use App\Models\ManagersAccount;
+use App\Models\Account;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class WithdrawManagerController extends Controller
 {
@@ -29,7 +32,7 @@ class WithdrawManagerController extends Controller
 
     // 📄 Efficient Pagination
     // English: latest() can be slow on 300k+ rows; adding 'id' ensures stable and fast sorting
-    $withdraws = $query->latest('id')->paginate($perPage)->withQueryString();
+    $withdraws = $query->latest('req_id')->paginate($perPage)->withQueryString();
 
     return view('pages.admin.withdraw.withdraw', compact('withdraws', 'perPage'));
 }
@@ -101,4 +104,132 @@ class WithdrawManagerController extends Controller
         fclose($file);
     }, $filename, $headers);
 }
+    public function create()
+        {
+            return view('pages.manager.withdraw.request');
+        }
+
+    public function store(Request $request)
+        {
+            $request->validate([
+                'amount' => 'required|numeric|min:1',
+                'bank' => 'required|string|max:255',
+                'ac_no' => 'required|string|max:50',
+                'ac_name' => 'required|string|max:255',
+                'period' => 'required|string|max:50',
+                'description' => 'required|string|max:500'
+            ]);
+
+            $manager = auth('manager')->user();
+
+            Withdraw::create([
+                'eti_id' => $manager->eti_id,
+                'req_by' => $manager->manager_id,
+                'bank' => $request->bank,
+                'ac_no' => $request->ac_no,
+                'ac_name' => $request->ac_name,
+                'description' => $request->description,
+                'period' => $request->period,
+                'date' => now(),
+                'amount' => $request->amount,
+                'req_status' => 0
+            ]);
+
+            return redirect()->route('manager.dashboard')
+                ->with('success','Withdraw request submitted successfully.');
+        }
+
+        public function approve($id)
+{
+    $withdraw = Withdraw::findOrFail($id);
+
+    if ($withdraw->req_status != 0) {
+        return back()->with('error','Request already processed');
+    }
+
+    $manager = ManagersAccount::where('eti_id', $withdraw->eti_id)->first();
+
+    if (!$manager) {
+        return back()->with('error','Manager not found');
+    }
+
+    // increase manager balance
+    $manager->balance += $withdraw->amount;
+    $manager->save();
+
+    // update withdraw status
+    $withdraw->req_status = 1;
+    $withdraw->save();
+
+    return back()->with('success','Withdraw approved successfully');
+}
+
+    // public function approve($id)
+    //     {
+    //         DB::beginTransaction();
+
+    //         try {
+
+    //             $withdraw = Withdraw::findOrFail($id);
+
+    //             if ($withdraw->req_status != 0) {
+    //                 return back()->with('error','Request already processed');
+    //             }
+
+    //             // Get latest account balance
+    //             $lastAccount = Account::latest('id')->first();
+    //             $currentBalance = $lastAccount ? $lastAccount->balance : 0;
+
+    //             // Calculate new balance
+    //             $newBalance = $currentBalance - $withdraw->amount;
+
+    //             // Insert debit transaction
+    //             Account::create([
+    //                 'date' => now()->toDateString(),
+    //                 'credit' => 0,
+    //                 'debit' => $withdraw->amount,
+    //                 'balance' => $newBalance,
+    //                 'description' => 'Manager withdraw approved: '.$withdraw->eti_id
+    //             ]);
+
+    //             // Update withdraw status
+    //             $withdraw->req_status = 1;
+    //             $withdraw->save();
+
+    //             DB::commit();
+
+    //             return back()->with('success','Withdraw approved successfully');
+
+    //         } catch (\Exception $e) {
+
+    //             DB::rollBack();
+
+    //             return back()->with('error',$e->getMessage());
+    //         }
+    // }
+
+        public function reject($id)
+            {
+                $withdraw = Withdraw::findOrFail($id);
+
+                if ($withdraw->req_status != 0) {
+                    return back()->with('error','Request already processed');
+                }
+
+                $withdraw->req_status = 2;
+                $withdraw->save();
+
+                return back()->with('success','Withdraw rejected');
+            }
+
+            // public function reject($id)
+            // {
+            //     $withdraw = Withdraw::findOrFail($id);
+
+            //     $withdraw->update([
+            //         'req_status' => 2
+            //     ]);
+
+            //     return back()->with('success','Withdraw rejected.');
+            // }
 }
