@@ -9,7 +9,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('invoice_id');
+            $table->integer('invoice_id');
             $table->string('inv_id');
             $table->decimal('amount', 10, 2);
             $table->string('type')->default('payment');
