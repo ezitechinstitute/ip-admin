@@ -82,9 +82,11 @@ $configData = Helper::appClasses();
             <h5 class="card-title mb-0">Congratulations 🎉 {{$manager->name}}!</h5>
             <p class="mb-2 text-success">You have earned in Feb</p>
             <div style="display: flex; flex-direction: column" class="mb-1">
-              <h3 class="mb-0">PKR : 40,000</h3>
+              <h3 class="mb-0">PKR {{ number_format($monthlyRevenue) }}</h3>
             </div>
-            <a href="{{route('intern-accounts-admin')}}" class="btn btn-primary">Withraw Amount</a>
+            <a href="{{ route('manager.withdraw.create') }}" class="btn btn-success">
+                Withdraw Amount
+            </a>
           </div>
         </div>
         <div class="col-5 text-center text-sm-left">
@@ -208,7 +210,7 @@ $configData = Helper::appClasses();
             </div>
           </div>
 
-          <!-- Pending Test Reviews -->
+          <!-- Pending Test  -->
           <div class="col-md-6 col-6">
             <div class="d-flex align-items-center">
               <div class="badge rounded bg-label-danger me-4 p-2">
@@ -216,7 +218,7 @@ $configData = Helper::appClasses();
               </div>
               <div class="card-info">
                 <h5 class="mb-0 counter">{{ $pendingTests ?? 0 }}</h5>
-                <small>Test Reviews</small>
+                <small>Pending Test</small>
               </div>
             </div>
           </div>
@@ -234,6 +236,19 @@ $configData = Helper::appClasses();
             </div>
           </div>
 
+          <!-- Expired Projects -->
+            <div class="col-md-6 col-6">
+              <div class="d-flex align-items-center">
+                <div class="badge rounded bg-label-danger me-4 p-2">
+                  <i class="ti tabler-clock-off icon-lg"></i>
+                </div>
+                <div class="card-info">
+                  <h5 class="mb-0 counter">{{ $expiredProjects ?? 0 }}</h5>
+                  <small>Expired Projects</small>
+                </div>
+              </div>
+            </div>
+
           <!-- Revenue -->
           <div class="col-md-6 col-6">
             <div class="d-flex align-items-center">
@@ -243,6 +258,20 @@ $configData = Helper::appClasses();
               <div class="card-info">
                 <h5 class="mb-0 counter">{{ $monthlyRevenue ?? 0 }}</h5>
                 <small>Monthly Revenue</small>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Commission Earned -->
+          <div class="col-md-6 col-6">
+            <div class="d-flex align-items-center">
+              <div class="badge rounded bg-label-primary me-4 p-2">
+                <i class="ti tabler-wallet icon-lg"></i>
+              </div>
+              <div class="card-info">
+                <h5 class="mb-0 counter">{{ $commission ?? 0 }}</h5>
+                <small>Commission Earned</small>
               </div>
             </div>
           </div>
@@ -259,97 +288,102 @@ $configData = Helper::appClasses();
  @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege', 'manager_dashboard_interview_pipeline'))
 <div class="col-xl-6 col-xl-6">
   <div class="card h-100">
-    <div class="card-header d-flex justify-content-between">
-      <h5 class="card-title mb-0">Interview Pipeline</h5>
+  <div class="card-header d-flex justify-content-between">
+    <h5 class="card-title mb-0">Interview Pipeline</h5>
+  </div>
+
+  <div class="card-body">
+    <div class="row gy-4">
+
+<!-- New Applications -->
+<div class="col-md-6 col-6">
+  <div class="d-flex align-items-center">
+    <div class="badge rounded bg-label-primary me-4 p-2">
+      <i class="ti tabler-file-text icon-lg"></i>
     </div>
-
-    <div class="card-body d-flex align-items-end">
-      <div class="w-100">
-
-        <div class="row gy-8">
-
-          <!-- Manager Shift -->
-          <div class="col-md-6 col-6">
-            <div class="d-flex align-items-center">
-              <div class="badge rounded bg-label-primary me-4 p-2">
-<i class="ti tabler-file-text icon-lg"></i>
-              </div>
-              <div class="card-info">
-                <h5 class="mb-0 counter">{{ $managerHours ?? 14 }}</h5>
-                <small>New Applications</small>
-              </div>
-            </div>
-          </div>
-
-          <!-- Total Interns -->
-          <div class="col-md-6 col-6">
-            <div class="d-flex align-items-center">
-              <div class="badge rounded bg-label-info me-4 p-2">
-                <i class="ti tabler-users-group icon-lg"></i>
-              </div>
-              <div class="card-info">
-                <h5 class="mb-0 counter">{{ $totalInterns ?? 0 }}</h5>
-                <small>Contacted</small>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pending Interviews -->
-          <div class="col-md-6 col-6">
-            <div class="d-flex align-items-center">
-              <div class="badge rounded bg-label-warning me-4 p-2">
-                <i class="ti tabler-user-search icon-lg"></i>
-              </div>
-              <div class="card-info">
-                <h5 class="mb-0 counter">{{ $pendingInterviews ?? 0 }}</h5>
-                <small>Test Assigned</small>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pending Test Reviews -->
-          <div class="col-md-6 col-6">
-            <div class="d-flex align-items-center">
-              <div class="badge rounded bg-label-danger me-4 p-2">
-                <i class="ti tabler-clipboard-check icon-lg"></i>
-              </div>
-              <div class="card-info">
-                <h5 class="mb-0 counter">{{ $pendingTests ?? 0 }}</h5>
-                <small>Test Completed</small>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ongoing Projects -->
-          <div class="col-md-6 col-6">
-            <div class="d-flex align-items-center">
-              <div class="badge rounded bg-label-success me-4 p-2">
-                <i class="ti tabler-briefcase icon-lg"></i>
-              </div>
-              <div class="card-info">
-                <h5 class="mb-0 counter">{{ $ongoingProjects ?? 0 }}</h5>
-                <small>Interview Scheduled</small>
-              </div>
-            </div>
-          </div>
-
-          <!-- Revenue -->
-          <div class="col-md-6 col-6">
-            <div class="d-flex align-items-center">
-              <div class="badge rounded bg-label-dark me-4 p-2">
-<i class="ti tabler-user-check icon-lg"></i>
-              </div>
-              <div class="card-info">
-                <h5 class="mb-0 counter">{{ $monthlyRevenue ?? 0 }}</h5>
-                <small>Selected</small>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
+    <div class="card-info">
+      <h5 class="mb-0 counter">{{ $statusCounts['New'] ?? 0 }}</h5>
+      <small>New Applications</small>
     </div>
+  </div>
+</div>
+
+<!-- Contacted -->
+<div class="col-md-6 col-6">
+  <div class="d-flex align-items-center">
+    <div class="badge rounded bg-label-info me-4 p-2">
+      <i class="ti tabler-phone icon-lg"></i>
+    </div>
+    <div class="card-info">
+      <h5 class="mb-0 counter">{{ $statusCounts['Contact'] ?? 0 }}</h5>
+      <small>Contacted</small>
+    </div>
+  </div>
+</div>
+
+<!-- Test Assigned -->
+<div class="col-md-6 col-6">
+  <div class="d-flex align-items-center">
+    <div class="badge rounded bg-label-warning me-4 p-2">
+      <i class="ti tabler-list-check icon-lg"></i>
+    </div>
+    <div class="card-info">
+      <h5 class="mb-0 counter">{{ $statusCounts['Test'] ?? 0 }}</h5>
+      <small>Test Assigned</small>
+    </div>
+  </div>
+</div>
+
+<!-- Test Completed -->
+<div class="col-md-6 col-6">
+  <div class="d-flex align-items-center">
+    <div class="badge rounded bg-label-success me-4 p-2">
+      <i class="ti tabler-certificate icon-lg"></i>
+    </div>
+    <div class="card-info">
+      <h5 class="mb-0 counter">{{ $statusCounts['Completed'] ?? 0 }}</h5>
+      <small>Test Completed</small>
+    </div>
+  </div>
+</div>
+
+<!-- Interview Scheduled -->
+<div class="col-md-6 col-6">
+  <div class="d-flex align-items-center">
+    <div class="badge rounded bg-label-dark me-4 p-2">
+      <i class="ti tabler-calendar-event icon-lg"></i>
+    </div>
+    <div class="card-info">
+      <h5 class="mb-0 counter">{{ $statusCounts['Interview'] ?? 0 }}</h5>
+      <small>Interview Scheduled</small>
+    </div>
+  </div>
+</div>
+
+<!-- Selected -->
+<div class="col-md-6 col-6">
+  <div class="d-flex align-items-center">
+    <div class="badge rounded bg-label-success me-4 p-2">
+      <i class="ti tabler-user-check icon-lg"></i>
+    </div>
+    <div class="card-info">
+      <h5 class="mb-0 counter">{{ $statusCounts['Selected'] ?? 0 }}</h5>
+      <small>Selected</small>
+    </div>
+  </div>
+</div>
+
+<!-- Rejected -->
+<div class="col-md-6 col-6">
+  <div class="d-flex align-items-center">
+    <div class="badge rounded bg-label-danger me-4 p-2">
+      <i class="ti tabler-user-x icon-lg"></i>
+    </div>
+    <div class="card-info">
+      <h5 class="mb-0 counter">{{ $statusCounts['Rejected'] ?? 0 }}</h5>
+      <small>Rejected</small>
+    </div>
+  </div>
   </div>
 </div>
 
@@ -625,3 +659,45 @@ $('#communicationForm').on('submit', function(e) {
 });
 </script>
 @endpush
+
+
+<style>
+
+.pipeline-container{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.pipeline-stage{
+  flex:1;
+  min-width:120px;
+  background:#f8f9fa;
+  border-radius:10px;
+  padding:15px;
+  text-align:center;
+  transition:0.3s;
+}
+
+.pipeline-stage:hover{
+  transform:translateY(-4px);
+  box-shadow:0 6px 15px rgba(0,0,0,0.1);
+}
+
+.pipeline-stage h4{
+  font-weight:700;
+}
+
+.pipeline-arrow{
+  font-size:20px;
+  font-weight:bold;
+  color:#999;
+}
+
+.pipeline-stage.rejected{
+  background:#ffeaea;
+}
+
+</style>
