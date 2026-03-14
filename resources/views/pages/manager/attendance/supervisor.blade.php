@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Leave Requests')
+@section('title', 'Supervisor Attendance')
 
 @section('vendor-style')
 <link rel="stylesheet" href="path-to/datatables.bootstrap5.css">
@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="path-to/form-validation.css">
 <link rel="stylesheet" href="path-to/animate.css">
 <link rel="stylesheet" href="path-to/sweetalert2.css">
+<link rel="stylesheet" href="path-to/flatpickr.css">
 @endsection
 
 @section('vendor-script')
@@ -19,16 +20,25 @@
 <script src="path-to/form-validation.js"></script>
 <script src="path-to/cleave-zen.js"></script>
 <script src="path-to/sweetalert2.js"></script>
+<script src="path-to/flatpickr.js"></script>
 @endsection
 
 @section('content')
 <div class="col-12 mb-6">
-    <h4 class="mt-6 mb-1">Intern Leave Requests</h4>
+    <h4 class="mt-6 mb-1">Supervisor Attendance</h4>
+    <p class="text-muted">View supervisor check-in and check-out records</p>
 </div>
 
 @if(session('success'))
 <div class="alert alert-success alert-dismissible fade show" role="alert">
     {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
+
+@if(session('error'))
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ session('error') }}
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 @endif
@@ -56,32 +66,30 @@
                                 <option value="{{ $val }}" {{ request('per_page',15)==$val ? 'selected' : '' }}>{{ $val }}</option>
                                 @endforeach
                             </select>
-                            <input type="hidden" name="search" value="{{ request('search') }}">
-                            <input type="hidden" name="status" value="{{ request('status') }}">
+                            <input type="hidden" name="date" value="{{ request('date', date('Y-m-d')) }}">
+                            <input type="hidden" name="supervisor_id" value="{{ request('supervisor_id') }}">
                         </form>
                         <label for="dt-length-0"></label>
                     </div>
                 </div>
 
                 <div class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
-                    {{-- <form method="GET" action="{{ route('manager.leave.requests') }}" id="filterForm" class="d-flex gap-2">
-                        <input type="search" name="search" id="searchInput" class="form-control"
-                            placeholder="Search by Name, Email or Supervisor ID" value="{{ request('search') }}">
-                        <style>
-                            input[type="search"]::-webkit-search-cancel-button,
-                            input[type="search"]::-webkit-search-decoration {
-                                -webkit-appearance: none;
-                                appearance: none;
-                            }
-                        </style>
-
-                        <select name="status" id="statusFilter" class="form-select text-capitalize" onchange="this.form.submit()">
-                            <option value="">All Status</option>
-                            <option value="pending" {{ request('status')=='pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Approved</option>
-                            <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Rejected</option>
+                    <form method="GET" action="{{ route('manager.supervisor.attendance') }}" id="filterForm" class="d-flex gap-2">
+                        <input type="text" id="attendanceDatePicker" name="date" class="form-control" style="width: 150px;" placeholder="Select Date" value="{{ request('date', date('Y-m-d')) }}">
+                        
+                        <select name="supervisor_id" id="supervisorFilter" class="form-select select2" style="min-width: 200px;">
+                            <option value="">All Supervisors</option>
+                            @foreach($supervisorsList ?? [] as $supervisor)
+                            <option value="{{ $supervisor->id }}" {{ request('supervisor_id') == $supervisor->id ? 'selected' : '' }}>
+                                {{ $supervisor->name }}
+                            </option>
+                            @endforeach
                         </select>
-                    </form> --}}
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="icon-base ti tabler-filter me-1"></i> Filter
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -91,81 +99,95 @@
                         aria-describedby="DataTables_Table_0_info" style="width: 100%;">
                         <thead class="border-top sticky-top bg-card">
                             <tr>
-                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Leave ID</th>
-                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Supervisor ID</th>
-                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Name</th>
+                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">#</th>
+                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Supervisor</th>
                                 <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Email</th>
-                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">From Date</th>
-                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">To Date</th>
-                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Days</th>
-                                <th class="dt-orderable-none">Reason</th>
-                                <th class="dt-orderable-none">Status</th>
-                                <th class="dt-orderable-none">Created At</th>
-                                <th class="dt-orderable-none">Action</th>
+                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Date</th>
+                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Check In</th>
+                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Check Out</th>
+                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Total Hours</th>
+                                <th class="dt-orderable-asc dt-orderable-desc text-nowrap">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($leaves as $leave)
+                            @forelse($attendanceRecords ?? [] as $index => $record)
                             <tr>
-                                <td><span class="text-heading text-nowrap">{{ $leave->leave_id }}</span></td>
-                                <td><span class="text-heading text-nowrap">{{ $leave->supervisor_id }}</span></td>
-                                <td><span class="text-heading text-nowrap">{{ $leave->name }}</span></td>
+                                <td><span class="text-heading text-nowrap">{{ $index + 1 }}</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-2">
+                                            <span class="avatar-initial rounded-circle bg-label-{{ $record->check_in ? 'success' : 'secondary' }}">
+                                                {{ substr($record->supervisor->name ?? 'S', 0, 1) }}
+                                            </span>
+                                        </div>
+                                        <span class="text-heading text-nowrap fw-medium">{{ $record->supervisor->name ?? 'Unknown' }}</span>
+                                    </div>
+                                </td>
                                 <td>
                                     <span class="text-heading text-nowrap">
-                                        <small><i class="icon-base ti tabler-mail me-1 text-danger icon-22px"></i>{{ $leave->email }}</small>
+                                        <small><i class="icon-base ti tabler-mail me-1 text-danger icon-22px"></i>{{ $record->supervisor->email ?? 'N/A' }}</small>
                                     </span>
                                 </td>
-                                <td><span class="text-heading text-nowrap">{{ $leave->from_date }}</span></td>
-                                <td><span class="text-heading text-nowrap">{{ $leave->to_date }}</span></td>
-                                <td><span class="text-heading text-nowrap">{{ $leave->days }}</span></td>
-                                <td><span class="text-heading text-nowrap">{{ $leave->reason }}</span></td>
+                                <td><span class="text-heading text-nowrap">{{ \Carbon\Carbon::parse($record->date)->format('d M Y') }}</span></td>
+                                <td>
+                                    @if($record->check_in)
+                                    <span class="badge bg-label-success text-nowrap">
+                                        <i class="icon-base ti tabler-login me-1"></i>
+                                        {{ \Carbon\Carbon::parse($record->check_in)->format('h:i A') }}
+                                    </span>
+                                    @else
+                                    <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($record->check_out)
+                                    <span class="badge bg-label-info text-nowrap">
+                                        <i class="icon-base ti tabler-logout me-1"></i>
+                                        {{ \Carbon\Carbon::parse($record->check_out)->format('h:i A') }}
+                                    </span>
+                                    @else
+                                    <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($record->check_in && $record->check_out)
+                                    @php
+                                    $checkIn = \Carbon\Carbon::parse($record->check_in);
+                                    $checkOut = \Carbon\Carbon::parse($record->check_out);
+                                    $hours = $checkOut->diffInHours($checkIn);
+                                    $minutes = $checkOut->diffInMinutes($checkIn) % 60;
+                                    @endphp
+                                    <span class="badge bg-label-primary">{{ $hours }}h {{ $minutes }}m</span>
+                                    @elseif($record->check_in)
+                                    <span class="badge bg-label-warning">In Progress</span>
+                                    @else
+                                    <span class="text-muted">—</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @php
-                                    $statusClass = 'bg-label-warning';
-                                    $statusText = 'Pending';
+                                    $statusClass = 'bg-label-secondary';
+                                    $statusText = 'Absent';
 
-                                    if($leave->leave_status === 1){
+                                    if($record->check_in && $record->check_out){
                                         $statusClass = 'bg-label-success';
-                                        $statusText = 'Approved';
+                                        $statusText = 'Completed';
                                     }
-                                    elseif($leave->leave_status === 0 || $leave->leave_status === null){
-                                        $statusClass = 'bg-label-danger';
-                                        $statusText = 'Rejected';
+                                    elseif($record->check_in){
+                                        $statusClass = 'bg-label-warning';
+                                        $statusText = 'Working';
                                     }
                                     @endphp
                                     <span class="badge {{ $statusClass }}">{{ $statusText }}</span>
                                 </td>
-                                <td>
-                                    <span class="text-heading text-nowrap">{{ $leave->created_at ? \Carbon\Carbon::parse($leave->created_at)->format('Y-m-d') : 'N/A' }}</span> </td>
-                                <td>
-                                    <div class="dropdown">
-                                        <a href="javascript:;"
-                                            class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
-                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-end m-0">
-                                            <a href="{{ route('manager.leave.approve',$leave->leave_id) }}"
-                                                class="dropdown-item text-success">
-                                                <i class="icon-base ti tabler-check me-1"></i> Approve
-                                            </a>
-                                            <a href="{{ route('manager.leave.reject',$leave->leave_id) }}"
-                                                class="dropdown-item text-danger">
-                                                <i class="icon-base ti tabler-x me-1"></i> Reject
-                                            </a>
-                                            <div class="dropdown-divider"></div>
-                                            {{-- <a href="{{ route('manager.leave.view',$leave->leave_id) }}"
-                                                class="dropdown-item">
-                                                <i class="icon-base ti tabler-eye me-1"></i> View Details
-                                            </a> --}}
-                                        </div>
-                                    </div>
-                                </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="11">
-                                    <p class="text-center mb-0">No Leave Requests Found</p>
+                                <td colspan="8" class="text-center py-4">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <p class="mb-0">No Attendance Records Found</p>
+                                        <small class="text-muted">No records found for {{ request('date', date('Y-m-d')) }}</small>
+                                    </div>
                                 </td>
                             </tr>
                             @endforelse
@@ -175,10 +197,11 @@
                 </div>
             </div>
 
+            @if(isset($attendanceRecords) && $attendanceRecords->total() > 0)
             <div class="row mx-3 justify-content-between">
                 <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
                     <div class="dt-info" aria-live="polite">
-                        Showing {{ $leaves->firstItem() ?? 0 }} to {{ $leaves->lastItem() ?? 0 }} of {{ $leaves->total() ?? 0 }} entries
+                        Showing {{ $attendanceRecords->firstItem() ?? 0 }} to {{ $attendanceRecords->lastItem() ?? 0 }} of {{ $attendanceRecords->total() ?? 0 }} entries
                     </div>
                 </div>
 
@@ -186,28 +209,28 @@
                     <div class="dt-paging">
                         <nav aria-label="pagination">
                             <ul class="pagination">
-                                <li class="dt-paging-button page-item {{ $leaves->onFirstPage() ? 'disabled' : '' }}">
-                                    <a class="page-link" style="border-radius: 5px;" href="{{ $leaves->url(1) }}" aria-label="First">
+                                <li class="dt-paging-button page-item {{ $attendanceRecords->onFirstPage() ? 'disabled' : '' }}">
+                                    <a class="page-link" style="border-radius: 5px;" href="{{ $attendanceRecords->url(1) }}" aria-label="First">
                                         <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
                                     </a>
                                 </li>
-                                <li class="dt-paging-button page-item {{ $leaves->onFirstPage() ? 'disabled' : '' }}">
-                                    <a class="page-link" style="border-radius: 5px;" href="{{ $leaves->previousPageUrl() }}" aria-label="Previous">
+                                <li class="dt-paging-button page-item {{ $attendanceRecords->onFirstPage() ? 'disabled' : '' }}">
+                                    <a class="page-link" style="border-radius: 5px;" href="{{ $attendanceRecords->previousPageUrl() }}" aria-label="Previous">
                                         <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
                                     </a>
                                 </li>
-                                @foreach ($leaves->getUrlRange(max(1, $leaves->currentPage() - 2), min($leaves->lastPage(), $leaves->currentPage() + 2)) as $page => $url)
-                                <li class="dt-paging-button page-item {{ $page == $leaves->currentPage() ? 'active' : '' }}">
+                                @foreach ($attendanceRecords->getUrlRange(max(1, $attendanceRecords->currentPage() - 2), min($attendanceRecords->lastPage(), $attendanceRecords->currentPage() + 2)) as $page => $url)
+                                <li class="dt-paging-button page-item {{ $page == $attendanceRecords->currentPage() ? 'active' : '' }}">
                                     <a class="page-link" style="border-radius: 5px;" href="{{ $url }}">{{ $page }}</a>
                                 </li>
                                 @endforeach
-                                <li class="dt-paging-button page-item {{ $leaves->currentPage() == $leaves->lastPage() ? 'disabled' : '' }}">
-                                    <a class="page-link" style="border-radius: 5px;" href="{{ $leaves->nextPageUrl() }}" aria-label="Next">
+                                <li class="dt-paging-button page-item {{ $attendanceRecords->currentPage() == $attendanceRecords->lastPage() ? 'disabled' : '' }}">
+                                    <a class="page-link" style="border-radius: 5px;" href="{{ $attendanceRecords->nextPageUrl() }}" aria-label="Next">
                                         <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
                                     </a>
                                 </li>
-                                <li class="dt-paging-button page-item {{ $leaves->currentPage() == $leaves->lastPage() ? 'disabled' : '' }}">
-                                    <a class="page-link" style="border-radius: 5px;" href="{{ $leaves->url($leaves->lastPage()) }}" aria-label="Last">
+                                <li class="dt-paging-button page-item {{ $attendanceRecords->currentPage() == $attendanceRecords->lastPage() ? 'disabled' : '' }}">
+                                    <a class="page-link" style="border-radius: 5px;" href="{{ $attendanceRecords->url($attendanceRecords->lastPage()) }}" aria-label="Last">
                                         <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
                                     </a>
                                 </li>
@@ -216,22 +239,46 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </div>
 </div>
 
 <script>
-    let timer;
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
+    // Initialize Flatpickr for date selection
+    flatpickr('#attendanceDatePicker', {
+        dateFormat: 'Y-m-d',
+        maxDate: 'today',
+        defaultDate: '{{ request('date', date('Y-m-d')) }}',
+        onChange: function(selectedDates, dateStr) {
             document.getElementById('filterForm').submit();
-        }, 500);
+        }
     });
 
-    document.getElementById('statusFilter').addEventListener('change', function() {
+    // Initialize Select2
+    $(document).ready(function() {
+        $('.select2').select2({
+            dropdownParent: $('.card-datatable'),
+            placeholder: 'Select Supervisor',
+            allowClear: true,
+            width: '100%'
+        });
+    });
+
+    // Auto-submit when supervisor filter changes
+    document.getElementById('supervisorFilter')?.addEventListener('change', function() {
         document.getElementById('filterForm').submit();
     });
+
+    // Auto-hide alerts
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.classList.remove('show');
+            alert.classList.add('hide');
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 5000);
 </script>
 
 @endsection
