@@ -333,6 +333,20 @@
           "title": "View Attendance Calendar"
         }
       ]
+    },
+    {
+      "key": "manager_invoices",
+      "title": "Invoices",
+      "privileges": [
+        {
+          "key": "view_invoice_dashboard",
+          "title": "View Invoice Dashboard"
+        },
+        {
+          "key": "create_invoice",
+          "title": "Create Invoice"
+        }
+      ]
     }
   ]
 }
