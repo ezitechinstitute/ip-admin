@@ -110,6 +110,7 @@ use App\Http\Controllers\InternAccountsController;
 use App\Http\Controllers\InternProjectsController;
 use App\Http\Controllers\InternTaskController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\manager_controllers\InvoiceController as ManagerInvoiceController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\language\LanguageController;
 use App\Http\Controllers\laravel_example\UserManagement;
@@ -717,6 +718,19 @@ Route::get('/completed-interns/export', [AllManagerInternController::class, 'exp
 
 
 
+// invoices routes
+Route::prefix('invoices')->name('invoices.')->group(function(){
+    Route::get('/', [ManagerInvoiceController::class, 'dashboard'])->name('dashboard');
+    Route::get('/create', [ManagerInvoiceController::class, 'create'])->name('create');
+    Route::post('/store', [ManagerInvoiceController::class, 'store'])->name('store');
+    Route::get('/{id}', [ManagerInvoiceController::class, 'show'])->name('view');
+    Route::get('/{id}/payment', [ManagerInvoiceController::class, 'paymentForm'])->name('payment');
+    Route::post('/{id}/record-payment', [ManagerInvoiceController::class, 'recordPayment'])->name('record-payment');
+    Route::post('/{id}/update-due-date', [ManagerInvoiceController::class, 'updateDueDate'])->name('update-due-date');
+    Route::get('/export/csv', [ManagerInvoiceController::class, 'export'])->name('export');
+    Route::get('/stats/json', [ManagerInvoiceController::class, 'getStats'])->name('stats');
+    Route::get('/{id}/pdf', [ManagerInvoiceController::class, 'generatePDF'])->name('pdf');
+});
 
 //Payment Receipt Routes
 
@@ -736,6 +750,7 @@ Route::get('/knowledge-base', [ManagerKnowledgeBaseController::class, 'index'])-
 Route::get('/knowledge-base/export',
     [ManagerKnowledgeBaseController::class, 'exportKnowledgeBaseCSV']
 )->name('manager.knowledge-base.export');
+
 
 
 
