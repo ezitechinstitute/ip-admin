@@ -585,18 +585,52 @@ class InvoiceController extends Controller
     /**
      * Generate PDF invoice
      */
-    public function generatePDF($id)
-    {
-        try {
-            $invoice = Invoice::findOrFail($id);
-            
-            $pdf = Pdf::loadView('pdf.invoice', compact('invoice'));
-            
-            return $pdf->download('invoice-' . $invoice->inv_id . '.pdf');
-            
-        } catch (\Exception $e) {
-            Log::error('PDF generation failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to generate PDF');
-        }
+   /**
+ * Generate PDF invoice
+ */
+public function generatePDF($id)
+{
+    try {
+        $invoice = Invoice::findOrFail($id);
+        
+        // Set paper size and orientation
+        $pdf = Pdf::loadView('pdf.invoice', compact('invoice'))
+                  ->setPaper('a4', 'portrait')
+                  ->setOptions([
+                      'defaultFont' => 'sans-serif',
+                      'isHtml5ParserEnabled' => true,
+                      'isRemoteEnabled' => true
+                  ]);
+        
+        // Download PDF
+        return $pdf->download('invoice-' . $invoice->inv_id . '.pdf');
+        
+    } catch (\Exception $e) {
+        Log::error('PDF generation failed: ' . $e->getMessage());
+        return back()->with('error', 'Failed to generate PDF: ' . $e->getMessage());
     }
 }
+
+/**
+ * View PDF invoice in browser
+ */
+public function viewPDF($id)
+{
+    try {
+        $invoice = Invoice::findOrFail($id);
+        
+        $pdf = Pdf::loadView('pdf.invoice', compact('invoice'))
+                  ->setPaper('a4', 'portrait');
+        
+        // Stream in browser
+        return $pdf->stream('invoice-' . $invoice->inv_id . '.pdf');
+        
+    } catch (\Exception $e) {
+        Log::error('PDF view failed: ' . $e->getMessage());
+        return back()->with('error', 'Failed to load PDF');
+    }
+}
+
+
+}
+

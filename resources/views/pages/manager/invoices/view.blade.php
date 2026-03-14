@@ -27,6 +27,10 @@
         <i class="ti ti-cash me-1"></i>Record Payment
       </a>
       @endif
+      {{-- PDF BUTTON ADDED HERE --}}
+      <a href="{{ route('invoices.pdf', $invoice->id) }}" class="btn btn-primary" target="_blank">
+        <i class="ti ti-file-text me-1"></i>Download PDF
+      </a>
       <a href="{{ route('invoices.dashboard') }}" class="btn btn-secondary">
         <i class="ti ti-arrow-left me-1"></i>Back
       </a>
@@ -182,7 +186,6 @@
                   <h6 class="mb-0 fw-semibold">
                     Payment Received - PKR {{ number_format($transaction->amount, 2) }}
                   </h6>
-                  {{-- FIXED: Safe date display --}}
                   <small class="text-muted">
                     @if(isset($transaction->payment_date) && $transaction->payment_date)
                       {{ \Carbon\Carbon::parse($transaction->payment_date)->format('d M Y') }}

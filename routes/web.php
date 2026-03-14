@@ -110,6 +110,7 @@ use App\Http\Controllers\InternAccountsController;
 use App\Http\Controllers\InternProjectsController;
 use App\Http\Controllers\InternTaskController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\manager_controllers\InvoiceController as ManagerInvoiceController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\language\LanguageController;
 use App\Http\Controllers\laravel_example\UserManagement;
@@ -697,19 +698,17 @@ Route::get('/completed-interns/export', [AllManagerInternController::class, 'exp
 
 // invoices routes
 Route::prefix('invoices')->name('invoices.')->group(function(){
-    Route::get('/', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'dashboard'])->name('dashboard');
-    Route::get('/create', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'create'])->name('create');
-    Route::post('/store', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'store'])->name('store');
-    Route::get('/{id}', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'show'])->name('view');
-    Route::get('/{id}/payment', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'paymentForm'])->name('payment');
-    Route::post('/{id}/record-payment', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'recordPayment'])->name('record-payment'); // THIS LINE WAS MISSING!
-    Route::post('/{id}/update-due-date', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'updateDueDate'])->name('update-due-date');
-    Route::get('/export/csv', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'export'])->name('export');
-    Route::get('/stats/json', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'getStats'])->name('stats');
+    Route::get('/', [ManagerInvoiceController::class, 'dashboard'])->name('dashboard');
+    Route::get('/create', [ManagerInvoiceController::class, 'create'])->name('create');
+    Route::post('/store', [ManagerInvoiceController::class, 'store'])->name('store');
+    Route::get('/{id}', [ManagerInvoiceController::class, 'show'])->name('view');
+    Route::get('/{id}/payment', [ManagerInvoiceController::class, 'paymentForm'])->name('payment');
+    Route::post('/{id}/record-payment', [ManagerInvoiceController::class, 'recordPayment'])->name('record-payment');
+    Route::post('/{id}/update-due-date', [ManagerInvoiceController::class, 'updateDueDate'])->name('update-due-date');
+    Route::get('/export/csv', [ManagerInvoiceController::class, 'export'])->name('export');
+    Route::get('/stats/json', [ManagerInvoiceController::class, 'getStats'])->name('stats');
+    Route::get('/{id}/pdf', [ManagerInvoiceController::class, 'generatePDF'])->name('pdf');
 });
-
-
-
 
 //Payment Receipt Routes
 
