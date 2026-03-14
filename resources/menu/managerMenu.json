@@ -16,36 +16,36 @@
       "slug": "manager/my-interns",
       "url": "manager/my-interns",
       "permission": "view_my_interns",
-      "submenu": [
-        {
-          "url": "manager/all-interns/active",
-          "name": "Active Interns",
-          "slug": "manager/all-interns/active",
-          "permission": "view_active_interns"
-        },
+      "submenu": [        
         {
           "url": "manager/all-interns/newInterns",
-          "name": "New Interns",
+          "name": "Interview",
           "slug": "manager/all-interns/newInterns",
           "permission": "view_new_interns"
         },
         {
           "url": "manager/all-interns/contact",
-          "name": "Contact With",
+          "name": "Contact",
           "slug": "manager/all-interns/contact",
           "permission": "view_contact_with"
         },
         {
           "url": "manager/all-interns/test",
-          "name": "Interview Test",
+          "name": "Test",
           "slug": "manager/all-interns/test",
           "permission": "view_interview_test"
         },
         {
           "url": "manager/all-interns/completed",
-          "name": "Test Completed",
+          "name": "Completed",
           "slug": "manager/all-interns/completed",
           "permission": "view_test_completed"
+        },
+        {
+          "url": "manager/all-interns/active",
+          "name": "Active Interns",
+          "slug": "manager/all-interns/active",
+          "permission": "view_active_interns"
         }
       ]
     },
@@ -56,6 +56,40 @@
       "url": "manager/international-interns",
       "permission": "view_manager_international_interns"
     },
+
+    {
+      "menuHeader" :"Supervisor"
+    },
+    {
+      "name" : "Supervisor",
+      "icon": "menu-icon icon-base ti tabler-cash",
+      "slug": "manager/Supervisor",
+      "url": "manager/Supervisor"
+    },
+    {
+    "menuHeader": "Attend & Leaves"
+  },
+  {
+    "name": "Intern Leaves",
+    "icon": "menu-icon icon-base ti tabler-user-check",
+    "slug": "manager/attendance/intern-leaves",
+    "url": "manager/attendance/intern-leaves",
+    "permission": "view_intern_leaves"
+  },
+  {
+    "name": "Supervisor Leaves",
+    "icon": "menu-icon icon-base ti tabler-checklist",
+    "slug": "manager/attendance/supervisor-leaves",
+    "url": "manager/attendance/supervisor-leaves",
+    "permission": "approve_supervisor_leaves"
+  },
+  {
+    "name": "Attendance Calendar",
+    "icon": "menu-icon icon-base ti tabler-calendar",
+    "slug": "manager/attendance-calendar",
+    "url": "manager/attendance-calendar",
+    "permission": "view_attendance_calendar"
+  },
     {
       "menuHeader": "Reports & Logs"
     },

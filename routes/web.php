@@ -135,6 +135,8 @@ use App\Http\Controllers\manager_controllers\OfferLetterTemplateController;
 use App\Http\Controllers\manager_controllers\PaymentReceiptController;
 use App\Http\Controllers\manager_controllers\ProfileSettingsController;
 use App\Http\Controllers\manager_controllers\RemainingAmountController;
+use App\Http\Controllers\manager_controllers\Supervisorcontroller;
+use App\Http\Controllers\manager_controllers\ManagerLeaveController;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\modal\ModalExample;
@@ -497,6 +499,7 @@ Route::get('supervisors', [SupervisorsController::class, 'index'])->name('superv
 Route::post('add-supervisor', [SupervisorsController::class, 'addSupervisor'])->name('add-supervisor.admin');
 Route::put('/supervisor/update/{id}', [SupervisorsController::class, 'update'])->name('update-supervisor.admin');
 Route::post('/supervisor-permissions/store', [SupervisorsController::class, 'storePermissions'])->name('supervisor.permissions.store');
+Route::post('/supervisor.assign-manager', [SupervisorsController::class, 'assignSupervisor'])->name('supervisor.assign-manager');
 Route::get('supervisor/{id}/permissions', [SupervisorsController::class, 'getSupervisorPermissions'])
     ->name('supervisor.permissions.get');
     // routes/web.php
@@ -605,6 +608,17 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 
 
 Route::prefix('/manager')->middleware(['validManager'])->group(function(){
+
+    //atendance route
+    Route::get('/attendance/intern-leaves', [ManagerLeaveController::class, 'intern'])->name('manager.attendance.intern');
+    Route::get('/leave/approve/{id}', [ManagerLeaveController::class,'approve'])->name('manager.leave.approve');
+    Route::get('/leave-reject/{id}', [ManagerLeaveController::class, 'reject'])->name('manager.leave.reject');
+
+    Route::get('/attendance/supervisor-attendance', [ManagerLeaveController::class, 'supervisor'])->name('manager.supervisor.attendance');
+    Route::get('/attendance/supervisor-leaves', [ManagerLeaveController::class, 'supervisor'])->name('manager.supervisor.attendance');
+    Route::patch('leaves/{leave}/approve', [ManagerLeaveController::class, 'approve'])->name('manager.leave.approve');
+    Route::patch('leaves/{leave}/reject', [ManagerLeaveController::class, 'reject'])->name('manager.leave.reject');
+
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/my-interns', [AllManagerInternController::class, 'myInterns']) ->name('manager.myInterns');
@@ -700,6 +714,13 @@ Route::get('/knowledge-base', [ManagerKnowledgeBaseController::class, 'index'])-
 Route::get('/knowledge-base/export',
     [ManagerKnowledgeBaseController::class, 'exportKnowledgeBaseCSV']
 )->name('manager.knowledge-base.export');
+
+
+
+
+//supervisor routes
+
+Route::get('Supervisor',[Supervisorcontroller::class,'index'])->name('manager.supervisor');
 });
 
 // manager route end here
@@ -711,6 +732,10 @@ Route::get('/knowledge-base/export',
 Route::prefix('/supervisor')->middleware(['ValidSupervisor'])->group(function () {
     Route::get('/dashboard', [DashboardSupervisorController :: class, 'index'])->name('supervisor.dashboard');
 });
+
+
+
+
 
    
 Route::fallback(function (){

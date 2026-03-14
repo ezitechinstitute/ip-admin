@@ -16,10 +16,10 @@ class ValidSupervisor
     {
         // Check if user is authenticated via manager guard
         if (Auth::guard('manager')->check()) {
-            $manager = Auth::guard('manager')->user();
+            $supervisor = Auth::guard('manager')->user();
 
             // Check if the manager is logged in as Supervisor
-            if ($manager->loginas === 'Supervisor') {
+            if ($supervisor->loginas === 'Supervisor') {
                 return $next($request); // Allow access
             }
         }
