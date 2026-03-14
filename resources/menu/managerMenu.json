@@ -74,53 +74,6 @@
       "url": "manager/Supervisor"
     },
     {
-    "menuHeader": "Attend & Leaves"
-  },
-  {
-    "name": "Intern Leaves",
-    "icon": "menu-icon icon-base ti tabler-user-check",
-    "slug": "manager/attendance/intern-leaves",
-    "url": "manager/attendance/intern-leaves",
-    "permission": "view_intern_leaves"
-  },
-  {
-    "name": "Supervisor Leaves",
-    "icon": "menu-icon icon-base ti tabler-checklist",
-    "slug": "manager/attendance/supervisor-leaves",
-    "url": "manager/attendance/supervisor-leaves",
-    "permission": "approve_supervisor_leaves"
-  },
-  {
-    "name": "Attendance Calendar",
-    "icon": "menu-icon icon-base ti tabler-calendar",
-    "slug": "manager/attendance-calendar",
-    "url": "manager/attendance-calendar",
-    "permission": "view_attendance_calendar"
-  },
-  {
-  "menuHeader": "Finance"
-},
-{
-  "name": "Invoices",
-  "icon": "menu-icon icon-base ti tabler-file-invoice",
-  "slug": "manager/invoices",
-  "url": "manager/invoices",
-  "permission": "view_invoice_dashboard",
-  "submenu": [
-    {
-      "url": "manager/invoices",
-      "name": "Invoice Dashboard",
-      "slug": "manager/invoices",
-      "permission": "view_invoice_dashboard"
-    },
-    {
-      "url": "manager/invoices/create",
-      "name": "Create Invoice",
-      "slug": "manager/invoices/create",
-      "permission": "create_invoice"
-    }
-  ]
-},
       "menuHeader": "Attend & Leaves"
     },
     {
