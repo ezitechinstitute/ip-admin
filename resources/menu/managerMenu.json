@@ -90,6 +90,30 @@
     "url": "manager/attendance-calendar",
     "permission": "view_attendance_calendar"
   },
+  {
+  "menuHeader": "Finance"
+},
+{
+  "name": "Invoices",
+  "icon": "menu-icon icon-base ti tabler-file-invoice",
+  "slug": "manager/invoices",
+  "url": "manager/invoices",
+  "permission": "view_invoice_dashboard",
+  "submenu": [
+    {
+      "url": "manager/invoices",
+      "name": "Invoice Dashboard",
+      "slug": "manager/invoices",
+      "permission": "view_invoice_dashboard"
+    },
+    {
+      "url": "manager/invoices/create",
+      "name": "Create Invoice",
+      "slug": "manager/invoices/create",
+      "permission": "create_invoice"
+    }
+  ]
+},
     {
       "menuHeader": "Reports & Logs"
     },

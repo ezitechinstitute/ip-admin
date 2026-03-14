@@ -695,6 +695,21 @@ Route::get('/completed-interns/export', [AllManagerInternController::class, 'exp
 
 
 
+// invoices routes
+Route::prefix('invoices')->name('invoices.')->group(function(){
+    Route::get('/', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'dashboard'])->name('dashboard');
+    Route::get('/create', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'create'])->name('create');
+    Route::post('/store', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'store'])->name('store');
+    Route::get('/{id}', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'show'])->name('view');
+    Route::get('/{id}/payment', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'paymentForm'])->name('payment');
+    Route::post('/{id}/record-payment', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'recordPayment'])->name('record-payment'); // THIS LINE WAS MISSING!
+    Route::post('/{id}/update-due-date', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'updateDueDate'])->name('update-due-date');
+    Route::get('/export/csv', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'export'])->name('export');
+    Route::get('/stats/json', [App\Http\Controllers\manager_controllers\InvoiceController::class, 'getStats'])->name('stats');
+});
+
+
+
 
 //Payment Receipt Routes
 
@@ -714,6 +729,7 @@ Route::get('/knowledge-base', [ManagerKnowledgeBaseController::class, 'index'])-
 Route::get('/knowledge-base/export',
     [ManagerKnowledgeBaseController::class, 'exportKnowledgeBaseCSV']
 )->name('manager.knowledge-base.export');
+
 
 
 
