@@ -3,18 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\AdminSetting;
-use App\Models\invoice;
+use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 class InvoiceController extends Controller
 {
-    public function invoice(Request $request)
+    public function Invoice(Request $request)
 {
     $pageLimitSet = AdminSetting::first();
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    $query = invoice::query();
+    $query = Invoice::query();
 
     // 🔍 Search (Grouping orWhere is important!)
     if ($request->filled('search')) {
@@ -63,7 +63,7 @@ class InvoiceController extends Controller
 {
     $fileName = 'invoices_export_' . date('Y-m-d_H-i-s') . '.csv';
 
-    $query = invoice::query();
+    $query = Invoice::query();
 
     // Search Filter
     if ($request->filled('search')) {
