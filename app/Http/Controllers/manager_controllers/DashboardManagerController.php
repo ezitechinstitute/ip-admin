@@ -110,7 +110,7 @@ class DashboardManagerController extends Controller
 
                 $commission = DB::table('transactions')
                     ->whereMonth('created_at', now()->month)
-                    ->sum('manager_amount');
+                    ->sum('amount');
 
 
                 //Counts Active Interns (for this manager's allowed techs and types)

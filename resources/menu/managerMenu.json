@@ -63,7 +63,6 @@
       "url": "manager/curriculum",
       "permission": "view_manager_curriculum"
     },
-
     {
       "menuHeader": "Supervisor"
     },
@@ -105,6 +104,30 @@
       "permission": "view_attendance_calendar"
     },
     {
+      "menuHeader": "Finance"
+    },
+    {
+      "name": "Invoices",
+      "icon": "menu-icon icon-base ti tabler-file-invoice",
+      "slug": "manager/invoices",
+      "url": "manager/invoices",
+      "permission": "view_invoice_dashboard",
+      "submenu": [
+        {
+          "url": "manager/invoices",
+          "name": "Invoice Dashboard",
+          "slug": "manager/invoices",
+          "permission": "view_invoice_dashboard"
+        },
+        {
+          "url": "manager/invoices/create",
+          "name": "Create Invoice",
+          "slug": "manager/invoices/create",
+          "permission": "create_invoice"
+        }
+      ]
+    },
+    {
       "menuHeader": "Reports & Logs"
     },
     {
@@ -128,6 +151,13 @@
       "slug": "manager/offer-letter-template",
       "permission": "view_manager_offer_letter_template"
     },
+    {
+      "name": "Certificate Requests",
+      "icon": "menu-icon icon-base ti tabler-certificate",
+      "slug": "manager/certificate-requests",
+      "url": "manager/certificate-requests"
+    },
+
     {
       "url": "manager/payment-receipt",
       "name": "Payment Receipt",

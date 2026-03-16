@@ -908,7 +908,7 @@ public function active(Request $request)
         ->get();
 
     $allowedTechNames = $allowedTechsData->pluck('technology')->unique()->toArray();
-
+    // dd($allowedTechNames);
     // Pagination limit
     $pageLimitSet = AdminSetting::first();
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
@@ -1203,6 +1203,24 @@ public function remove($id)
 }
 
 
+// public function updateStatus(Request $request)
+// {
+//     $request->validate([
+//         'id' => 'required|exists:intern_table,id',
+//         'status' => 'required|in:Active,Interview,Contact,Test,Completed,Removed'
+//     ]);
+
+//     try {
+//         // English comments: Use the Model directly
+//         $intern = \App\Models\Intern::findOrFail($request->id);
+//         $intern->status = $request->status;
+//         $intern->save();
+
+//         return redirect()->back()->with('success', 'Status updated successfully!');
+//     } catch (\Exception $e) {
+//         return redirect()->back()->withErrors(['error' => 'Update failed: ' . $e->getMessage()]);
+//     }
+// }
 public function updateStatus(Request $request)
 {
     $request->validate([
@@ -1211,17 +1229,42 @@ public function updateStatus(Request $request)
     ]);
 
     try {
-        // English comments: Use the Model directly
+
         $intern = \App\Models\Intern::findOrFail($request->id);
         $intern->status = $request->status;
         $intern->save();
 
+        // If status is Completed → insert into intern_accounts
+        if ($request->status === 'Completed') {
+
+            // Check if already exists
+            $exists = DB::table('intern_accounts')
+                ->where('email', $intern->email)
+                ->exists();
+
+            if (!$exists) {
+
+                DB::table('intern_accounts')->insert([
+                    'eti_id' => $intern->id,
+                    'name' => $intern->name,
+                    'email' => $intern->email,
+                    'phone' => $intern->phone,
+                    'password' => bcrypt('123456'), // default password
+                    'int_technology' => $intern->technology,
+                    'start_date' => now()->format('Y-m-d'),
+                    'int_status' => 'Active',
+                    'review' => null,
+                    'reset_token' => null
+                ]);
+            }
+        }
+
         return redirect()->back()->with('success', 'Status updated successfully!');
+
     } catch (\Exception $e) {
         return redirect()->back()->withErrors(['error' => 'Update failed: ' . $e->getMessage()]);
     }
 }
-
     // English comments: Remove or Soft Delete the intern
     public function removeIntern($id)
     {

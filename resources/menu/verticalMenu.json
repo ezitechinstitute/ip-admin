@@ -123,6 +123,12 @@
       "slug": "admin/managers"
     },
     {
+      "name": "Certificate Templates",
+      "icon": "menu-icon icon-base ti tabler-certificate",
+      "slug": "admin/certificate-templates",
+      "url": "admin/certificate-templates"
+    },
+    {
       "url": "admin/supervisors",
       "name": "Supervisors",
       "icon": "menu-icon icon-base ti tabler-user-check",

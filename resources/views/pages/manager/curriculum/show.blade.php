@@ -3,6 +3,99 @@
 @section('title', 'Curriculum Details')
 
 @section('content')
+{{-- Define JavaScript FIRST, before any HTML that uses it --}}
+<script>
+// Define functions immediately, before any HTML parsing
+window.openAddProject = function() {
+    console.log('openAddProject called');
+    
+    // Reset the form first
+    const form = document.getElementById('projectForm');
+    if (form) {
+        form.reset();
+    }
+    
+    // Remove any _method field
+    const methodInput = document.querySelector('input[name="_method"]');
+    if (methodInput) {
+        methodInput.remove();
+    }
+    
+    // Set form action for store
+    document.getElementById('projectForm').action = '{{ route("manager.curriculum.project.store") }}';
+    document.getElementById('projectForm').method = 'POST';
+    document.getElementById('projectModalLabel').textContent = 'Add Project';
+    document.getElementById('project_status').value = '1';
+    
+    // Clear hidden ID
+    const projectIdField = document.getElementById('project_id');
+    if (projectIdField) {
+        projectIdField.value = '';
+    }
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('projectModal'));
+    modal.show();
+    
+    console.log('Modal ready for add');
+};
+
+window.editProject = function(project) {
+    console.log('editProject called with:', project);
+    
+    try {
+        // Set modal title
+        document.getElementById('projectModalLabel').textContent = 'Edit Project';
+        
+        // IMPORTANT: Set form action for update - use the correct URL
+        document.getElementById('projectForm').action = '{{ url("manager/curriculum/project") }}/' + project.cp_id;
+        document.getElementById('projectForm').method = 'POST'; // Keep as POST but add _method=PUT
+        
+        // Add or update _method field to PUT
+        let methodInput = document.querySelector('input[name="_method"]');
+        if (!methodInput) {
+            methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            document.getElementById('projectForm').appendChild(methodInput);
+        }
+        methodInput.value = 'PUT'; // This tells Laravel to treat it as PUT
+        
+        // Populate all fields
+        document.getElementById('project_id').value = project.cp_id || '';
+        document.getElementById('project_title').value = project.project_title || '';
+        document.getElementById('sequence_order').value = project.sequence_order || '';
+        document.getElementById('duration_weeks').value = project.duration_weeks || '';
+        document.getElementById('project_description').value = project.project_description || '';
+        document.getElementById('learning_objectives').value = project.learning_objectives || '';
+        document.getElementById('deliverables').value = project.deliverables || '';
+        document.getElementById('project_status').value = project.status == '1' ? '1' : '0';
+        
+        // Set supervisor if field exists
+        const supervisorField = document.getElementById('assigned_supervisor');
+        if (supervisorField) {
+            supervisorField.value = project.assigned_supervisor || project.supervisor_id || '';
+        }
+        
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById('projectModal'));
+        modal.show();
+        
+        console.log('Form populated and modal shown');
+        
+    } catch (error) {
+        console.error('Error in editProject:', error);
+        alert('Error loading project data: ' + error.message);
+    }
+};
+
+// Verify functions are loaded
+console.log('Edit functions loaded:', {
+    openAddProject: typeof window.openAddProject === 'function',
+    editProject: typeof window.editProject === 'function'
+});
+</script>
+
 <div class="container-fluid px-4 py-3">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0">Curriculum: {{ $curriculum->curriculum_name }}</h4>
@@ -42,7 +135,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h5>Projects</h5>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#projectModal" onclick="openAddProject()">Add Project</button>
+        <button class="btn btn-primary" onclick="openAddProject()">Add Project</button>
     </div>
 
     <div class="card">
@@ -59,7 +152,7 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="projects-table-body">
                         @forelse($curriculum->projects as $project)
                             <tr>
                                 <td>{{ $project->sequence_order }}</td>
@@ -73,40 +166,39 @@
                                         <span class="badge bg-secondary">Inactive</span>
                                     @endif
                                 </td>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="dropdown">
-                            <a href="javascript:;" 
-                                class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
-                                data-bs-toggle="dropdown" 
-                                aria-expanded="false">
-                                <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
-                            </a>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-icon btn-text-secondary dropdown-toggle hide-arrow"
+                                                type="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+                                            <i class="icon-base ti tabler-dots-vertical"></i>
+                                        </button>
 
-                            <div class="dropdown-menu dropdown-menu-end m-0">
+                                        <ul class="dropdown-menu dropdown-menu-end">
 
-                                <button class="dropdown-item"
-                                onclick='openEditProject(@json($project))'
-                                data-bs-toggle="modal"
-                                data-bs-target="#projectModal">
-                                Edit
-                                </button>
+                                            <li>
+                                                <button class="dropdown-item"
+                                                        onclick='editProject(@json($project))'>
+                                                    <i class="icon-base ti tabler-edit me-2"></i> Edit
+                                                </button>
+                                            </li>
 
-                                <form action="{{ route('manager.curriculum.project.destroy', $project->cp_id) }}"
-                                    method="POST"
-                                    class="m-0"
-                                    onsubmit="return confirm('Delete project?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="dropdown-item text-danger">
-                                    Delete
-                                </button>
-                                </form>
+                                            <li>
+                                                <form action="{{ route('manager.curriculum.project.destroy', $project->cp_id) }}"
+                                                    method="POST"
+                                                    onsubmit="return confirm('Delete project?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="dropdown-item text-danger">
+                                                        <i class="icon-base ti tabler-trash me-2"></i> Delete
+                                                    </button>
+                                                </form>
+                                            </li>
 
-                            </div>
-                            </div>
-                        </div>
-                        </td>
+                                        </ul>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -120,6 +212,7 @@
     </div>
 </div>
 
+<!-- Project Modal -->
 <div class="modal fade" id="projectModal" tabindex="-1" aria-labelledby="projectModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -151,7 +244,7 @@
                             <select id="assigned_supervisor" name="assigned_supervisor" class="form-select">
                                 <option value="">— Select supervisor —</option>
                                 @foreach($supervisors as $supervisor)
-                                    <option value="{{ $supervisor->manager_id }}">{{ $supervisor->name }} (ID: {{ $supervisor->manager_id }})</option>
+                                    <option value="{{ $supervisor->manager_id }}">{{ $supervisor->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -188,55 +281,5 @@
 @endsection
 
 @section('script')
-<script>
-    function openAddProject() {
-        document.getElementById('projectModalLabel').textContent = 'Add Project';
-        document.getElementById('projectForm').action = '{{ route('manager.curriculum.project.store') }}';
-        let methodInput = document.getElementById('_method');
-        if (methodInput) methodInput.remove();
-        document.getElementById('project_id').value = '';
-        ['project_title', 'sequence_order', 'duration_weeks', 'assigned_supervisor', 'project_description', 'learning_objectives', 'deliverables', 'project_status'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        document.getElementById('project_status').value = 1;
-    }
-
-    function openEditProject(project) {
-        document.getElementById('projectModalLabel').textContent = 'Edit Project';
-        document.getElementById('projectForm').action = '{{ url('manager/curriculum/project') }}/' + project.cp_id;
-
-        let methodInput = document.querySelector('input[name="_method"]');
-        if (!methodInput) {
-            methodInput = document.createElement('input');
-            methodInput.setAttribute('type', 'hidden');
-            methodInput.setAttribute('name', '_method');
-            methodInput.id = '_method';
-            document.getElementById('projectForm').appendChild(methodInput);
-        }
-        methodInput.value = 'PUT';
-
-        document.getElementById('project_id').value = project.cp_id;
-        document.getElementById('project_title').value = project.project_title;
-        document.getElementById('sequence_order').value = project.sequence_order;
-        document.getElementById('duration_weeks').value = project.duration_weeks;
-        document.getElementById('assigned_supervisor').value = project.assigned_supervisor || '';
-        document.getElementById('project_description').value = project.project_description;
-        document.getElementById('learning_objectives').value = project.learning_objectives || '';
-        document.getElementById('deliverables').value = project.deliverables || '';
-        document.getElementById('project_status').value = project.status ? 1 : 0;
-    }
-
-    // populate select with the current project supervisor on open
-    function setSupervisorSelection(project) {
-        const select = document.getElementById('assigned_supervisor');
-        if (!select) return;
-
-        if (project && project.assigned_supervisor) {
-            select.value = project.assigned_supervisor;
-        } else {
-            select.value = '';
-        }
-    }
-</script>
+{{-- Keep this for any additional scripts --}}
 @endsection

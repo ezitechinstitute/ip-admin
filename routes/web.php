@@ -110,6 +110,7 @@ use App\Http\Controllers\InternAccountsController;
 use App\Http\Controllers\InternProjectsController;
 use App\Http\Controllers\InternTaskController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\manager_controllers\InvoiceController as ManagerInvoiceController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\language\LanguageController;
 use App\Http\Controllers\laravel_example\UserManagement;
@@ -195,9 +196,24 @@ use App\Http\Middleware\validManager;
 use App\Http\Middleware\ValidSupervisor;
 use App\Http\Middleware\ValidUser;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\admin\CertificateTemplateController;
+use App\Http\Controllers\manager_controllers\CertificateController;
 
 
 use App\Http\Controllers\supervisor_controllers\DashboardSupervisorController;
+
+
+use Illuminate\Support\Facades\Mail;
+
+Route::get('/test-email', function () {
+
+    Mail::raw('Laravel email test successful!', function ($message) {
+        $message->to('test@example.com')
+                ->subject('Email Test');
+    });
+
+    return "Email sent! Check Mailtrap inbox.";
+});
 
 
 
@@ -436,6 +452,24 @@ Route::post('/set-password-generate', [OTPVerifyController::class, 'updateSetPas
 // Admin routes - Start
 Route::prefix('/admin')->middleware(['validUser'])->group(function (){
 
+
+    // Certificate Templates
+
+    Route::get('/certificate-templates',
+        [CertificateTemplateController::class,'index']
+    )->name('admin.certificate.templates');
+
+    Route::post('/certificate-template-store',
+        [CertificateTemplateController::class,'store']
+    )->name('admin.certificate.template.store');
+
+    Route::delete('/certificate-template-delete/{id}',
+        [CertificateTemplateController::class,'destroy']
+    )->name('admin.certificate.template.delete');
+
+
+
+
 // Dashboard Rotes
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard-admin');
 Route::post('/send-broadcast', [DashboardController::class, 'sendTargetedBroadcast'])->name('admin.send-broadcast');
@@ -620,6 +654,19 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 
 
     Route::prefix('/manager')->middleware(['validManager'])->group(function(){
+
+
+    
+
+    // Certificate Requests
+
+    Route::get('/certificate-requests', [CertificateController::class, 'index'])
+    ->name('manager.certificate.requests');
+
+    Route::post('/certificate-approve/{id}', [CertificateController::class, 'approve'])
+        ->name('manager.certificate.approve');
+
+
     // Attendance routes
     Route::get('/attendance/intern-leaves', [ManagerLeaveController::class, 'intern'])->name('manager.attendance.intern');
     Route::get('/leave/approve/{id}', [ManagerLeaveController::class,'approve'])->name('manager.leave.approve');
@@ -644,7 +691,7 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
     // Curriculum management
     Route::resource('/curriculum', ManagerCurriculumController::class, ['as' => 'manager']);
     Route::post('/curriculum/project', [ManagerCurriculumProjectController::class, 'store'])->name('manager.curriculum.project.store');
-    Route::put('/curriculum/project/{id}', [ManagerCurriculumProjectController::class, 'update'])->name('manager.curriculum.project.update');
+    Route::post('/curriculum/project/{id}', [ManagerCurriculumProjectController::class, 'update'])->name('manager.curriculum.project.update');
     Route::delete('/curriculum/project/{id}', [ManagerCurriculumProjectController::class, 'destroy'])->name('manager.curriculum.project.destroy');
 
     // Active Interns submenu page
@@ -717,6 +764,19 @@ Route::get('/completed-interns/export', [AllManagerInternController::class, 'exp
 
 
 
+// invoices routes
+Route::prefix('invoices')->name('invoices.')->group(function(){
+    Route::get('/', [ManagerInvoiceController::class, 'dashboard'])->name('dashboard');
+    Route::get('/create', [ManagerInvoiceController::class, 'create'])->name('create');
+    Route::post('/store', [ManagerInvoiceController::class, 'store'])->name('store');
+    Route::get('/{id}', [ManagerInvoiceController::class, 'show'])->name('view');
+    Route::get('/{id}/payment', [ManagerInvoiceController::class, 'paymentForm'])->name('payment');
+    Route::post('/{id}/record-payment', [ManagerInvoiceController::class, 'recordPayment'])->name('record-payment');
+    Route::post('/{id}/update-due-date', [ManagerInvoiceController::class, 'updateDueDate'])->name('update-due-date');
+    Route::get('/export/csv', [ManagerInvoiceController::class, 'export'])->name('export');
+    Route::get('/stats/json', [ManagerInvoiceController::class, 'getStats'])->name('stats');
+    Route::get('/{id}/pdf', [ManagerInvoiceController::class, 'generatePDF'])->name('pdf');
+});
 
 //Payment Receipt Routes
 
@@ -736,6 +796,7 @@ Route::get('/knowledge-base', [ManagerKnowledgeBaseController::class, 'index'])-
 Route::get('/knowledge-base/export',
     [ManagerKnowledgeBaseController::class, 'exportKnowledgeBaseCSV']
 )->name('manager.knowledge-base.export');
+
 
 
 
