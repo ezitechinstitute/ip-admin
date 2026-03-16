@@ -645,7 +645,7 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
     // Curriculum management
     Route::resource('/curriculum', ManagerCurriculumController::class, ['as' => 'manager']);
     Route::post('/curriculum/project', [ManagerCurriculumProjectController::class, 'store'])->name('manager.curriculum.project.store');
-    Route::put('/curriculum/project/{id}', [ManagerCurriculumProjectController::class, 'update'])->name('manager.curriculum.project.update');
+    Route::post('/curriculum/project/{id}', [ManagerCurriculumProjectController::class, 'update'])->name('manager.curriculum.project.update');
     Route::delete('/curriculum/project/{id}', [ManagerCurriculumProjectController::class, 'destroy'])->name('manager.curriculum.project.destroy');
 
     // Active Interns submenu page

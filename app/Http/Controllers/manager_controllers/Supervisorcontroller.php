@@ -87,6 +87,7 @@ class Supervisorcontroller extends Controller
      */
     public function reassignIntern(Request $request, $supervisorId)
     {
+
         $request->validate([
             'assignment_id' => 'required|integer|exists:intern_curriculum_assignment,assignment_id',
             'new_supervisor_id' => 'required|integer|exists:manager_accounts,manager_id',
@@ -94,9 +95,10 @@ class Supervisorcontroller extends Controller
 
         $assignment = InternCurriculumAssignment::findOrFail($request->assignment_id);
         $newSupervisor = ManagersAccount::where('loginas', 'Supervisor')->findOrFail($request->new_supervisor_id);
-
+        dd($assignment);
         // reassign related curriculum supervisor mappings to new supervisor for this curriculum
         $projectIds = CurriculumProject::where('curriculum_id', $assignment->curriculum_id)->pluck('cp_id');
+        dd($projectIds);
 
         CurriculumSupervisorMapping::whereIn('cp_id', $projectIds)
             ->update(['supervisor_id' => $newSupervisor->manager_id]);
