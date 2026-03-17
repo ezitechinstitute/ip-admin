@@ -14,9 +14,9 @@ return new class extends Migration
             $table->text('description')->nullable();
             
             // Foreign Keys - Match the exact column types
-            $table->unsignedBigInteger('supervisor_id');  // references manager_accounts.manager_id
-            $table->unsignedBigInteger('intern_id');      // references intern_accounts.int_id
-            $table->unsignedBigInteger('project_id')->nullable();
+            $table->integer('supervisor_id'); // matches manager_id (int)
+            $table->integer('intern_id');     // matches int_id (int)
+            $table->integer('project_id')->nullable();
             
             // Task Details
             $table->date('deadline');

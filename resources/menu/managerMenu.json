@@ -170,6 +170,12 @@
       "permission": "view_manager_offer_letter_template"
     },
     {
+      "name": "Communication Center",
+      "icon": "menu-icon icon-base ti tabler-message",
+      "slug": "manager/communication-center",
+      "url": "manager/communication-center"
+    }, 
+    {
       "name": "Certificate Requests",
       "icon": "menu-icon icon-base ti tabler-certificate",
       "slug": "manager/certificate-requests",
