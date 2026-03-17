@@ -347,6 +347,28 @@
           "title": "Create Invoice"
         }
       ]
+    },
+    {
+      "key": "manager_tasks",
+      "title": "Tasks",
+      "privileges": [
+        {
+          "key": "view_manager_tasks",
+          "title": "View Manager Tasks"
+        },
+        {
+          "key": "create_manager_tasks",
+          "title": "Create Manager Tasks"
+        },
+        {
+          "key": "edit_manager_tasks",
+          "title": "Edit Manager Tasks"
+        },
+        {
+          "key": "delete_manager_tasks",
+          "title": "Delete Manager Tasks"
+        }
+      ]
     }
   ]
 }
