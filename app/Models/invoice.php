@@ -28,7 +28,7 @@ class Invoice extends Model
     'approval_status',
     'invoice_type',
     'created_at',
-    // REMOVED: intern_id, notes, next_due_date, payment_type
+    // REMOVED: intern_id, notes, next_due_date, payment_type 
 ];
 
     protected $casts = [

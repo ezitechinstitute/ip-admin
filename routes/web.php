@@ -196,6 +196,8 @@ use App\Http\Middleware\validManager;
 use App\Http\Middleware\ValidSupervisor;
 use App\Http\Middleware\ValidUser;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\admin\CertificateTemplateController;
+use App\Http\Controllers\manager_controllers\CertificateController;
 
 // ========== NEW TASK CONTROLLERS ADDED HERE ==========
 use App\Http\Controllers\supervisor_controllers\TaskController;
@@ -203,6 +205,19 @@ use App\Http\Controllers\manager_controllers\TaskViewController;
 // =====================================================
 
 use App\Http\Controllers\supervisor_controllers\DashboardSupervisorController;
+
+
+use Illuminate\Support\Facades\Mail;
+
+Route::get('/test-email', function () {
+
+    Mail::raw('Laravel email test successful!', function ($message) {
+        $message->to('test@example.com')
+                ->subject('Email Test');
+    });
+
+    return "Email sent! Check Mailtrap inbox.";
+});
 
 
 
@@ -441,6 +456,24 @@ Route::post('/set-password-generate', [OTPVerifyController::class, 'updateSetPas
 // Admin routes - Start
 Route::prefix('/admin')->middleware(['validUser'])->group(function (){
 
+
+    // Certificate Templates
+
+    Route::get('/certificate-templates',
+        [CertificateTemplateController::class,'index']
+    )->name('admin.certificate.templates');
+
+    Route::post('/certificate-template-store',
+        [CertificateTemplateController::class,'store']
+    )->name('admin.certificate.template.store');
+
+    Route::delete('/certificate-template-delete/{id}',
+        [CertificateTemplateController::class,'destroy']
+    )->name('admin.certificate.template.delete');
+
+
+
+
 // Dashboard Rotes
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard-admin');
 Route::post('/send-broadcast', [DashboardController::class, 'sendTargetedBroadcast'])->name('admin.send-broadcast');
@@ -625,6 +658,19 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 
 
     Route::prefix('/manager')->middleware(['validManager'])->group(function(){
+
+
+    
+
+    // Certificate Requests
+
+    Route::get('/certificate-requests', [CertificateController::class, 'index'])
+    ->name('manager.certificate.requests');
+
+    Route::post('/certificate-approve/{id}', [CertificateController::class, 'approve'])
+        ->name('manager.certificate.approve');
+
+
     // Attendance routes
     Route::get('/attendance/intern-leaves', [ManagerLeaveController::class, 'intern'])->name('manager.attendance.intern');
     Route::get('/leave/approve/{id}', [ManagerLeaveController::class,'approve'])->name('manager.leave.approve');
