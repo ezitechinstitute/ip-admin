@@ -128,6 +128,24 @@
       ]
     },
     {
+      "menuHeader": "Task Management"
+    },
+    {
+      "name": "Tasks",
+      "icon": "menu-icon icon-base ti tabler-checklist",
+      "slug": "manager/tasks",
+      "url": "manager/tasks",
+      "permission": "view_manager_tasks",
+      "submenu": [
+        {
+          "url": "manager/tasks",
+          "name": "All Tasks",
+          "slug": "manager/tasks/all",
+          "permission": "view_manager_tasks"
+        }
+      ]
+    },
+    {
       "menuHeader": "Reports & Logs"
     },
     {
