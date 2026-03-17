@@ -199,6 +199,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\admin\CertificateTemplateController;
 use App\Http\Controllers\manager_controllers\CertificateController;
 
+// ========== NEW TASK CONTROLLERS ADDED HERE ==========
+use App\Http\Controllers\supervisor_controllers\TaskController;
+use App\Http\Controllers\manager_controllers\TaskViewController;
+// =====================================================
 
 use App\Http\Controllers\supervisor_controllers\DashboardSupervisorController;
 
@@ -695,6 +699,15 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
     // Manager Withdraw Request
     Route::get('/withdraw-request',[WithdrawManagerController::class,'create'])->name('manager.withdraw.create');
     Route::post('/withdraw-request',[WithdrawManagerController::class,'store'])->name('manager.withdraw.store');
+    
+    // ========== NEW TASK VIEW ROUTES ADDED HERE ==========
+    Route::prefix('tasks')->name('manager.tasks.')->group(function(){
+        Route::get('/', [TaskViewController::class, 'index'])->name('index');
+        Route::get('/{id}', [TaskViewController::class, 'show'])->name('show');
+        Route::get('/export/csv', [TaskViewController::class, 'export'])->name('export');
+    });
+    // =====================================================
+    
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/my-interns', [AllManagerInternController::class, 'myInterns']) ->name('manager.myInterns');
@@ -833,7 +846,20 @@ Route::get('Supervisor/{id}/activity-log', [Supervisorcontroller::class, 'activi
 // supervisor route
 
 Route::prefix('/supervisor')->middleware(['ValidSupervisor'])->group(function () {
-    Route::get('/dashboard', [DashboardSupervisorController :: class, 'index'])->name('supervisor.dashboard');
+    Route::get('/dashboard', [DashboardSupervisorController::class, 'index'])->name('supervisor.dashboard');
+    
+    // ========== NEW TASK MANAGEMENT ROUTES ADDED HERE ==========
+    Route::prefix('tasks')->name('supervisor.tasks.')->group(function () {
+        Route::get('/', [TaskController::class, 'index'])->name('index');
+        Route::get('/create', [TaskController::class, 'create'])->name('create');
+        Route::post('/store', [TaskController::class, 'store'])->name('store');
+        Route::get('/{id}', [TaskController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [TaskController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [TaskController::class, 'update'])->name('update');
+        Route::delete('/{id}', [TaskController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/grade', [TaskController::class, 'grade'])->name('grade');
+    });
+    // ===========================================================
 });
 
 

@@ -57,6 +57,42 @@
       "permission": "view_supervisor_international_interns"
     },
     {
+      "menuHeader": "TASK MANAGEMENT"
+    },
+    {
+      "name": "Tasks",
+      "icon": "menu-icon icon-base ti tabler-checklist",
+      "slug": "supervisor/tasks",
+      "url": "supervisor/tasks",
+      "permission": "view_supervisor_tasks",
+      "submenu": [
+        {
+          "url": "supervisor/tasks",
+          "name": "All Tasks",
+          "slug": "supervisor/tasks",
+          "permission": "view_supervisor_tasks"
+        },
+        {
+          "url": "supervisor/tasks/create",
+          "name": "Create Task",
+          "slug": "supervisor/tasks/create",
+          "permission": "create_supervisor_tasks"
+        },
+        {
+          "url": "supervisor/tasks?status=pending",
+          "name": "Pending Tasks",
+          "slug": "supervisor/tasks/pending",
+          "permission": "view_supervisor_tasks"
+        },
+        {
+          "url": "supervisor/tasks?status=submitted",
+          "name": "Submitted Tasks",
+          "slug": "supervisor/tasks/submitted",
+          "permission": "view_supervisor_tasks"
+        }
+      ]
+    },
+    {
       "menuHeader": "Reports & Logs"
     },
     {
@@ -88,7 +124,7 @@
       "permission": "view_supervisor_payment_receipt"
     },
     {
-      "menuHeader": "supervisor Settings"
+      "menuHeader": "Supervisor Settings"
     },
     {
       "url": "supervisor/profile-settings",
