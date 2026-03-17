@@ -10,7 +10,7 @@ class Invoice extends Model
     
     // Specify which timestamp columns exist
     const CREATED_AT = 'created_at';
-    const UPDATED_AT = null; // Disable updated_at since it doesn't exist
+    const UPDATED_AT = null; // Disable upda ted_at since it doesn't exist
     
    protected $fillable = [
     'inv_id',
