@@ -202,6 +202,8 @@ use App\Http\Controllers\manager_controllers\CertificateController;
 
 use App\Http\Controllers\supervisor_controllers\DashboardSupervisorController;
 
+use App\Http\Controllers\manager_controllers\CommunicationController;
+
 
 use Illuminate\Support\Facades\Mail;
 
@@ -656,6 +658,16 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
     Route::prefix('/manager')->middleware(['validManager'])->group(function(){
 
 
+        // Communication Center 
+        Route::get(
+        '/communication-center',
+        [CommunicationController::class,'index']
+        )->name('manager.communication');
+
+        Route::post(
+        '/send-message',
+        [CommunicationController::class,'sendMessage']
+        )->name('manager.send.message');
     
 
     // Certificate Requests
