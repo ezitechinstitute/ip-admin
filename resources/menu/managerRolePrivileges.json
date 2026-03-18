@@ -257,6 +257,40 @@
       ]
     },
     {
+      "key": "manager_certificate",
+      "title": "Certificates",
+      "privileges": [
+        {
+          "key": "view_manager_certificate_templates",
+          "title": "View Certificate Templates"
+        },
+        {
+          "key": "add_new_manager_certificate_templates",
+          "title": "Add Certificate Template"
+        },
+        {
+          "key": "edit_manager_certificate_templates",
+          "title": "Edit Certificate Template"
+        },
+        {
+          "key": "delete_manager_certificate_templates",
+          "title": "Delete Certificate Template"
+        },
+        {
+          "key": "view_manager_certificate_requests",
+          "title": "View Certificate Requests"
+        },
+        {
+          "key": "approve_manager_certificate_requests",
+          "title": "Approve Certificate Requests"
+        },
+        {
+          "key": "reject_manager_certificate_requests",
+          "title": "Reject Certificate Requests"
+        }
+      ]
+    },
+    {
       "key": "manager_payment_receipt",
       "title": "Payment Receipt",
       "privileges": [
@@ -273,6 +307,16 @@
         {
           "key": "view_manager_profile_settings",
           "title": "View Profile Settings"
+        }
+      ]
+    },
+    {
+      "key": "manager_revenue",
+      "title": "Revenue & Commission",
+      "privileges": [
+        {
+          "key": "view_manager_revenue",
+          "title": "View Revenue & Commission"
         }
       ]
     },

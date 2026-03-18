@@ -67,14 +67,33 @@
       "permission": "view_manager_remaining_amount"
     },
     {
+      "name": "Revenue & Commission",
+      "icon": "menu-icon icon-base ti tabler-chart-bar",
+      "slug": "manager/revenue",
+      "url": "manager/revenue",
+      "permission": "view_manager_revenue"
+    },
+    {
       "url": "manager/offer-letter-request",
       "name": "Offer Letter Request",
       "icon": "menu-icon icon-base ti tabler-file-certificate",
       "slug": "manager/offer-letter-request",
       "permission": "view_manager_offer_letter_request"
     },
+    {      "url": "manager/certificate-requests",
+      "name": "Certificate Requests",
+      "icon": "menu-icon icon-base ti tabler-certificate",
+      "slug": "manager/certificate-requests",
+      "permission": "view_manager_certificate_requests"
+    },
     {
-      "url": "manager/offer-letter-template",
+      "url": "manager/certificate-templates",
+      "name": "Certificate Templates",
+      "icon": "menu-icon icon-base ti tabler-file-certificate",
+      "slug": "manager/certificate-templates",
+      "permission": "view_manager_certificate_templates"
+    },
+    {      "url": "manager/offer-letter-template",
       "name": "Offer Letter Template",
       "icon": "menu-icon icon-base ti tabler-certificate",
       "slug": "manager/offer-letter-template",

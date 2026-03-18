@@ -120,8 +120,8 @@ use App\Http\Controllers\layouts\ContentNavbar;
 use App\Http\Controllers\layouts\ContentNavSidebar;
 use App\Http\Controllers\layouts\Fluid;
 use App\Http\Controllers\layouts\Horizontal;
-use App\Http\Controllers\layouts\NavbarFull;
-use App\Http\Controllers\layouts\NavbarFullSidebar;
+// use App\Http\Controllers\layouts\NavbarFull;
+// use App\Http\Controllers\layouts\NavbarFullSidebar;
 use App\Http\Controllers\layouts\Vertical;
 use App\Http\Controllers\layouts\WithoutMenu;
 use App\Http\Controllers\layouts\WithoutNavbar;
@@ -135,6 +135,8 @@ use App\Http\Controllers\manager_controllers\OfferLetterTemplateController;
 use App\Http\Controllers\manager_controllers\PaymentReceiptController;
 use App\Http\Controllers\manager_controllers\ProfileSettingsController;
 use App\Http\Controllers\manager_controllers\RemainingAmountController;
+use App\Http\Controllers\manager_controllers\RevenueController;
+use App\Http\Controllers\manager_controllers\CertificateController;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\modal\ModalExample;
@@ -204,8 +206,8 @@ Route::get('/lang/{locale}', [LanguageController::class, 'swap']);
 Route::get('/layouts/collapsed-menu', [CollapsedMenu::class, 'index'])->name('layouts-collapsed-menu');
 Route::get('/layouts/content-navbar', [ContentNavbar::class, 'index'])->name('layouts-content-navbar');
 Route::get('/layouts/content-nav-sidebar', [ContentNavSidebar::class, 'index'])->name('layouts-content-nav-sidebar');
-Route::get('/layouts/navbar-full', [NavbarFull::class, 'index'])->name('layouts-navbar-full');
-Route::get('/layouts/navbar-full-sidebar', [NavbarFullSidebar::class, 'index'])->name('layouts-navbar-full-sidebar');
+// Route::get('/layouts/navbar-full', [NavbarFull::class, 'index'])->name('layouts-navbar-full');
+// Route::get('/layouts/navbar-full-sidebar', [NavbarFullSidebar::class, 'index'])->name('layouts-navbar-full-sidebar');
 Route::get('/layouts/horizontal', [Horizontal::class, 'index'])->name('dashboard-analytics');
 Route::get('/layouts/vertical', [Vertical::class, 'index'])->name('dashboard-analytics');
 Route::get('/layouts/without-menu', [WithoutMenu::class, 'index'])->name('layouts-without-menu');
@@ -603,6 +605,10 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
+
+    // Revenue & Commission Tracking
+    Route::get('/revenue', [RevenueController::class, 'index'])->name('manager.revenue');
+
     Route::get('/my-interns', [AllManagerInternController::class, 'myInterns']) ->name('manager.myInterns');
     Route::get('/my-interns/export', [AllManagerInternController::class, 'exportMyInternsCSV'])->name('manager.myInterns.export');
 
@@ -643,8 +649,16 @@ Route::post('/send-offer-letter', [OfferLetterRequestController::class, 'sendOff
 
 Route::get('/download-offer-letter-pdf', [OfferLetterRequestController::class, 'downloadOfferLetterPdf'])->name('manager.download.pdf');
 
+    Route::get('/certificate-templates', [CertificateController::class, 'templates'])->name('manager.certificate.templates');
+    Route::post('/certificate-templates/create', [CertificateController::class, 'storeTemplate'])->name('manager.certificate.template.create');
+    Route::put('/certificate-templates/update/{id}', [CertificateController::class, 'updateTemplate'])->name('manager.certificate.template.update');
+    Route::delete('/certificate-templates/delete/{id}', [CertificateController::class, 'destroyTemplate'])->name('manager.certificate.template.delete');
+    Route::get('/certificate-templates/preview/{id}', [CertificateController::class, 'previewTemplate'])->name('manager.certificate.template.preview');
 
-
+    Route::get('/certificate-requests', [CertificateController::class, 'requests'])->name('manager.certificate.requests');
+    Route::post('/certificate-requests/submit', [CertificateController::class, 'submitRequest'])->name('manager.certificate.request.submit');
+    Route::post('/certificate-requests/update-status', [CertificateController::class, 'updateRequestStatus'])->name('manager.certificate.request.update-status');
+    Route::get('/certificate-requests/download/{id}', [CertificateController::class, 'downloadCertificate'])->name('manager.certificate.request.download');
 
 
     Route::get('/remainingamount', [RemainingAmountController::class, 'index'])->name('manager.remainingamount');

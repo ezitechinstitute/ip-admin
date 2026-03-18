@@ -778,7 +778,14 @@ public function completed(Request $request)
                      ->paginate($perPage)
                      ->withQueryString();
 
-    return view('pages.manager.all-interns.completed', compact('interns', 'allowedTechNames', 'perPage'));
+    $internIds = $interns->pluck('id')->toArray();
+    $certificateRequests = DB::table('certificate_requests')
+        ->whereIn('intern_id', $internIds)
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->keyBy('intern_id');
+
+    return view('pages.manager.all-interns.completed', compact('interns', 'allowedTechNames', 'perPage', 'certificateRequests'));
 }
 
 
