@@ -137,6 +137,9 @@ use App\Http\Controllers\manager_controllers\ProfileSettingsController;
 use App\Http\Controllers\manager_controllers\RemainingAmountController;
 use App\Http\Controllers\manager_controllers\Supervisorcontroller;
 use App\Http\Controllers\manager_controllers\ManagerLeaveController;
+use App\Http\Controllers\manager_controllers\ManagerAttendanceController;
+use App\Http\Controllers\manager_controllers\ManagerCurriculumController;
+use App\Http\Controllers\manager_controllers\ManagerCurriculumProjectController;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\modal\ModalExample;
@@ -582,6 +585,15 @@ Route::put('/transactions/update/{id}', [AccountsController::class, 'updateTrans
 Route::get('withdraw',[WithdrawManagerController::class,'index'])->name('admin.withdraw');
 Route::get('withdraw/export-csv', [WithdrawManagerController::class, 'exportWithdrawCSV'])->name('admin.withdraw.export');
 
+    // Approve or Reject Withdraw Requests testing umair
+    Route::post('/withdraw/approve/{id}',
+        [WithdrawManagerController::class,'approve']
+    )->name('admin.withdraw.approve');
+
+    Route::post('/withdraw/reject/{id}',
+        [WithdrawManagerController::class,'reject']
+    )->name('admin.withdraw.reject');
+
 // Feeback & complaint
 Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.admin');
 Route::post('/feedback/resolve/{id}', [FeedbackController::class, 'resolve'])
@@ -607,24 +619,34 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 
 
 
-Route::prefix('/manager')->middleware(['validManager'])->group(function(){
-
-    //atendance route
+    Route::prefix('/manager')->middleware(['validManager'])->group(function(){
+    // Attendance routes
     Route::get('/attendance/intern-leaves', [ManagerLeaveController::class, 'intern'])->name('manager.attendance.intern');
     Route::get('/leave/approve/{id}', [ManagerLeaveController::class,'approve'])->name('manager.leave.approve');
     Route::get('/leave-reject/{id}', [ManagerLeaveController::class, 'reject'])->name('manager.leave.reject');
+    Route::get('/manager/attendance/export', [ManagerLeaveController::class, 'reject'])->name('manager.attendance.export');
 
-    Route::get('/attendance/supervisor-attendance', [ManagerLeaveController::class, 'supervisor'])->name('manager.supervisor.attendance');
+    Route::get('/attendance-calendar', [ManagerAttendanceController::class, 'attendanceCalendar'])->name('manager.attendance-calendar');
+
+    Route::get('/attendance/supervisor-attendance', [ManagerAttendanceController::class, 'supervisorAttendance'])->name('manager.supervisor.attendance');
     Route::get('/attendance/supervisor-leaves', [ManagerLeaveController::class, 'supervisor'])->name('manager.supervisor.attendance');
     Route::patch('leaves/{leave}/approve', [ManagerLeaveController::class, 'approve'])->name('manager.leave.approve');
     Route::patch('leaves/{leave}/reject', [ManagerLeaveController::class, 'reject'])->name('manager.leave.reject');
 
+    // Manager Withdraw Request
+    Route::get('/withdraw-request',[WithdrawManagerController::class,'create'])->name('manager.withdraw.create');
+    Route::post('/withdraw-request',[WithdrawManagerController::class,'store'])->name('manager.withdraw.store');
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/my-interns', [AllManagerInternController::class, 'myInterns']) ->name('manager.myInterns');
     Route::get('/my-interns/export', [AllManagerInternController::class, 'exportMyInternsCSV'])->name('manager.myInterns.export');
 
-    
+    // Curriculum management
+    Route::resource('/curriculum', ManagerCurriculumController::class, ['as' => 'manager']);
+    Route::post('/curriculum/project', [ManagerCurriculumProjectController::class, 'store'])->name('manager.curriculum.project.store');
+    Route::put('/curriculum/project/{id}', [ManagerCurriculumProjectController::class, 'update'])->name('manager.curriculum.project.update');
+    Route::delete('/curriculum/project/{id}', [ManagerCurriculumProjectController::class, 'destroy'])->name('manager.curriculum.project.destroy');
+
     // Active Interns submenu page
     Route::get('/all-interns', [AllManagerInternController::class, 'index']) ->name('manager.allInterns');
     Route::get('/all-interns/active', [AllManagerInternController::class, 'active'])->name('manager.activeInterns');
@@ -721,7 +743,15 @@ Route::get('/knowledge-base/export',
 //supervisor routes
 
 Route::get('Supervisor',[Supervisorcontroller::class,'index'])->name('manager.supervisor');
+Route::get('Supervisor/{id}', [Supervisorcontroller::class, 'show'])->name('manager.supervisor.show');
+Route::post('Supervisor/{id}/reassign-intern', [Supervisorcontroller::class, 'reassignIntern'])->name('manager.supervisor.reassignIntern');
+Route::patch('Supervisor/{id}/toggle-freeze', [Supervisorcontroller::class, 'toggleFreeze'])->name('manager.supervisor.toggleFreeze');
+Route::get('Supervisor/{id}/activity-log', [Supervisorcontroller::class, 'activityLog'])->name('manager.supervisor.activityLog');
 });
+
+
+
+
 
 // manager route end here
 

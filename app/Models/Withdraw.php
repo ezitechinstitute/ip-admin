@@ -12,14 +12,15 @@ class Withdraw extends Model
     protected $primaryKey = 'req_id';
 
     protected $fillable = [
-        'eti_id',
-        'req_by ',
-        'bank',
-        'ac_no',
-        'ac_name',
-        'description',
-        'date',
-        'amount',
-        'req_status',
+            'eti_id',
+            'req_by',
+            'bank',
+            'ac_no',
+            'ac_name',
+            'description',
+            'period',
+            'date',
+            'amount',
+            'req_status'
     ];
 }
