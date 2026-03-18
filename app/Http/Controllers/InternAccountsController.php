@@ -119,7 +119,7 @@ $request->validate([
     ini_set('memory_limit', '512M');
 
     // 1. Permission Check
-    $settings = \App\Models\AdminSetting::first();
+    
     $permissions = $settings->export_permissions ?? [];
     if (!isset($permissions['admin']) || $permissions['admin'] != 1) {
         return redirect()->back()->with('error', 'Export permission is disabled.');

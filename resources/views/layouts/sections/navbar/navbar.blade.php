@@ -5,6 +5,7 @@
   // English comments: Check current route/URL to decide which navbar to show
   // This is more reliable than checking guards if sessions are overlapping
   $isManagerRoute = request()->is('manager/*') || request()->is('manager');
+  $isSupervisorRoute = request()->is('supervisor/*') || request()->is('supervisor');
   $isAdminRoute = request()->is('admin/*') || request()->is('admin') || request()->is('dashboard*');
 @endphp
 
@@ -16,6 +17,13 @@
   {{-- English comments: Decision logic based on Route first, then Guard --}}
   @if($isManagerRoute)
       @include('layouts/sections/navbar/manager-navbar-partial')
+  @elseif($isSupervisorRoute)
+      {{-- If supervisor partial is missing, fallback to navbar-partial (standard) --}}
+      @if(view()->exists('layouts/sections/navbar/supervisor-navbar-partial'))
+          @include('layouts/sections/navbar/supervisor-navbar-partial')
+      @else
+          @include('layouts/sections/navbar/navbar-partial')
+      @endif
   @else
       {{-- English comments: Default to admin/regular navbar for everything else --}}
       @include('layouts/sections/navbar/navbar-partial')
@@ -27,6 +35,12 @@
   <div class="{{ $containerNav }}">
       @if($isManagerRoute)
           @include('layouts/sections/navbar/manager-navbar-partial')
+      @elseif($isSupervisorRoute)
+          @if(view()->exists('layouts/sections/navbar/supervisor-navbar-partial'))
+              @include('layouts/sections/navbar/supervisor-navbar-partial')
+          @else
+              @include('layouts/sections/navbar/navbar-partial')
+          @endif
       @else
           @include('layouts/sections/navbar/navbar-partial')
       @endif
