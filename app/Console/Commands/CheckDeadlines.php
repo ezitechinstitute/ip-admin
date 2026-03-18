@@ -44,14 +44,16 @@ class CheckDeadlines extends Command
                 ]);
 
             // Notify Intern
-            \Illuminate\Support\Facades\DB::table('supervisor_notifications')->insert([
-                'supervisor_id' => $task->assigned_by,
-                'type' => 'Task Expired',
-                'eti_id' => $task->eti_id,
-                'message' => "Your task '{$task->task_title}' has expired and a penalty flag has been added.",
-                'is_read' => false,
-                'created_at' => now()
-            ]);
+            if (\Illuminate\Support\Facades\Schema::hasTable('supervisor_notifications')) {
+                \Illuminate\Support\Facades\DB::table('supervisor_notifications')->insert([
+                    'supervisor_id' => $task->assigned_by,
+                    'type' => 'Task Expired',
+                    'eti_id' => $task->eti_id,
+                    'message' => "Your task '{$task->task_title}' has expired and a penalty flag has been added.",
+                    'is_read' => false,
+                    'created_at' => now()
+                ]);
+            }
             
             $this->warn("Task ID {$task->task_id} expired.");
         }

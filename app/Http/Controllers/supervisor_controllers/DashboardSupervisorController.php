@@ -94,21 +94,23 @@ class DashboardSupervisorController extends Controller
         ->limit(5)
         ->get();
 
-    if (Schema::hasTable('supervisor_activity_logs')) {
-    $activityLogs = DB::table('supervisor_activity_logs')
-        ->where('supervisor_id', $supervisorId)
-        ->orderByDesc('created_at')
-        ->limit(10)
-        ->get();
-} else {
     $activityLogs = collect();
-}
+    if (\Illuminate\Support\Facades\Schema::hasTable('supervisor_activity_logs')) {
+        $activityLogs = \Illuminate\Support\Facades\DB::table('supervisor_activity_logs')
+            ->where('supervisor_id', $supervisorId)
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+    }
 
-    $notifications = \Illuminate\Support\Facades\DB::table('supervisor_notifications')
-        ->where('supervisor_id', $supervisorId)
-        ->orderByDesc('created_at')
-        ->limit(5)
-        ->get();
+    $notifications = collect();
+    if (\Illuminate\Support\Facades\Schema::hasTable('supervisor_notifications')) {
+        $notifications = \Illuminate\Support\Facades\DB::table('supervisor_notifications')
+            ->where('supervisor_id', $supervisorId)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+    }
 
     return view('content.supervisor.dashboard', compact(
         'totalAssignedInterns',
