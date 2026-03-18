@@ -4,51 +4,48 @@ namespace App\Http\Controllers\supervisor_controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
-
 
 class DashboardSupervisorController extends Controller
 {
     public function index()
 {
-    $supervisorId = session('manager_id');
-    $supervisorTechnology = session('manager_department');
+    $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+    $supervisorTechnology = trim(session('manager_department'));
     $today = now()->toDateString();
 
     // KPI Cards
     $totalAssignedInterns = \Illuminate\Support\Facades\DB::table('intern_accounts')
         ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->where('int_technology', $supervisorTechnology);
+            $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
         })
         ->count();
 
     $activeInterns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-        ->where('int_status', 'Active')
+        ->whereRaw('LOWER(int_status) = ?', ['active'])
         ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->where('int_technology', $supervisorTechnology);
+            $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
         })
         ->count();
 
     // Selection Phase Counts (New)
-    $interviewCount = \App\Models\Intern::where('status', 'Interview')
+    $interviewCount = \App\Models\Intern::whereRaw('LOWER(status) = ?', ['interview'])
         ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->where('technology', $supervisorTechnology);
+            $query->whereRaw('LOWER(technology) = ?', [strtolower($supervisorTechnology)]);
         })->count();
     
-    $contactCount = \App\Models\Intern::where('status', 'Contact')
+    $contactCount = \App\Models\Intern::whereRaw('LOWER(status) = ?', ['contact'])
         ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->where('technology', $supervisorTechnology);
+            $query->whereRaw('LOWER(technology) = ?', [strtolower($supervisorTechnology)]);
         })->count();
 
-    $testCount = \App\Models\Intern::where('status', 'Test')
+    $testCount = \App\Models\Intern::whereRaw('LOWER(status) = ?', ['test'])
         ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->where('technology', $supervisorTechnology);
+            $query->whereRaw('LOWER(technology) = ?', [strtolower($supervisorTechnology)]);
         })->count();
 
-    $completedCount = \App\Models\Intern::where('status', 'Completed')
+    $completedCount = \App\Models\Intern::whereRaw('LOWER(status) = ?', ['completed'])
         ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->where('technology', $supervisorTechnology);
+            $query->whereRaw('LOWER(technology) = ?', [strtolower($supervisorTechnology)]);
         })->count();
 
     $pendingTaskReviews = \Illuminate\Support\Facades\DB::table('intern_tasks')
@@ -62,14 +59,14 @@ class DashboardSupervisorController extends Controller
 
     $tasksCompletedToday = \Illuminate\Support\Facades\DB::table('intern_tasks')
         ->where('assigned_by', $supervisorId)
-        ->where('task_status', 'Completed')
+        ->whereRaw('LOWER(task_status) = ?', ['completed'])
         ->whereDate('updated_at', $today)
         ->count();
 
     $overdueTasks = \Illuminate\Support\Facades\DB::table('intern_tasks')
         ->where('assigned_by', $supervisorId)
         ->whereDate('task_end', '<', $today)
-        ->where('task_status', '!=', 'Completed')
+        ->whereRaw('LOWER(task_status) != ?', ['completed'])
         ->count();
 
     $totalProjectsAssigned = \Illuminate\Support\Facades\DB::table('intern_projects')
@@ -80,7 +77,7 @@ class DashboardSupervisorController extends Controller
     $newInterns = \Illuminate\Support\Facades\DB::table('intern_accounts')
         ->select('name', 'email', 'int_technology', 'start_date', 'int_status')
         ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->where('int_technology', $supervisorTechnology);
+            $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
         })
         ->orderByDesc('int_id')
         ->limit(5)

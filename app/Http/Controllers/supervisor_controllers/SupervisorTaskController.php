@@ -26,11 +26,11 @@ class SupervisorTaskController extends Controller
 
     public function create()
     {
-        $supervisorTechnology = session('manager_department');
+        $supervisorTechnology = trim(session('manager_department'));
         $interns = DB::table('intern_accounts')
-            ->where('int_status', 'Active')
+            ->whereRaw('LOWER(int_status) = ?', ['active'])
             ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->where('int_technology', $supervisorTechnology);
+                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
             })
             ->get();
 

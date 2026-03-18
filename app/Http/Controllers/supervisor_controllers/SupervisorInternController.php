@@ -10,7 +10,7 @@ class SupervisorInternController extends Controller
 {
     public function myInterns(Request $request)
     {
-        $supervisorTechnology = session('manager_department');
+        $supervisorTechnology = trim(session('manager_department'));
 
         $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
             ->select(
@@ -25,7 +25,7 @@ class SupervisorInternController extends Controller
                 'int_status'
             )
             ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->where('int_technology', $supervisorTechnology);
+                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
             })
             ->limit(20)
             ->get();
@@ -35,7 +35,7 @@ class SupervisorInternController extends Controller
 
     public function active()
     {
-        $supervisorTechnology = session('manager_department');
+        $supervisorTechnology = trim(session('manager_department'));
 
         $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
             ->select(
@@ -48,9 +48,9 @@ class SupervisorInternController extends Controller
                 'intern_accounts.start_date',
                 'intern_accounts.int_status'
             )
-            ->where('int_status', 'Active')
+            ->whereRaw('LOWER(int_status) = ?', ['active'])
             ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->where('int_technology', $supervisorTechnology);
+                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
             })
             ->limit(20)
             ->get();
@@ -62,7 +62,7 @@ class SupervisorInternController extends Controller
 
             $completedTasks = \Illuminate\Support\Facades\DB::table('intern_tasks')
                 ->where('eti_id', $intern->eti_id)
-                ->where('task_status', 'Completed')
+                ->whereRaw('LOWER(task_status) = ?', ['completed'])
                 ->count();
 
             $intern->progress = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
@@ -75,7 +75,7 @@ class SupervisorInternController extends Controller
 
     public function contactWith()
     {
-        $supervisorTechnology = session('manager_department');
+        $supervisorTechnology = trim(session('manager_department'));
 
         $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
             ->select(
@@ -88,9 +88,9 @@ class SupervisorInternController extends Controller
                 'start_date',
                 'int_status'
             )
-            ->where('int_status', 'Contact')
+            ->whereRaw('LOWER(int_status) = ?', ['contact'])
             ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->where('int_technology', $supervisorTechnology);
+                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
             })
             ->limit(20)
             ->get();
@@ -100,7 +100,7 @@ class SupervisorInternController extends Controller
 
     public function test()
     {
-        $supervisorTechnology = session('manager_department');
+        $supervisorTechnology = trim(session('manager_department'));
 
         $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
             ->select(
@@ -113,9 +113,9 @@ class SupervisorInternController extends Controller
                 'start_date',
                 'int_status'
             )
-            ->where('int_status', 'Test')
+            ->whereRaw('LOWER(int_status) = ?', ['test'])
             ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->where('int_technology', $supervisorTechnology);
+                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
             })
             ->limit(20)
             ->get();
@@ -125,7 +125,7 @@ class SupervisorInternController extends Controller
 
     public function completed()
     {
-        $supervisorTechnology = session('manager_department');
+        $supervisorTechnology = trim(session('manager_department'));
 
         $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
             ->select(
@@ -138,9 +138,9 @@ class SupervisorInternController extends Controller
                 'start_date',
                 'int_status'
             )
-            ->where('int_status', 'Completed')
+            ->whereRaw('LOWER(int_status) = ?', ['completed'])
             ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->where('int_technology', $supervisorTechnology);
+                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
             })
             ->limit(20)
             ->get();
@@ -150,7 +150,7 @@ class SupervisorInternController extends Controller
 
     public function newInterns()
     {
-        $supervisorTechnology = session('manager_department');
+        $supervisorTechnology = trim(session('manager_department'));
 
         $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
             ->select(
@@ -163,9 +163,9 @@ class SupervisorInternController extends Controller
                 'start_date',
                 'int_status'
             )
-            ->where('int_status', 'New')
+            ->whereRaw('LOWER(int_status) = ?', ['new'])
             ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->where('int_technology', $supervisorTechnology);
+                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
             })
             ->limit(20)
             ->get();
@@ -175,12 +175,12 @@ class SupervisorInternController extends Controller
 
     public function show($id)
     {
-        $supervisorTechnology = session('manager_department');
+        $supervisorTechnology = trim(session('manager_department'));
 
         $intern = \Illuminate\Support\Facades\DB::table('intern_accounts')
             ->where('int_id', $id)
             ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->where('int_technology', $supervisorTechnology);
+                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
             })
             ->first();
 
@@ -208,12 +208,12 @@ class SupervisorInternController extends Controller
 
     public function progressMonitoring()
     {
-        $supervisorTechnology = session('manager_department');
+        $supervisorTechnology = trim(session('manager_department'));
 
         $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-            ->where('int_status', 'Active')
+            ->whereRaw('LOWER(int_status) = ?', ['active'])
             ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->where('int_technology', $supervisorTechnology);
+                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
             })
             ->get();
 
@@ -224,7 +224,15 @@ class SupervisorInternController extends Controller
 
             $total = $tasks->count();
             $completed = $tasks->where('task_status', 'Completed')->count();
+            if ($completed == 0) {
+                $completed = $tasks->where('task_status', 'completed')->count();
+            }
+            
             $expired = $tasks->where('task_status', 'Expired')->count();
+            if ($expired == 0) {
+                $expired = $tasks->where('task_status', 'expired')->count();
+            }
+
             $overdue = $tasks->where('task_status', 'Assigned')
                 ->where('task_end', '<', now()->toDateString())
                 ->count();

@@ -10,7 +10,7 @@ class SupervisorProjectController extends Controller
     public function index()
     {
         $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
-        $supervisorTechnology = session('manager_department');
+        $supervisorTechnology = trim(session('manager_department'));
 
         if (!$supervisorId) {
             return redirect()->route('login')->with('error', 'Authentication error: Supervisor ID not found. Please re-login.');
@@ -39,9 +39,9 @@ class SupervisorProjectController extends Controller
         // Fetch active interns for this supervisor to show in the "Create Project" dropdown
         $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
             ->select('eti_id', 'name', 'email')
-            ->where('int_status', 'Active')
+            ->whereRaw('LOWER(int_status) = ?', ['active'])
             ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->where('int_technology', $supervisorTechnology);
+                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
             })
             ->get();
 
