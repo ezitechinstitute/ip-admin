@@ -41,17 +41,7 @@ class SupervisorsController extends Controller
     // English: Sorting by manager_id (Primary Key) is much faster than created_at on huge tables
     $allSupervisors = $query->latest('manager_id')->paginate($perPage)->withQueryString();
 
-      $privilegeGroups = [];
-    $jsonPath = base_path('resources/menu/managerRolePrivileges.json');
-
-    if (file_exists($jsonPath)) {
-        // English: Loading privileges once outside the loop for efficiency
-        $jsonData = json_decode(file_get_contents($jsonPath), true);
-        $privilegeGroups = $jsonData['privileges'] ?? [];
-    }
-    $allManager = ManagersAccount::select('manager_id', 'name')
-                ->where('loginas', 'Manager')->get();
-    return view('pages.admin.supervisor.supervisor', compact('allSupervisors','allManager', 'privilegeGroups', 'perPage'));
+    return view('pages.admin.supervisor.supervisor', compact('allSupervisors', 'perPage'));
 }
 
     public function addSupervisor(Request $request)
@@ -168,19 +158,6 @@ public function update(Request $request, $id)
         // For errors, go back with the error message
         return redirect()->back()->with('error', 'Failed to save: ' . $e->getMessage());
     }
-}
-
-public function assignSupervisor(Request $request)
-{
-    // dd($request->all()); // check data
-
-    DB::table('manager_accounts')
-        ->where('manager_id', $request->supervisor_id) // supervisor row
-        ->update([
-            'assigned_manager' => $request->manager_id // selected manager
-        ]);
-
-    return back()->with('success','Supervisor assigned successfully');
 }
 
 

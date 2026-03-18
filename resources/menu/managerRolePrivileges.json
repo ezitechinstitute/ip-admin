@@ -60,7 +60,7 @@
           "key": "view_active_interns",
           "title": "View Active Interns"
         },
-
+        
         {
           "key": "excel_active_interns",
           "title": "Download Excel"
@@ -83,7 +83,7 @@
           "key": "view_new_interns",
           "title": "View New Interns"
         },
-
+        
         {
           "key": "excel_new_interns",
           "title": "Download Excel"
@@ -106,7 +106,7 @@
           "key": "view_contact_with",
           "title": "View Contact With"
         },
-
+        
         {
           "key": "excel_contact_with",
           "title": "Download Excel"
@@ -129,7 +129,7 @@
           "key": "view_interview_test",
           "title": "View Interview Test"
         },
-
+        
         {
           "key": "excel_interview_test",
           "title": "Download Excel"
@@ -152,7 +152,7 @@
           "key": "view_test_completed",
           "title": "View Test Completed"
         },
-
+        
         {
           "key": "excel_test_completed",
           "title": "Download Excel"
@@ -175,7 +175,7 @@
           "key": "view_manager_international_interns",
           "title": "View International Interns"
         },
-
+        
         {
           "key": "excel_manager_international_interns",
           "title": "Download Excel"
@@ -283,90 +283,6 @@
         {
           "key": "view_manager_knowledge_base",
           "title": "View Knowledge Base"
-        }
-      ]
-    },
-    {
-      "key": "manager_curriculum",
-      "title": "Curriculum Management",
-      "privileges": [
-        {
-          "key": "view_manager_curriculum",
-          "title": "View Curriculum"
-        },
-        {
-          "key": "create_manager_curriculum",
-          "title": "Create Curriculum"
-        },
-        {
-          "key": "edit_manager_curriculum",
-          "title": "Edit Curriculum"
-        },
-        {
-          "key": "delete_manager_curriculum",
-          "title": "Delete Curriculum"
-        },
-        {
-          "key": "manage_manager_curriculum_projects",
-          "title": "Manage Curriculum Projects"
-        }
-      ]
-    },
-    {
-      "key": "manager_attendance_logs",
-      "title": "Attendance & Leaves",
-      "privileges": [
-        {
-          "key": "view_intern_leaves",
-          "title": "View Intern Leaves"
-        },
-        {
-          "key": "approve_supervisor_leaves",
-          "title": "Approve Supervisor Leaves"
-        },
-        {
-          "key": "view_supervisor_attendance",
-          "title": "View Supervisor Attendance"
-        },
-        {
-          "key": "view_attendance_calendar",
-          "title": "View Attendance Calendar"
-        }
-      ]
-    },
-    {
-      "key": "manager_invoices",
-      "title": "Invoices",
-      "privileges": [
-        {
-          "key": "view_invoice_dashboard",
-          "title": "View Invoice Dashboard"
-        },
-        {
-          "key": "create_invoice",
-          "title": "Create Invoice"
-        }
-      ]
-    },
-    {
-      "key": "manager_tasks",
-      "title": "Tasks",
-      "privileges": [
-        {
-          "key": "view_manager_tasks",
-          "title": "View Manager Tasks"
-        },
-        {
-          "key": "create_manager_tasks",
-          "title": "Create Manager Tasks"
-        },
-        {
-          "key": "edit_manager_tasks",
-          "title": "Edit Manager Tasks"
-        },
-        {
-          "key": "delete_manager_tasks",
-          "title": "Delete Manager Tasks"
         }
       ]
     }

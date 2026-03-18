@@ -120,60 +120,6 @@ class DashboardController extends Controller
 
 
 
-public function managerDashboard()
-{
-    // KPI Cards Data
-
-    $totalInterns = Intern::count();
-
-    $activeInterns = Intern::where('status', 'active')->count();
-
-    $pendingInterviews = Intern::where('status', 'Interview')->count();
-
-    $pendingTests = Intern::where('status', 'Test')->count();
-
-    $ongoingProjects = InternProject::where('pstatus', 'Ongoing')->count();
-
-    $expiredProjects = InternProject::where('pstatus', 'Expired')->count();
-
-    // Example revenue calculation (adjust if revenue field exists)
-    $monthlyRevenue = InternProject::whereMonth('created_at', now()->month)
-        ->sum('project_price');
-
-    // Example commission (10%)
-    $commission = $monthlyRevenue * 0.10;
-
-    // Interview Pipeline
-    $newApplications = Intern::where('status', 'New')->count();
-    $contacted = Intern::where('status', 'Contact')->count();
-    $testAssigned = Intern::where('status', 'Test')->count();
-    $testCompleted = Intern::where('status', 'Completed')->count();
-    $interviewScheduled = Intern::where('status', 'Interview')->count();
-    $selected = Intern::where('status', 'Selected')->count();
-    $rejected = Intern::where('status', 'Rejected')->count();
-
-    return view('content.dashboard.manager-dashboard', compact(
-        'totalInterns',
-        'activeInterns',
-        'pendingInterviews',
-        'pendingTests',
-        'ongoingProjects',
-        'expiredProjects',
-        'monthlyRevenue',
-        'commission',
-        'newApplications',
-        'contacted',
-        'testAssigned',
-        'testCompleted',
-        'interviewScheduled',
-        'selected',
-        'rejected'
-    ));
-}
-
-
-
-
    public function sendTargetedBroadcast(Request $request)
 {
     // English comments: Validate that the message is not empty before processing

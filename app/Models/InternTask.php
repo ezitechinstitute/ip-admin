@@ -27,8 +27,11 @@ class InternTask extends Model
         'task_obt_points',
         'assigned_by',
         'task_status',
+        'penalty_flag',
+        'code_quality_score',
         'task_approve',
         'review',
+        'remarks',
         'task_screenshot',
         'task_live_url',
         'task_git_url',
@@ -39,6 +42,12 @@ class InternTask extends Model
     public function intern()
     {
         return $this->belongsTo(InternAccount::class, 'eti_id', 'eti_id');
+    }
+
+    // Supervisor Relationship
+    public function supervisor()
+    {
+        return $this->belongsTo(ManagersAccount::class, 'assigned_by', 'manager_id');
     }
 
     // Project Relationship (Only if project_id exists in intern_tasks table)

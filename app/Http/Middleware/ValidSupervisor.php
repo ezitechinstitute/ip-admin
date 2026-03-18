@@ -4,27 +4,17 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class ValidSupervisor
+class validSupervisor
 {
-    /**
-     * Handle an incoming request.
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if user is authenticated via manager guard
-        if (Auth::guard('manager')->check()) {
-            $supervisor = Auth::guard('manager')->user();
-
-            // Check if the manager is logged in as Supervisor
-            if ($supervisor->loginas === 'Supervisor') {
-                return $next($request); // Allow access
-            }
+        // Check if supervisor is logged in
+        if (!session()->has('manager_id') || session('loginas') !== 'Supervisor') {
+            return redirect()->route('login')->with('error', 'Please login as Supervisor to access this page.');
         }
 
-        // Not authenticated as manager
-        return redirect()->route('login')->withErrors(['error' => 'Please login first!']);
+        return $next($request);
     }
 }

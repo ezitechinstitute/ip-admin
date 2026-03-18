@@ -352,52 +352,11 @@
                         <label class="form-check-label" for="edit_role_supervsior"> Supervisor </label>
                       </div>
                     </div>
-                    <div class="col-12 mt-4">
-                      <div class="d-flex mb-3" style="justify-content: space-between; align-items: center">
-                        <h5 class="mb-0">Edit Privileges</h5>
-                        <div class="d-flex align-items-center">
-                          <input type="checkbox" class="form-check-input me-2 mt-0" id="editSelectAll">
-                          <label class="small text-muted mb-0" style="font-size: 13px; cursor: pointer;"
-                            for="editSelectAll">Select All Privileges</label>
-                        </div>
-                      </div>
 
-                      <div class="privilege-masonry">
-                        @foreach($privilegeGroups as $group)
-                        <div class="masonry-item mb-3">
-                          <div class="card shadow-sm border border-light">
-                            <div class="card-header d-flex justify-content-between align-items-center p-2 bg-light"
-                              >
-                              <span class="fw-bold small">{{ $group['title'] }}</span>
-
-                              <div class="d-flex align-items-center">
-                                <input type="checkbox" class="form-check-input edit-select-all-group me-2"
-                                  >
-                                <label class="small text-muted mb-0" style="font-size: 13px; cursor: pointer;"
-                                  >All</label>
-                              </div>
-                            </div>
-                            <div class="card-body p-0">
-                              <ul class="list-group list-group-flush">
-                                @foreach($group['privileges'] as $privilege)
-                                <li class="list-group-item py-1 px-3 border-light">
-                                  <input type="checkbox" name="permissions[]" value="{{ $privilege['key'] }}"
-                                    class="form-check-input me-2 edit-group-item" data-key="{{ $privilege['key'] }}">
-                                  <span style="font-size: 13px;">{{ $privilege['title'] }}</span>
-                                </li>
-                                @endforeach
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                        @endforeach
-                      </div>
-                    </div>
                     <div class="col-12 text-end mt-3">
                       <button type="reset" class="btn btn-label-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                       <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
-
                   </form>
                 </div>
               </div>
@@ -436,51 +395,14 @@
                       <button type="submit" class="btn btn-primary">Save Permissions</button>
                     </div>
                   </form>
+
+
+
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Supervisor AssignToManager Modal -->
-          <div class="modal fade" id="AssignToManagerModal" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                  
-                  <!-- Modal Header -->
-                  <div class="modal-header">
-                    <h4 class="modal-title">Supervisor Assign to Manager</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-
-                  <!-- Modal Body -->
-                  <div class="modal-body">
-                    {{-- <p class="text-body-secondary mb-3">Set Supervisor Permissions</p> --}}
-
-                    <form action="{{ route('supervisor.assign-manager') }}" method="POST" id="assignSupervisorForm">
-                        @csrf
-
-                        <!-- Hidden input to store supervisor ID -->
-                        <input type="hidden" name="supervisor_id" id="supervisor_id">
-
-                        <div class="mb-3">
-                            <label for="manager_id" class="form-label">Select Manager</label>
-                            <select class="form-select" name="manager_id" id="manager_id" required>
-                                @foreach($allManager as $manager)
-                                    <option value="{{ $manager->manager_id }}">{{ $manager->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="text-end">
-                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Assign Supervisor</button>
-                        </div>
-                    </form>
-                  </div>
-
-                </div>
-              </div>
-            </div>
 
         </div>
       </div>
@@ -517,9 +439,6 @@
                     class="dt-column-order"></span></th>
                 <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
                   aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Department</span><span
-                    class="dt-column-order"></span></th>
-                <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Assigned To</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
                     class="dt-column-title">Status</span><span class="dt-column-order"></span></th>
@@ -578,10 +497,7 @@
                     @endif</span>
 
                 </td>
-                 <td>
-                  <span class="text-heading text-nowrap">{{ optional($allManager->firstWhere('manager_id', $supervisor->assigned_manager))->name ?? '_' }}</span>
-                  
-                </td>
+
                 <td>
                   @php
                   // Map statuses to Bootstrap badge classes
@@ -623,10 +539,6 @@
                         <a href="javascript:;" class="dropdown-item permission-btn" data-bs-toggle="modal"
                           data-bs-target="#SupervisorPermissionsModel" data-id="{{ $supervisor->manager_id }}">
                           Permissions
-                        </a>
-                         <a href="javascript:;" class="dropdown-item permission-btn" data-bs-toggle="modal"
-                          data-bs-target="#AssignToManagerModal" data-id="{{ $supervisor->manager_id }}">
-                          Assign to Manager
                         </a>
                       </div>
                     </div>
@@ -1075,23 +987,9 @@
 
 
 <script>
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    const assignButtons = document.querySelectorAll('.permission-btn');
-    const supervisorInput = document.getElementById('supervisor_id');
-
-    assignButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const supervisorId = this.dataset.id; // data-id="{{ $supervisor->manager_id }}"
-            supervisorInput.value = supervisorId;
-        });
-    });
-});
   document.addEventListener('DOMContentLoaded', function () {
 
   const permissionModal = document.getElementById('SupervisorPermissionsModel');
-
   const techTableBody = permissionModal.querySelector('table tbody');
 
   document.querySelectorAll('.permission-btn').forEach(btn => {
