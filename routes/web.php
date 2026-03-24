@@ -463,6 +463,9 @@ Route::post('update-intern-account', [InternAccountsController::class, 'updateIn
 Route::get('/intern-view-profile-account/{id}', [InternAccountsController::class, 'InternViewProfileAccount'])->name('view.profile.interne.account.admin');
 Route::get('/intern-accounts/export-csv', [InternAccountsController::class, 'exportInternAccountsCSV'])->name('export.intern.csv.admin');
 
+ Route::get('/internship-registration', [App\Http\Controllers\InternshipRegistrationController::class, 'step1'])->name('internship.step1');
+ Route::post('/internship-registration/step2', [App\Http\Controllers\InternshipRegistrationController::class, 'step2'])->name('internship.step2');
+ Route::post('/internship-registration/step3', [App\Http\Controllers\InternshipRegistrationController::class, 'step3'])->name('internship.step3');
 
 // Intern Projects
 Route::get('intern-projects', [InternProjectsController::class, 'interProjects'])->name('intern-projects');

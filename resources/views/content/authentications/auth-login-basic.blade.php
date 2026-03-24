@@ -78,6 +78,13 @@ $customizerHidden = 'customizer-hide';
             <a href="{{ url('auth/register-basic') }}">
               <span>Create an account</span>
             </a>
+            <br>
+            <a href="{{ url('/internship-registration') }}" class="btn btn-outline-primary mt-2">
+              <span>Ezitech Internship Registration</span>
+            </a>
+            <a href="{{ url('/admin/internship-registration') }}" class="btn btn-outline-primary mt-2">
+              <span>Ezitech Internship Registration</span>
+            </a>
           </p>
 
           <div class="divider my-6">
