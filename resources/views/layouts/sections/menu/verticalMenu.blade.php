@@ -10,6 +10,8 @@ $firstSegment = Request::segment(1);
 // 1. Menu file decide karein
 if ($firstSegment == 'admin') {
     $menuPath = base_path('resources/menu/verticalMenu.json');
+} elseif ($firstSegment == 'supervisor') {
+    $menuPath = base_path('resources/menu/supervisorMenu.json');
 } else {
     $menuPath = base_path('resources/menu/managerMenu.json');
 }
@@ -23,7 +25,7 @@ $menuJson = file_get_contents($menuPath);
 $menuData = json_decode($menuJson);
 
 // 3. --- ROLE BASED FILTERING LOGIC ---
-if ($firstSegment == 'manager' && Auth::guard('manager')->check()) {
+if (($firstSegment == 'manager' || $firstSegment == 'supervisor') && Auth::guard('manager')->check()) {
     $manager = Auth::guard('manager')->user();
     
     // Permission filter function

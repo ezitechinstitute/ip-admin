@@ -16,8 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
        
         $middleware->alias([
-            'validUser' => ValidUser::class,
-            'validManager' => ValidManager::class,
+            'validSupervisor' => \App\Http\Middleware\ValidSupervisor::class,
+            'validUser' => \App\Http\Middleware\ValidUser::class,
+            'validManager' => \App\Http\Middleware\ValidManager::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

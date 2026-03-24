@@ -8,11 +8,54 @@ use App\Models\CertificateRequest;
 use App\Models\CertificateTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+/**
+ * CertificateController - Consolidated Certificate Management System
+ * 
+ * This controller handles all certificate-related operations including:
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TEMPLATE MANAGEMENT (Template CRUD)
+ * ─────────────────────────────────────
+ * • templates()          - List all certificate templates (paginated, searchable)
+ * • storeTemplate()      - Create new HTML/content-based certificate template
+ * • updateTemplate()     - Update existing template
+ * • destroyTemplate()    - Soft delete template (uses is_deleted flag)
+ * • previewTemplate()    - Generate PDF preview of template
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CERTIFICATE REQUEST MANAGEMENT (Request CRUD)
+ * ─────────────────────────────────────────────
+ * • requests()           - List certificate requests (paginated, searchable, filterable by status)
+ * • submitRequest()      - Submit new certificate request (prevents duplicates)
+ * • updateRequestStatus()- Approve/reject requests with PDF generation & email
+ * • downloadCertificate()- Download approved certificate PDF
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FEATURES:
+ * ─────────
+ * ✓ Permission checks for all operations
+ * ✓ Pagination with configurable limits
+ * ✓ Search & filtering capabilities
+ * ✓ HTML/content-based template generation
+ * ✓ Dynamic template variables ({{name}}, {{email}}, {{certificate_type}}, {{date}})
+ * ✓ PDF generation and storage
+ * ✓ Email notifications to managers & interns
+ * ✓ Duplicate request prevention
+ * ✓ Soft delete for data retention
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * Note: Previous duplicate controllers (CertificateTemplateController) have been 
+ * consolidated into this single unified controller. All routes point here.
+ * 
+ * @author System
+ * @version 2.0 Consolidated
+ * @since 2024
+ */
 class CertificateController extends Controller
 {
     public function templates(Request $request)

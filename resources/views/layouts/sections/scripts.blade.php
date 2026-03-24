@@ -12,7 +12,7 @@
 <!-- END: Page Vendor JS-->
 
 <!-- BEGIN: Theme JS-->
-@if(request()->is('manager/*') || request()->is('manager'))
+@if(request()->is('manager/*') || request()->is('manager') || request()->is('supervisor/*') || request()->is('supervisor'))
     {{-- English comments: Load manager-specific JS for manager routes --}}
     @vite(['resources/assets/js/main-manager-navbar.js'])
 @else

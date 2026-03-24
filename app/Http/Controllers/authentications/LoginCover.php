@@ -36,23 +36,34 @@ class LoginCover extends Controller
         return redirect()->route('dashboard-admin');
     }
 
-    // 2. Check in Managers Table using 'manager' guard
-    // Attempt to find user in ManagersAccount table
-    $manager = ManagersAccount::where('email', $request->email)
-                            ->where('password', $request->password)
-                            ->first();
+    // 2. Check in Managers/Supervisors Table using 'manager' guard
+$manager = ManagersAccount::where('email', $request->email)
+    ->where('password', $request->password)
+    ->first();
 
 if ($manager) {
-    // English comments: Check if the manager account is active (status == 1)
     if ($manager->status != 1) {
         return back()->withErrors([
-            'email' => 'Your account is deactivated. Please contact the Admin!',
+            'email' => 'Your account is deactivated. Please contact the Admin!'
         ])->onlyInput('email');
     }
 
-    // English comments: If active, proceed with login
     Auth::guard('manager')->login($manager);
     $request->session()->regenerate();
+
+    // Store custom session values for middleware
+    session([
+        'manager_id' => $manager->manager_id,
+        'loginas' => $manager->loginas,
+        'manager_email' => $manager->email,
+        'manager_name' => $manager->name,
+        'manager_department' => $manager->department ?? null,
+    ]);
+
+    if ($manager->loginas === 'Supervisor') {
+        return redirect()->route('supervisor.dashboard');
+    }
+
     return redirect()->route('manager.dashboard');
 }
 

@@ -11,6 +11,20 @@
       "menuHeader": "Intern Management"
     },
     {
+      "name": "Curriculum",
+      "icon": "menu-icon icon-base ti tabler-book",
+      "slug": "manager/curriculum",
+      "url": "manager/curriculum",
+      "permission": "view_manager_curriculum"
+    },
+    {
+      "name": "Tasks",
+      "icon": "menu-icon icon-base ti tabler-clipboard-list",
+      "slug": "manager/tasks",
+      "url": "manager/tasks",
+      "permission": "view_manager_tasks"
+    },
+    {
       "name": "My Interns",
       "icon": "menu-icon icon-base ti tabler-users-group",
       "slug": "manager/my-interns",
@@ -58,6 +72,41 @@
     },
     {
       "menuHeader": "Reports & Logs"
+    },
+    {
+      "name": "Invoices",
+      "icon": "menu-icon icon-base ti tabler-receipt",
+      "slug": "manager/invoices",
+      "url": "manager/invoices",
+      "permission": "view_manager_invoices"
+    },
+    {
+      "name": "Attendance",
+      "icon": "menu-icon icon-base ti tabler-calendar-check",
+      "slug": "manager/attendance",
+      "url": "manager/attendance",
+      "permission": "view_manager_attendance"
+    },
+    {
+      "name": "Supervisors",
+      "icon": "menu-icon icon-base ti tabler-user-check",
+      "slug": "manager/supervisors",
+      "url": "manager/supervisors",
+      "permission": "view_manager_supervisors"
+    },
+    {
+      "name": "Communication",
+      "icon": "menu-icon icon-base ti tabler-message-circle",
+      "slug": "manager/communication",
+      "url": "manager/communication",
+      "permission": "view_manager_communication"
+    },
+    {
+      "name": "Withdrawal",
+      "icon": "menu-icon icon-base ti tabler-wallet",
+      "slug": "manager/withdraw",
+      "url": "manager/withdraw",
+      "permission": "view_manager_withdraw"
     },
     {
       "name": "Remaining Amount",

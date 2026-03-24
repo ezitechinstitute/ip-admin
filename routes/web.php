@@ -137,6 +137,13 @@ use App\Http\Controllers\manager_controllers\ProfileSettingsController;
 use App\Http\Controllers\manager_controllers\RemainingAmountController;
 use App\Http\Controllers\manager_controllers\RevenueController;
 use App\Http\Controllers\manager_controllers\CertificateController;
+use App\Http\Controllers\manager_controllers\ManagerCurriculumController;
+use App\Http\Controllers\manager_controllers\ManagerCurriculumProjectController;
+use App\Http\Controllers\manager_controllers\TaskViewController;
+use App\Http\Controllers\manager_controllers\InvoiceController as ManagerInvoiceController;
+use App\Http\Controllers\manager_controllers\CommunicationController;
+use App\Http\Controllers\manager_controllers\ManagerAttendanceController;
+use App\Http\Controllers\manager_controllers\Supervisorcontroller;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\modal\ModalExample;
@@ -159,6 +166,16 @@ use App\Http\Controllers\pages\UserTeams;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupervisorsController;
+use App\Http\Controllers\supervisor_controllers\DashboardSupervisorController;
+use App\Http\Controllers\supervisor_controllers\SupervisorInternController;
+use App\Http\Controllers\supervisor_controllers\SupervisorProjectController;
+use App\Http\Controllers\supervisor_controllers\SupervisorAttendanceController;
+use App\Http\Controllers\supervisor_controllers\SupervisorLeaveController;
+use App\Http\Controllers\supervisor_controllers\SupervisorFeedbackController;
+use App\Http\Controllers\supervisor_controllers\SupervisorProfileController;
+use App\Http\Controllers\supervisor_controllers\SupervisorKnowledgeBaseController;
+use App\Http\Controllers\supervisor_controllers\SupervisorTaskController;
+use App\Http\Controllers\supervisor_controllers\SupervisorEvaluationController;
 use App\Http\Controllers\tables\Basic as TablesBasic;
 use App\Http\Controllers\tables\DatatableAdvanced;
 use App\Http\Controllers\tables\DatatableBasic;
@@ -195,6 +212,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
+
 // Main Page Route
 // Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
 // Route::get('/dashboard/analytics', [Analytics::class, 'index'])->name('dashboard-analytics');
@@ -208,8 +226,8 @@ Route::get('/layouts/content-navbar', [ContentNavbar::class, 'index'])->name('la
 Route::get('/layouts/content-nav-sidebar', [ContentNavSidebar::class, 'index'])->name('layouts-content-nav-sidebar');
 // Route::get('/layouts/navbar-full', [NavbarFull::class, 'index'])->name('layouts-navbar-full');
 // Route::get('/layouts/navbar-full-sidebar', [NavbarFullSidebar::class, 'index'])->name('layouts-navbar-full-sidebar');
-Route::get('/layouts/horizontal', [Horizontal::class, 'index'])->name('dashboard-analytics');
-Route::get('/layouts/vertical', [Vertical::class, 'index'])->name('dashboard-analytics');
+Route::get('/layouts/horizontal', [Horizontal::class, 'index'])->name('layouts-horizontal');
+Route::get('/layouts/vertical', [Vertical::class, 'index'])->name('layouts-vertical');
 Route::get('/layouts/without-menu', [WithoutMenu::class, 'index'])->name('layouts-without-menu');
 Route::get('/layouts/without-navbar', [WithoutNavbar::class, 'index'])->name('layouts-without-navbar');
 Route::get('/layouts/fluid', [Fluid::class, 'index'])->name('layouts-fluid');
@@ -304,7 +322,7 @@ Route::get('/auth/verify-email-basic', [VerifyEmailBasic::class, 'index'])->name
 Route::get('/auth/verify-email-cover', [VerifyEmailCover::class, 'index'])->name('auth-verify-email-cover');
 Route::get('/auth/reset-password-basic', [ResetPasswordBasic::class, 'index'])->name('auth-reset-password-basic');
 Route::get('/auth/reset-password-cover', [ResetPasswordCover::class, 'index'])->name('auth-reset-password-cover');
-Route::get('/auth/forgot-password-basic', [ForgotPasswordBasic::class, 'index'])->name('auth-reset-password-basic');
+Route::get('/auth/forgot-password-basic', [ForgotPasswordBasic::class, 'index'])->name('auth-forgot-password-basic');
 Route::get('/auth/forgot-password', [ForgotPasswordCover::class, 'index'])->name('auth-forgot-password-cover');
 Route::get('/auth/two-steps-basic', [TwoStepsBasic::class, 'index'])->name('auth-two-steps-basic');
 Route::get('/auth/two-steps-cover', [TwoStepsCover::class, 'index'])->name('auth-two-steps-cover');
@@ -609,6 +627,25 @@ Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     // Dashboard Route
     Route::get('/dashboard', [DashboardManagerController::class, 'index'])->name('manager.dashboard');
 
+    // Curriculum Routes
+    Route::get('/curriculum', [ManagerCurriculumController::class, 'index'])->name('manager.curriculum.index');
+    Route::get('/curriculum/create', [ManagerCurriculumController::class, 'create'])->name('manager.curriculum.create');
+    Route::post('/curriculum', [ManagerCurriculumController::class, 'store'])->name('manager.curriculum.store');
+    Route::get('/curriculum/{id}', [ManagerCurriculumController::class, 'show'])->name('manager.curriculum.show');
+    Route::get('/curriculum/{id}/edit', [ManagerCurriculumController::class, 'edit'])->name('manager.curriculum.edit');
+    Route::put('/curriculum/{id}', [ManagerCurriculumController::class, 'update'])->name('manager.curriculum.update');
+    Route::delete('/curriculum/{id}', [ManagerCurriculumController::class, 'destroy'])->name('manager.curriculum.destroy');
+    
+    // Curriculum Project Routes
+    Route::post('/curriculum/{id}/project', [ManagerCurriculumProjectController::class, 'store'])->name('manager.curriculum.project.store');
+    Route::put('/curriculum/{curriculum_id}/project/{project_id}', [ManagerCurriculumProjectController::class, 'update'])->name('manager.curriculum.project.update');
+    Route::delete('/curriculum/{curriculum_id}/project/{project_id}', [ManagerCurriculumProjectController::class, 'destroy'])->name('manager.curriculum.project.destroy');
+
+    // Tasks View Routes
+    Route::get('/tasks', [TaskViewController::class, 'index'])->name('manager.tasks.index');
+    Route::get('/tasks/{id}', [TaskViewController::class, 'show'])->name('manager.tasks.show');
+    Route::get('/tasks/export', [TaskViewController::class, 'export'])->name('manager.tasks.export');
+
     // Revenue & Commission Tracking
     Route::get('/revenue', [RevenueController::class, 'index'])->name('manager.revenue');
 
@@ -713,8 +750,98 @@ Route::get('/knowledge-base', [ManagerKnowledgeBaseController::class, 'index'])-
 Route::get('/knowledge-base/export',
     [ManagerKnowledgeBaseController::class, 'exportKnowledgeBaseCSV']
 )->name('manager.knowledge-base.export');
+
+// Invoice Routes
+Route::get('/invoices', [ManagerInvoiceController::class, 'dashboard'])->name('invoices.dashboard');
+Route::get('/invoice/create', [ManagerInvoiceController::class, 'create'])->name('invoices.create');
+Route::post('/invoice', [ManagerInvoiceController::class, 'store'])->name('invoices.store');
+Route::get('/invoice/{id}', [ManagerInvoiceController::class, 'show'])->name('invoices.view');
+Route::get('/invoice/{id}/payment', [ManagerInvoiceController::class, 'paymentForm'])->name('invoices.payment');
+Route::post('/invoice/{id}/record-payment', [ManagerInvoiceController::class, 'recordPayment'])->name('invoices.record-payment');
+Route::post('/invoice/{id}/update-due-date', [ManagerInvoiceController::class, 'updateDueDate'])->name('invoices.update-due-date');
+Route::get('/invoice-export', [ManagerInvoiceController::class, 'export'])->name('invoices.export');
+Route::get('/invoice/{id}/pdf', [ManagerInvoiceController::class, 'generatePDF'])->name('invoices.pdf');
+Route::get('/invoice/{id}/view-pdf', [ManagerInvoiceController::class, 'viewPDF'])->name('invoices.view-pdf');
+
+// Communication/Messaging Routes
+Route::get('/communication', [CommunicationController::class, 'index'])->name('manager.communication');
+Route::post('/send-message', [CommunicationController::class, 'sendMessage'])->name('manager.send.message');
+
+// Attendance Routes
+Route::get('/attendance', [ManagerAttendanceController::class, 'supervisorAttendance'])->name('manager.attendance');
+Route::get('/attendance-calendar', [ManagerAttendanceController::class, 'attendanceCalendar'])->name('manager.attendance.calendar');
+
+// Supervisor Routes
+Route::get('/supervisors', [Supervisorcontroller::class, 'index'])->name('manager.supervisors');
+
+// Withdraw Routes
+Route::get('/withdraw', [RevenueController::class, 'index'])->name('manager.withdraw.request');
+Route::post('/withdraw', [RevenueController::class, 'index'])->name('manager.withdraw.store');
+
 });
 
+
+
+Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function () {
+
+    Route::get('/dashboard', [DashboardSupervisorController::class, 'index'])->name('supervisor.dashboard');
+
+    Route::get('/my-interns', [SupervisorInternController::class, 'myInterns'])->name('supervisor.myInterns');
+    Route::get('/all-interns/active', [SupervisorInternController::class, 'active'])->name('supervisor.activeInterns');
+    Route::get('/all-interns/newInterns', [SupervisorInternController::class, 'newInterns'])->name('supervisor.newInterns');
+    Route::get('/all-interns/contact', [SupervisorInternController::class, 'contactWith'])->name('supervisor.contactWith');
+    Route::get('/all-interns/test', [SupervisorInternController::class, 'test'])->name('supervisor.test');
+    Route::get('/all-interns/completed', [SupervisorInternController::class, 'completed'])->name('supervisor.completed');
+    Route::get('/view-intern/{id}', [SupervisorInternController::class, 'show'])->name('supervisor.viewIntern');
+    Route::get('/progress-monitoring', [SupervisorInternController::class, 'progressMonitoring'])->name('supervisor.progressMonitoring');
+
+    Route::get('/projects', [SupervisorProjectController::class, 'index'])->name('supervisor.projects');
+    Route::post('/supervisor/projects/store', [SupervisorProjectController::class, 'store'])->name('supervisor.projects.store');
+    Route::get('/supervisor/projects/{project_id}/tasks', [SupervisorProjectController::class, 'tasks'])->name('supervisor.projects.tasks');
+    Route::post('/supervisor/projects/{project_id}/tasks/store', [SupervisorProjectController::class, 'storeTask'])->name('supervisor.projects.tasks.store');
+    Route::post('/supervisor/projects/{project_id}/tasks/load-curriculum', [SupervisorProjectController::class, 'loadCurriculum'])->name('supervisor.projects.tasks.loadCurriculum');
+    Route::get('/supervisor/projects/{project_id}/tasks/{task_id}/edit', [SupervisorProjectController::class, 'editTask'])->name('supervisor.projects.tasks.edit');
+    Route::post('/supervisor/projects/{project_id}/tasks/{task_id}/update', [SupervisorProjectController::class, 'updateTask'])->name('supervisor.projects.tasks.update');
+    Route::delete('/supervisor/projects/{project_id}/tasks/{task_id}/delete', [SupervisorProjectController::class, 'deleteTask'])->name('supervisor.projects.tasks.delete');
+
+    // Project CRUD
+    Route::get('/projects/edit/{id}', [SupervisorProjectController::class, 'edit'])->name('supervisor.projects.edit');
+    Route::post('/projects/update/{id}', [SupervisorProjectController::class, 'update'])->name('supervisor.projects.update');
+    Route::delete('/projects/delete/{id}', [SupervisorProjectController::class, 'destroy'])->name('supervisor.projects.delete');
+    
+
+
+
+    Route::get('/attendance', [SupervisorAttendanceController::class, 'index'])->name('supervisor.attendance');
+    Route::get('/leaves', [SupervisorLeaveController::class, 'index'])->name('supervisor.leaves');
+    Route::get('/feedback', [SupervisorFeedbackController::class, 'index'])->name('supervisor.feedback');
+
+    Route::get('/profile-settings', [SupervisorProfileController::class, 'index'])->name('supervisor.profile.settings');
+    Route::get('/knowledge-base', [SupervisorKnowledgeBaseController::class, 'index'])->name('supervisor.knowledge.base');
+
+    // General Tasks
+    Route::get('/tasks', [SupervisorTaskController::class, 'index'])->name('supervisor.tasks.index');
+    Route::get('/tasks/kanban', [SupervisorTaskController::class, 'kanban'])->name('supervisor.tasks.kanban');
+    Route::get('/tasks/create', [SupervisorTaskController::class, 'create'])->name('supervisor.tasks.create');
+    Route::post('/tasks/store', [SupervisorTaskController::class, 'store'])->name('supervisor.tasks.store');
+    Route::get('/tasks/review/{id}', [SupervisorTaskController::class, 'review'])->name('supervisor.tasks.review');
+    Route::post('/tasks/update/{id}', [SupervisorTaskController::class, 'update'])->name('supervisor.tasks.update');
+
+    // Task CRUD (Edit/Delete)
+    Route::get('/tasks/edit/{id}', [SupervisorTaskController::class, 'edit'])->name('supervisor.tasks.edit');
+    Route::post('/tasks/update-details/{id}', [SupervisorTaskController::class, 'updateDetails'])->name('supervisor.tasks.updateDetails');
+    Route::delete('/tasks/delete/{id}', [SupervisorTaskController::class, 'destroy'])->name('supervisor.tasks.delete');
+
+    // Evaluations
+    Route::get('/evaluations', [SupervisorEvaluationController::class, 'index'])->name('supervisor.evaluations.index');
+    Route::get('/evaluations/create/{eti_id}', [SupervisorEvaluationController::class, 'create'])->name('supervisor.evaluations.create');
+    Route::post('/evaluations/store', [SupervisorEvaluationController::class, 'store'])->name('supervisor.evaluations.store');
+
+    // Evaluation CRUD
+    Route::get('/evaluations/edit/{id}', [SupervisorEvaluationController::class, 'edit'])->name('supervisor.evaluations.edit');
+    Route::post('/evaluations/update/{id}', [SupervisorEvaluationController::class, 'update'])->name('supervisor.evaluations.update');
+    Route::delete('/evaluations/delete/{id}', [SupervisorEvaluationController::class, 'destroy'])->name('supervisor.evaluations.delete');
+});
 
 
 

@@ -329,6 +329,100 @@
           "title": "View Knowledge Base"
         }
       ]
+    },
+    {
+      "key": "manager_curriculum",
+      "title": "Curriculum",
+      "privileges": [
+        {
+          "key": "view_manager_curriculum",
+          "title": "View Curriculum"
+        },
+        {
+          "key": "create_manager_curriculum",
+          "title": "Create Curriculum"
+        },
+        {
+          "key": "edit_manager_curriculum",
+          "title": "Edit Curriculum"
+        },
+        {
+          "key": "delete_manager_curriculum",
+          "title": "Delete Curriculum"
+        }
+      ]
+    },
+    {
+      "key": "manager_tasks",
+      "title": "Tasks",
+      "privileges": [
+        {
+          "key": "view_manager_tasks",
+          "title": "View Tasks"
+        }
+      ]
+    },
+    {
+      "key": "manager_invoices",
+      "title": "Invoices",
+      "privileges": [
+        {
+          "key": "view_manager_invoices",
+          "title": "View Invoices"
+        },
+        {
+          "key": "create_manager_invoices",
+          "title": "Create Invoice"
+        },
+        {
+          "key": "edit_manager_invoices",
+          "title": "Edit Invoice"
+        }
+      ]
+    },
+    {
+      "key": "manager_attendance",
+      "title": "Attendance",
+      "privileges": [
+        {
+          "key": "view_manager_attendance",
+          "title": "View Attendance"
+        }
+      ]
+    },
+    {
+      "key": "manager_supervisors",
+      "title": "Supervisors",
+      "privileges": [
+        {
+          "key": "view_manager_supervisors",
+          "title": "View Supervisors"
+        }
+      ]
+    },
+    {
+      "key": "manager_communication",
+      "title": "Communication",
+      "privileges": [
+        {
+          "key": "view_manager_communication",
+          "title": "View Communication"
+        },
+        {
+          "key": "send_manager_communication",
+          "title": "Send Messages"
+        }
+      ]
+    },
+    {
+      "key": "manager_withdraw",
+      "title": "Withdrawal",
+      "privileges": [
+        {
+          "key": "view_manager_withdraw",
+          "title": "View Withdrawal"
+        }
+      ]
     }
   ]
 }
