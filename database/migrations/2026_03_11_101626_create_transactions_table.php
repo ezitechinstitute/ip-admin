@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transactions', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->decimal('amount', 10);
-            $table->string('instructor_email');
-            $table->string('manager_email');
-            $table->decimal('company_amount', 10);
-            $table->decimal('instructor_amout', 10);
-            $table->decimal('manager_amount', 10);
-            $table->decimal('remaining_amount', 10);
-            $table->timestamp('created_at')->useCurrent();
-        });
+        if (!Schema::hasTable('transactions')) {
+            Schema::create('transactions', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->decimal('amount', 10);
+                $table->string('instructor_email');
+                $table->string('manager_email');
+                $table->decimal('company_amount', 10);
+                $table->decimal('instructor_amout', 10);
+                $table->decimal('manager_amount', 10);
+                $table->decimal('remaining_amount', 10);
+                $table->timestamp('created_at')->useCurrent();
+            });
+        }
     }
 
     /**

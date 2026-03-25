@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('intern_remaining_amounts', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->string('name');
-            $table->string('email')->unique('email');
-            $table->string('contact');
-            $table->decimal('remaining_amount', 10);
-            $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
-        });
+        if (!Schema::hasTable('intern_remaining_amounts')) {
+            Schema::create('intern_remaining_amounts', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('name');
+                $table->string('email')->unique('email');
+                $table->string('contact');
+                $table->decimal('remaining_amount', 10);
+                $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
+            });
+        }
     }
 
     /**

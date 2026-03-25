@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('admin_accounts', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->text('image');
-            $table->string('name');
-            $table->string('email');
-            $table->string('password');
-            $table->string('loginas')->default('Admin');
-            $table->timestamp('created_at')->useCurrent();
-        });
+        if (!Schema::hasTable('admin_accounts')) {
+            Schema::create('admin_accounts', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->text('image');
+                $table->string('name');
+                $table->string('email');
+                $table->string('password');
+                $table->string('loginas')->default('Admin');
+                $table->timestamp('created_at')->useCurrent();
+            });
+        }
     }
 
     /**

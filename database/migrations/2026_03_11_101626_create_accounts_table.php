@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('accounts', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->date('date');
-            $table->double('credit');
-            $table->double('debit');
-            $table->double('balance')->default(0);
-            $table->text('description');
-            $table->dateTime('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
-        });
+        if (!Schema::hasTable('accounts')) {
+            Schema::create('accounts', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->date('date');
+                $table->double('credit');
+                $table->double('debit');
+                $table->double('balance')->default(0);
+                $table->text('description');
+                $table->dateTime('created_at')->useCurrent();
+                $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
+            });
+        }
     }
 
     /**

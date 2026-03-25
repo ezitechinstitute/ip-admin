@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('technologies', function (Blueprint $table) {
-            $table->integer('tech_id', true);
-            $table->string('technology');
-            $table->boolean('status')->default(true);
-            $table->dateTime('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
-        });
+        if (!Schema::hasTable('technologies')) {
+            Schema::create('technologies', function (Blueprint $table) {
+                $table->integer('tech_id', true);
+                $table->string('technology');
+                $table->boolean('status')->default(true);
+                $table->dateTime('created_at')->useCurrent();
+                $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
+            });
+        }
     }
 
     /**

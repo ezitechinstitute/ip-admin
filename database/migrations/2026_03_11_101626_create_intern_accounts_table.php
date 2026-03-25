@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('intern_accounts', function (Blueprint $table) {
-            $table->integer('int_id', true);
-            $table->string('eti_id')->index('eti_id');
-            $table->string('name');
-            $table->string('email');
-            $table->string('phone');
-            $table->text('password');
-            $table->string('int_technology');
-            $table->string('start_date')->nullable();
-            $table->string('int_status')->default('Test');
-            $table->string('review')->nullable();
-            $table->text('reset_token')->nullable();
-        });
+        if (!Schema::hasTable('intern_accounts')) {
+            Schema::create('intern_accounts', function (Blueprint $table) {
+                $table->integer('int_id', true);
+                $table->string('eti_id')->index('eti_id');
+                $table->string('name');
+                $table->string('email');
+                $table->string('phone');
+                $table->text('password');
+                $table->string('int_technology');
+                $table->string('start_date')->nullable();
+                $table->string('int_status')->default('Test');
+                $table->string('review')->nullable();
+                $table->text('reset_token')->nullable();
+            });
+        }
     }
 
     /**

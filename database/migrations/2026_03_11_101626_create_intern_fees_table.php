@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('intern_fees', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->string('description');
-            $table->decimal('amount', 10);
-            $table->timestamp('created_at')->useCurrent();
-        });
+        if (!Schema::hasTable('intern_fees')) {
+            Schema::create('intern_fees', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('description');
+                $table->decimal('amount', 10);
+                $table->timestamp('created_at')->useCurrent();
+            });
+        }
     }
 
     /**

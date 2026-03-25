@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('complete_test', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->string('name');
-            $table->string('email');
-            $table->string('phone');
-            $table->string('technology');
-            $table->boolean('payment_status')->default(false);
-            $table->string('status')->default('Completed');
-        });
+        if (!Schema::hasTable('complete_test')) {
+            Schema::create('complete_test', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('name');
+                $table->string('email');
+                $table->string('phone');
+                $table->string('technology');
+                $table->boolean('payment_status')->default(false);
+                $table->string('status')->default('Completed');
+            });
+        }
     }
 
     /**

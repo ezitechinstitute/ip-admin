@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('offer_letter_templates', function (Blueprint $table) {
-            $table->id();
-            $table->string('title', 255);
-            $table->json('content');
-            $table->integer('manager_id');
-            $table->boolean('can_use_other_template')->default(0);
-            $table->boolean('status')->default(0);
-            $table->boolean('is_deleted')->default(0);
-            
-            $table->foreign('manager_id')->references('manager_id')->on('manager_accounts');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('offer_letter_templates')) {
+            Schema::create('offer_letter_templates', function (Blueprint $table) {
+                $table->id();
+                $table->string('title', 255);
+                $table->json('content');
+                $table->integer('manager_id');
+                $table->boolean('can_use_other_template')->default(0);
+                $table->boolean('status')->default(0);
+                $table->boolean('is_deleted')->default(0);
+                
+                $table->foreign('manager_id')->references('manager_id')->on('manager_accounts');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

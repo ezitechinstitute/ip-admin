@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('verification_code', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->string('email')->unique('email');
-            $table->integer('code');
-            $table->dateTime('created_at')->useCurrent();
-        });
+        if (!Schema::hasTable('verification_code')) {
+            Schema::create('verification_code', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('email')->unique('email');
+                $table->integer('code');
+                $table->dateTime('created_at')->useCurrent();
+            });
+        }
     }
 
     /**

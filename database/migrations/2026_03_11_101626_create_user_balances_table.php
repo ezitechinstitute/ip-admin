@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_balances', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->string('email')->unique('email');
-            $table->decimal('balance', 10);
-            $table->integer('year');
-            $table->integer('month');
-            $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
-        });
+        if (!Schema::hasTable('user_balances')) {
+            Schema::create('user_balances', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('email')->unique('email');
+                $table->decimal('balance', 10);
+                $table->integer('year');
+                $table->integer('month');
+                $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
+            });
+        }
     }
 
     /**

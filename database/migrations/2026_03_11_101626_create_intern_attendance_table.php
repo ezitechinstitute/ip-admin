@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('intern_attendance', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->string('eti_id');
-            $table->string('email');
-            $table->dateTime('start_shift');
-            $table->dateTime('end_shift')->nullable();
-            $table->integer('duration')->default(0);
-            $table->boolean('status')->nullable();
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
-        });
+        if (!Schema::hasTable('intern_attendance')) {
+            Schema::create('intern_attendance', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('eti_id');
+                $table->string('email');
+                $table->dateTime('start_shift');
+                $table->dateTime('end_shift')->nullable();
+                $table->integer('duration')->default(0);
+                $table->boolean('status')->nullable();
+                $table->dateTime('created_at')->useCurrent();
+                $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            });
+        }
     }
 
     /**

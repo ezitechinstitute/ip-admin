@@ -11,20 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('withdraw_requests', function (Blueprint $table) {
-            $table->integer('req_id', true);
-            $table->string('eti_id')->index('reqkey2');
-            $table->integer('req_by')->index('reqkey1');
-            $table->string('bank');
-            $table->string('ac_no');
-            $table->string('ac_name');
-            $table->text('description');
-            $table->date('date');
-            $table->double('amount');
-            $table->integer('req_status')->nullable();
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
-        });
+        if (!Schema::hasTable('withdraw_requests')) {
+            Schema::create('withdraw_requests', function (Blueprint $table) {
+                $table->integer('req_id', true);
+                $table->string('eti_id')->index('reqkey2');
+                $table->integer('req_by')->index('reqkey1');
+                $table->string('bank');
+                $table->string('ac_no');
+                $table->string('ac_name');
+                $table->text('description');
+                $table->date('date');
+                $table->double('amount');
+                $table->integer('req_status')->nullable();
+                $table->dateTime('created_at')->useCurrent();
+                $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            });
+        }
     }
 
     /**

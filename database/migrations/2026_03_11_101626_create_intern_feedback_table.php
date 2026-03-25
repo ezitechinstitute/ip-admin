@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('intern_feedback', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->string('eti_id');
-            $table->text('feedback_text');
-            $table->timestamp('created_at')->useCurrent();
-            $table->enum('status', ['Open', 'Resolved'])->nullable()->default('Open');
-            $table->timestamp('resolved_at')->nullable();
-        });
+        if (!Schema::hasTable('intern_feedback')) {
+            Schema::create('intern_feedback', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('eti_id');
+                $table->text('feedback_text');
+                $table->timestamp('created_at')->useCurrent();
+                $table->enum('status', ['Open', 'Resolved'])->nullable()->default('Open');
+                $table->timestamp('resolved_at')->nullable();
+            });
+        }
     }
 
     /**

@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('supervisor_permissions', function (Blueprint $table) {
-            $table->integer('sup_p_id', true);
-            $table->integer('manager_id')->index('skey');
-            $table->integer('tech_id')->index('tkey');
-            $table->enum('internship_type', ['Remote', 'Onsite']);
-            $table->dateTime('created_at')->useCurrent();
-        });
+        if (!Schema::hasTable('supervisor_permissions')) {
+            Schema::create('supervisor_permissions', function (Blueprint $table) {
+                $table->integer('sup_p_id', true);
+                $table->integer('manager_id')->index('skey');
+                $table->integer('tech_id')->index('tkey');
+                $table->enum('internship_type', ['Remote', 'Onsite']);
+                $table->dateTime('created_at')->useCurrent();
+            });
+        }
     }
 
     /**

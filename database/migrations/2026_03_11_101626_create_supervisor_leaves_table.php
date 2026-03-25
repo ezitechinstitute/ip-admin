@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('supervisor_leaves', function (Blueprint $table) {
-            $table->bigIncrements('leave_id');
-            $table->string('supervisor_id');
-            $table->string('name');
-            $table->string('email');
-            $table->date('from_date');
-            $table->date('to_date');
-            $table->text('reason');
-            $table->integer('days');
-            $table->tinyInteger('leave_status')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('supervisor_leaves')) {
+            Schema::create('supervisor_leaves', function (Blueprint $table) {
+                $table->bigIncrements('leave_id');
+                $table->string('supervisor_id');
+                $table->string('name');
+                $table->string('email');
+                $table->date('from_date');
+                $table->date('to_date');
+                $table->text('reason');
+                $table->integer('days');
+                $table->tinyInteger('leave_status')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

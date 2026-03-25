@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('interview_test', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->string('title');
-            $table->text('description');
-            $table->string('technology');
-        });
+        if (!Schema::hasTable('interview_test')) {
+            Schema::create('interview_test', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('title');
+                $table->text('description');
+                $table->string('technology');
+            });
+        }
     }
 
     /**

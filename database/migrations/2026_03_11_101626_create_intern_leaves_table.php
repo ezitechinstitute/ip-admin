@@ -11,21 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('intern_leaves', function (Blueprint $table) {
-            $table->integer('leave_id', true);
-            $table->string('eti_id')->index('etikey');
-            $table->string('name');
-            $table->string('email');
-            $table->date('from_date');
-            $table->date('to_date');
-            $table->text('reason');
-            $table->string('technology');
-            $table->string('intern_type');
-            $table->integer('days');
-            $table->boolean('leave_status')->nullable();
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
-        });
+        if (!Schema::hasTable('intern_leaves')) {
+            Schema::create('intern_leaves', function (Blueprint $table) {
+                $table->integer('leave_id', true);
+                $table->string('eti_id')->index('etikey');
+                $table->string('name');
+                $table->string('email');
+                $table->date('from_date');
+                $table->date('to_date');
+                $table->text('reason');
+                $table->string('technology');
+                $table->string('intern_type');
+                $table->integer('days');
+                $table->boolean('leave_status')->nullable();
+                $table->dateTime('created_at')->useCurrent();
+                $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            });
+        }
     }
 
     /**
