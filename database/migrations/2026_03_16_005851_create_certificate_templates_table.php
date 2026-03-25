@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('certificate_templates', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->text('content');
-            $table->enum('certificate_type', ['internship', 'course_completion'])->default('internship');
-            $table->unsignedBigInteger('manager_id')->nullable();
-            $table->boolean('status')->default(1);
-            $table->boolean('is_deleted')->default(0);
-            $table->timestamps();
+        if (!Schema::hasTable('certificate_templates')) {
+            Schema::create('certificate_templates', function (Blueprint $table) {
+                $table->id();
+                $table->string('title');
+                $table->text('content');
+                $table->enum('certificate_type', ['internship', 'course_completion'])->default('internship');
+                $table->unsignedBigInteger('manager_id')->nullable();
+                $table->boolean('status')->default(1);
+                $table->boolean('is_deleted')->default(0);
+                $table->timestamps();
 
-            $table->index('manager_id');
-        });
+                $table->index('manager_id');
+            });
+        }
     }
 
     /**

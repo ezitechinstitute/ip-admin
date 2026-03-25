@@ -8,30 +8,32 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('technology_curriculum', function (Blueprint $table) {
-            $table->id('curriculum_id'); // BIGINT UNSIGNED primary key
+        if (!Schema::hasTable('technology_curriculum')) {
+            Schema::create('technology_curriculum', function (Blueprint $table) {
+                $table->id('curriculum_id'); // BIGINT UNSIGNED primary key
 
-            // tech_id matches technologies.tech_id exactly
-            $table->integer('tech_id'); 
-            $table->foreign('tech_id')
-                  ->references('tech_id')
-                  ->on('technologies')
-                  ->onDelete('cascade');
+                // tech_id matches technologies.tech_id exactly
+                $table->integer('tech_id'); 
+                $table->foreign('tech_id')
+                      ->references('tech_id')
+                      ->on('technologies')
+                      ->onDelete('cascade');
 
-            $table->string('curriculum_name');
-            $table->text('description')->nullable();
-            $table->integer('total_projects')->default(0);
-            $table->integer('total_duration_weeks')->default(0);
-            $table->boolean('status')->default(1);
+                $table->string('curriculum_name');
+                $table->text('description')->nullable();
+                $table->integer('total_projects')->default(0);
+                $table->integer('total_duration_weeks')->default(0);
+                $table->boolean('status')->default(1);
 
-            // created_by matches manager_accounts.manager_id exactly
-            $table->integer('created_by'); 
-            $table->foreign('created_by')
-                  ->references('manager_id')
-                  ->on('manager_accounts');
+                // created_by matches manager_accounts.manager_id exactly
+                $table->integer('created_by'); 
+                $table->foreign('created_by')
+                      ->references('manager_id')
+                      ->on('manager_accounts');
 
-            $table->timestamps();
-        });
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void

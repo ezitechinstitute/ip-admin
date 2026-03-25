@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payments', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->integer('invoice_id')->index('invoice_id');
-            $table->date('payment_date');
-            $table->decimal('amount_paid', 10);
-        });
+        if (!Schema::hasTable('payments')) {
+            Schema::create('payments', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->integer('invoice_id')->index('invoice_id');
+                $table->date('payment_date');
+                $table->decimal('amount_paid', 10);
+            });
+        }
     }
 
     /**

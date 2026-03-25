@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('curriculum_templates', function (Blueprint $table) {
-            $table->id();
-            $table->string('technology');
-            $table->string('task_title');
-            $table->text('task_description');
-            $table->integer('task_duration_days')->default(1);
-            $table->decimal('task_mark', 8, 2);
-            $table->string('milestone_title')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('curriculum_templates')) {
+            Schema::create('curriculum_templates', function (Blueprint $table) {
+                $table->id();
+                $table->string('technology');
+                $table->string('task_title');
+                $table->text('task_description');
+                $table->integer('task_duration_days')->default(1);
+                $table->decimal('task_mark', 8, 2);
+                $table->string('milestone_title')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

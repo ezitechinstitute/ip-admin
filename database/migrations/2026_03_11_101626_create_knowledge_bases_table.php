@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('knowledge_bases', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('title');
-            $table->string('category');
-            $table->longText('content');
-            $table->json('visibility');
-            $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->unsignedBigInteger('created_by')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('knowledge_bases')) {
+            Schema::create('knowledge_bases', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->string('title');
+                $table->string('category');
+                $table->longText('content');
+                $table->json('visibility');
+                $table->enum('status', ['active', 'inactive'])->default('active');
+                $table->unsignedBigInteger('created_by')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

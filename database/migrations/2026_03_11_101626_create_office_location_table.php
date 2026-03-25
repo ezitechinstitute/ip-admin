@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('office_location', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->double('lati');
-            $table->double('longi');
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('udated_at')->useCurrentOnUpdate()->useCurrent();
-        });
+        if (!Schema::hasTable('office_location')) {
+            Schema::create('office_location', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->double('lati');
+                $table->double('longi');
+                $table->dateTime('created_at')->useCurrent();
+                $table->dateTime('udated_at')->useCurrentOnUpdate()->useCurrent();
+            });
+        }
     }
 
     /**

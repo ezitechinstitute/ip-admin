@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('supervisor_activity_logs', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->integer('supervisor_id');
-            $table->integer('manager_id');
-            $table->string('action');
-            $table->text('details')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('supervisor_activity_logs')) {
+            Schema::create('supervisor_activity_logs', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->integer('supervisor_id');
+                $table->integer('manager_id');
+                $table->string('action');
+                $table->text('details')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

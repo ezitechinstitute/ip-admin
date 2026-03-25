@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('supervisor_complaints', function (Blueprint $table) {
-            $table->integer('id', true);
-            $table->integer('eti_id')->index('eti_id');
-            $table->string('complaint_name');
-            $table->text('complaint_text');
-            $table->timestamp('created_at')->useCurrent();
-            $table->enum('status', ['Pending', 'Accepted', 'Rejected'])->default('Pending');
-        });
+        if (!Schema::hasTable('supervisor_complaints')) {
+            Schema::create('supervisor_complaints', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->integer('eti_id')->index('eti_id');
+                $table->string('complaint_name');
+                $table->text('complaint_text');
+                $table->timestamp('created_at')->useCurrent();
+                $table->enum('status', ['Pending', 'Accepted', 'Rejected'])->default('Pending');
+            });
+        }
     }
 
     /**

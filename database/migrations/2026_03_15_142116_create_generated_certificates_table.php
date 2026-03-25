@@ -11,33 +11,35 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('generated_certificates', function (Blueprint $table) {
+        if (!Schema::hasTable('generated_certificates')) {
+            Schema::create('generated_certificates', function (Blueprint $table) {
 
-            $table->id();
+                $table->id();
 
-            $table->integer('intern_id');
+                $table->integer('intern_id');
 
-            $table->unsignedBigInteger('template_id');
+                $table->unsignedBigInteger('template_id');
 
-            $table->string('certificate_path')->nullable();
+                $table->string('certificate_path')->nullable();
 
-            $table->enum('status', ['pending','approved','rejected'])->default('pending');
+                $table->enum('status', ['pending','approved','rejected'])->default('pending');
 
-            $table->unsignedBigInteger('approved_by')->nullable();
+                $table->unsignedBigInteger('approved_by')->nullable();
 
-            $table->timestamps();
+                $table->timestamps();
 
-            $table->foreign('intern_id')
-                ->references('int_id')
-                ->on('intern_accounts')
-                ->onDelete('cascade');
+                $table->foreign('intern_id')
+                    ->references('int_id')
+                    ->on('intern_accounts')
+                    ->onDelete('cascade');
 
-            $table->foreign('template_id')
-                ->references('id')
-                ->on('certificate_templates')
-                ->onDelete('cascade');
+                $table->foreign('template_id')
+                    ->references('id')
+                    ->on('certificate_templates')
+                    ->onDelete('cascade');
 
-        });
+            });
+        }
     }
 
     /**

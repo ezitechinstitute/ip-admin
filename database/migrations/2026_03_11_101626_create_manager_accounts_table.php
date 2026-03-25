@@ -11,23 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('manager_accounts', function (Blueprint $table) {
-            $table->integer('manager_id', true);
-            $table->string('eti_id');
-            $table->text('image');
-            $table->string('name');
-            $table->string('email');
-            $table->string('contact');
-            $table->string('join_date');
-            $table->string('password');
-            $table->double('comission')->default(1000);
-            $table->string('department');
-            $table->boolean('status')->default(true);
-            $table->string('loginas')->default('Manager');
-            $table->integer('emergency_contact');
-            $table->dateTime('created_at')->useCurrent();
-            $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
-        });
+        if (!Schema::hasTable('manager_accounts')) {
+            Schema::create('manager_accounts', function (Blueprint $table) {
+                $table->integer('manager_id', true);
+                $table->string('eti_id');
+                $table->text('image');
+                $table->string('name');
+                $table->string('email');
+                $table->string('contact');
+                $table->string('join_date');
+                $table->string('password');
+                $table->double('comission')->default(1000);
+                $table->string('department');
+                $table->boolean('status')->default(true);
+                $table->string('loginas')->default('Manager');
+                $table->integer('emergency_contact');
+                $table->dateTime('created_at')->useCurrent();
+                $table->dateTime('updated_at')->useCurrentOnUpdate()->useCurrent();
+            });
+        }
     }
 
     /**

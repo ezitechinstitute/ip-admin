@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('manager_roles', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->integer('manager_id')->index('manager_roles_manager_id_foreign');
-            $table->string('permission_key');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('manager_roles')) {
+            Schema::create('manager_roles', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->integer('manager_id')->index('manager_roles_manager_id_foreign');
+                $table->string('permission_key');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

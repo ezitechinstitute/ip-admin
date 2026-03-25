@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('intern_evaluations', function (Blueprint $table) {
-            $table->id();
-            $table->string('eti_id'); // From intern_accounts
-            $table->integer('supervisor_id'); // From manager_accounts
-            $table->string('month');
-            $table->integer('technical_skills')->default(0);
-            $table->integer('problem_solving')->default(0);
-            $table->integer('communication')->default(0);
-            $table->integer('task_completion')->default(0);
-            $table->decimal('overall_score', 5, 2)->default(0.00);
-            $table->text('remarks')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('intern_evaluations')) {
+            Schema::create('intern_evaluations', function (Blueprint $table) {
+                $table->id();
+                $table->string('eti_id'); // From intern_accounts
+                $table->integer('supervisor_id'); // From manager_accounts
+                $table->string('month');
+                $table->integer('technical_skills')->default(0);
+                $table->integer('problem_solving')->default(0);
+                $table->integer('communication')->default(0);
+                $table->integer('task_completion')->default(0);
+                $table->decimal('overall_score', 5, 2)->default(0.00);
+                $table->text('remarks')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

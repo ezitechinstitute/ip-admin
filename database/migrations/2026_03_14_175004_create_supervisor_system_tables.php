@@ -21,15 +21,17 @@ return new class extends Migration
             });
         }
 
-        Schema::create('supervisor_notifications', function (Blueprint $table) {
-            $table->id();
-            $table->integer('supervisor_id');
-            $table->string('type');
-            $table->string('eti_id')->nullable();
-            $table->text('message');
-            $table->boolean('is_read')->default(false);
-            $table->timestamp('created_at')->useCurrent();
-        });
+        if (!Schema::hasTable('supervisor_notifications')) {
+            Schema::create('supervisor_notifications', function (Blueprint $table) {
+                $table->id();
+                $table->integer('supervisor_id');
+                $table->string('type');
+                $table->string('eti_id')->nullable();
+                $table->text('message');
+                $table->boolean('is_read')->default(false);
+                $table->timestamp('created_at')->useCurrent();
+            });
+        }
     }
 
     /**

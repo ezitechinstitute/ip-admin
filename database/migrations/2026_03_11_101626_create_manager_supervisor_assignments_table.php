@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('manager_supervisor_assignments', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->integer('manager_id');
-            $table->integer('supervisor_id');
-            $table->timestamps();
+        if (!Schema::hasTable('manager_supervisor_assignments')) {
+            Schema::create('manager_supervisor_assignments', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->integer('manager_id');
+                $table->integer('supervisor_id');
+                $table->timestamps();
 
-            $table->unique(['manager_id', 'supervisor_id']);
-        });
+                $table->unique(['manager_id', 'supervisor_id']);
+            });
+        }
     }
 
     /**
