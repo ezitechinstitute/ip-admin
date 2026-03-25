@@ -12,6 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('intern_projects')) {
+            // Drop constraints first if they exist
+            Schema::table('intern_projects', function (Blueprint $table) {
+                try { $table->dropForeign('internkey'); } catch (\Exception $e) {}
+                try { $table->dropForeign('supkey'); } catch (\Exception $e) {}
+            });
+            
+            // Add constraints fresh
             Schema::table('intern_projects', function (Blueprint $table) {
                 $table->foreign(['eti_id'], 'internkey')->references(['eti_id'])->on('intern_accounts')->onUpdate('restrict')->onDelete('restrict');
                 $table->foreign(['assigned_by'], 'supkey')->references(['manager_id'])->on('manager_accounts')->onUpdate('restrict')->onDelete('restrict');
