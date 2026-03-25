@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('manager_complaints', function (Blueprint $table) {
-            $table->foreign(['eti_id'], 'manager_complaints_ibfk_1')->references(['int_id'])->on('intern_accounts')->onUpdate('restrict')->onDelete('cascade');
-        });
+        if (Schema::hasTable('manager_complaints')) {
+            Schema::table('manager_complaints', function (Blueprint $table) {
+                $table->foreign(['eti_id'], 'manager_complaints_ibfk_1')->references(['int_id'])->on('intern_accounts')->onUpdate('restrict')->onDelete('cascade');
+            });
+        }
     }
 
     /**

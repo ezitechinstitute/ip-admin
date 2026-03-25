@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('offer_letter_templates', function (Blueprint $table) {
-            $table->foreign(['manager_id'])->references(['manager_id'])->on('manager_accounts')->onUpdate('restrict')->onDelete('restrict');
-        });
+        if (Schema::hasTable('offer_letter_templates')) {
+            Schema::table('offer_letter_templates', function (Blueprint $table) {
+                $table->foreign(['manager_id'])->references(['manager_id'])->on('manager_accounts')->onUpdate('restrict')->onDelete('restrict');
+            });
+        }
     }
 
     /**

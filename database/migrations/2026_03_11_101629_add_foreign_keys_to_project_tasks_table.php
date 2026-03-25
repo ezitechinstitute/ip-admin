@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('project_tasks', function (Blueprint $table) {
-            $table->foreign(['eti_id'], 'intkey')->references(['eti_id'])->on('intern_accounts')->onUpdate('restrict')->onDelete('restrict');
-            $table->foreign(['project_id'], 'projkey')->references(['project_id'])->on('intern_projects')->onUpdate('restrict')->onDelete('restrict');
-            $table->foreign(['assigned_by'], 'superkey')->references(['manager_id'])->on('manager_accounts')->onUpdate('restrict')->onDelete('restrict');
-        });
+        if (Schema::hasTable('project_tasks')) {
+            Schema::table('project_tasks', function (Blueprint $table) {
+                $table->foreign(['eti_id'], 'intkey')->references(['eti_id'])->on('intern_accounts')->onUpdate('restrict')->onDelete('restrict');
+                $table->foreign(['project_id'], 'projkey')->references(['project_id'])->on('intern_projects')->onUpdate('restrict')->onDelete('restrict');
+                $table->foreign(['assigned_by'], 'superkey')->references(['manager_id'])->on('manager_accounts')->onUpdate('restrict')->onDelete('restrict');
+            });
+        }
     }
 
     /**
