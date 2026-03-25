@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up()
         {
-            Schema::table('manager_accounts', function (Blueprint $table) {
-                $table->decimal('balance', 10, 2)->default(0);
-            });
+            if (Schema::hasTable('manager_accounts')) {
+                Schema::table('manager_accounts', function (Blueprint $table) {
+                    $table->decimal('balance', 10, 2)->default(0);
+                });
+            }
         }
 
         public function down()

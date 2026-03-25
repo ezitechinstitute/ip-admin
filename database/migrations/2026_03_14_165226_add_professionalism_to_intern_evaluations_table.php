@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('intern_evaluations', function (Blueprint $table) {
-            $table->integer('professionalism')->default(0)->after('communication');
-        });
+        if (Schema::hasTable('intern_evaluations')) {
+            Schema::table('intern_evaluations', function (Blueprint $table) {
+                $table->integer('professionalism')->default(0)->after('communication');
+            });
+        }
     }
 
     /**

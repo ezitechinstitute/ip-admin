@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('withdraw_requests', function (Blueprint $table) {
-            $table->string('period')->nullable();
-        });
+        if (Schema::hasTable('withdraw_requests')) {
+            Schema::table('withdraw_requests', function (Blueprint $table) {
+                $table->string('period')->nullable();
+            });
+        }
     }
 
     /**

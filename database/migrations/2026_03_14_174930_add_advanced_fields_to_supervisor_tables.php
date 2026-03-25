@@ -11,15 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('intern_projects', function (Blueprint $table) {
-            $table->string('tech_stack')->nullable()->after('title');
-            $table->string('difficulty_level')->nullable()->after('tech_stack');
-            // Adding more statuses to pstatus enum logic (using string since it's mostly string in DB)
-        });
+        if (Schema::hasTable('intern_projects')) {
+            Schema::table('intern_projects', function (Blueprint $table) {
+                $table->string('tech_stack')->nullable()->after('title');
+                $table->string('difficulty_level')->nullable()->after('tech_stack');
+                // Adding more statuses to pstatus enum logic (using string since it's mostly string in DB)
+            });
+        }
 
-        Schema::table('intern_accounts', function (Blueprint $table) {
-            $table->enum('internship_type', ['Remote', 'Onsite', 'Hybrid'])->default('Remote')->after('int_technology');
-        });
+        if (Schema::hasTable('intern_accounts')) {
+            Schema::table('intern_accounts', function (Blueprint $table) {
+                $table->enum('internship_type', ['Remote', 'Onsite', 'Hybrid'])->default('Remote')->after('int_technology');
+            });
+        }
     }
 
     /**

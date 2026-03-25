@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('intern_tasks', function (Blueprint $table) {
-            $table->boolean('penalty_flag')->default(false)->after('task_status');
-            $table->integer('code_quality_score')->nullable()->after('penalty_flag');
-            $table->text('remarks')->nullable()->after('review');
-        });
+        if (Schema::hasTable('intern_tasks')) {
+            Schema::table('intern_tasks', function (Blueprint $table) {
+                $table->boolean('penalty_flag')->default(false)->after('task_status');
+                $table->integer('code_quality_score')->nullable()->after('penalty_flag');
+                $table->text('remarks')->nullable()->after('review');
+            });
+        }
     }
 
     /**

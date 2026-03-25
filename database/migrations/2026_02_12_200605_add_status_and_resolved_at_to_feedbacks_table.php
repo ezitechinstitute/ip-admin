@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::table('intern_feedback', function (Blueprint $table) {
-        $table->enum('status', ['Open', 'Resolved'])->default('Open')->nullable();
-        $table->timestamp('resolved_at')->nullable();
-    });
+       if (Schema::hasTable('intern_feedback')) {
+           Schema::table('intern_feedback', function (Blueprint $table) {
+            $table->enum('status', ['Open', 'Resolved'])->default('Open')->nullable();
+            $table->timestamp('resolved_at')->nullable();
+        });
+       }
     }
 
     /**
