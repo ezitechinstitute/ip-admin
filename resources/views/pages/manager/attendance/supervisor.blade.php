@@ -74,7 +74,7 @@
                 </div>
 
                 <div class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
-                    <form method="GET" action="{{ route('manager.supervisor.attendance') }}" id="filterForm" class="d-flex gap-2">
+                    <form method="GET" action="{{ route('manager.attendance') }}" id="filterForm" class="d-flex gap-2">
                         <input type="text" id="attendanceDatePicker" name="date" class="form-control" style="width: 150px;" placeholder="Select Date" value="{{ request('date', date('Y-m-d')) }}">
                         
                         <select name="supervisor_id" id="supervisorFilter" class="form-select select2" style="min-width: 200px;">

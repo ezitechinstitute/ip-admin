@@ -48,6 +48,84 @@ class DashboardManagerController extends Controller
             if (!isset($statusCounts[$status])) $statusCounts[$status] = 0;
         }
 
-        return view('pages.manager.dashboard.dashboard', compact('manager', 'statusCounts'));
+        // ==================== KPI CARDS ====================
+        
+        // 4️⃣ Manager Shift Hours (from manager_accounts)
+        $managerHours = DB::table('manager_accounts')
+            ->where('manager_id', $manager->manager_id)
+            ->value('shift_hours') ?? 0;
+
+        // 5️⃣ Total Interns (under this manager)
+        $totalInterns = DB::table('intern_table')
+            ->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
+                $q->whereIn('technology', $allowedTechNames)
+                  ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
+            })
+            ->count();
+
+        // 6️⃣ Active Interns
+        $activeInterns = DB::table('intern_table')
+            ->where('status', 'Active')
+            ->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
+                $q->whereIn('technology', $allowedTechNames)
+                  ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
+            })
+            ->count();
+
+        // 7️⃣ Pending Interviews (status = 'Interview' but not yet completed)
+        $pendingInterviews = DB::table('intern_table')
+            ->where('status', 'Interview')
+            ->whereNull('interview_completed_at')
+            ->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
+                $q->whereIn('technology', $allowedTechNames)
+                  ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
+            })
+            ->count();
+
+        // 8️⃣ Pending Tests Review (status = 'Test' but not reviewed)
+        $pendingTests = DB::table('intern_table')
+            ->where('status', 'Test')
+            ->where('test_status', '!=', 'completed')
+            ->where(function($q) use ($allowedTechNames, $allowedInternTypes) {
+                $q->whereIn('technology', $allowedTechNames)
+                  ->whereIn(DB::raw('LOWER(intern_type)'), $allowedInternTypes);
+            })
+            ->count();
+
+        // 9️⃣ Ongoing Projects (not completed, not expired)
+        // Note: intern_projects table doesn't have manager_id field
+        // Counting all ongoing projects across all supervisors
+        $ongoingProjects = DB::table('intern_projects')
+            ->where('pstatus', '!=', 'Completed')
+            ->where(function($q) {
+                $q->whereNull('end_date')
+                  ->orWhereRaw("STR_TO_DATE(end_date, '%Y-%m-%d') > CURDATE()");
+            })
+            ->count();
+
+        // 🔟 Expired Projects (end_date < now)
+        $expiredProjects = DB::table('intern_projects')
+            ->whereRaw("STR_TO_DATE(end_date, '%Y-%m-%d') < CURDATE()")
+            ->where('pstatus', '!=', 'Completed')
+            ->count();
+
+        // 1️⃣1️⃣ Monthly Revenue (current month)
+        $currentMonth = now()->startOfMonth();
+        $monthlyRevenue = DB::table('transactions')
+            ->join('invoices', 'transactions.invoice_id', '=', 'invoices.id')
+            ->where('invoices.manager_id', $manager->manager_id)
+            ->whereBetween('transactions.created_at', [$currentMonth, now()])
+            ->sum('transactions.amount') ?? 0;
+
+        // 1️⃣2️⃣ Commission Earned (current month)
+        $commissionEarned = DB::table('manager_accounts')
+            ->where('manager_id', $manager->manager_id)
+            ->value('commission') ?? 0;
+
+        return view('pages.manager.dashboard.dashboard', compact(
+            'manager', 'statusCounts', 'managerHours', 'totalInterns', 'activeInterns',
+            'pendingInterviews', 'pendingTests', 'ongoingProjects', 'expiredProjects',
+            'monthlyRevenue', 'commissionEarned'
+        ));
     }
 }
