@@ -769,7 +769,9 @@ Route::get('/communication', [CommunicationController::class, 'index'])->name('m
 Route::post('/send-message', [CommunicationController::class, 'sendMessage'])->name('manager.send.message');
 
 // Attendance Routes
-Route::get('/attendance', [ManagerAttendanceController::class, 'supervisorAttendance'])->name('manager.attendance');
+Route::get('/attendance/manage', [ManagerAttendanceController::class, 'attendanceManagement'])->name('manager.attendance.manage');
+Route::get('/attendance', [ManagerAttendanceController::class, 'attendanceManagement'])->name('manager.attendance'); // Points to new unified view
+Route::get('/attendance/interns', [ManagerAttendanceController::class, 'internAttendance'])->name('manager.attendance.interns');
 Route::get('/attendance-calendar', [ManagerAttendanceController::class, 'attendanceCalendar'])->name('manager.attendance.calendar');
 
 // Leave Management Routes (Intern & Supervisor)
