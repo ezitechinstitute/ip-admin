@@ -268,80 +268,80 @@ $configData = Helper::appClasses();
 
         <div class="row gy-8">
 
-          <!-- Manager Shift -->
+          <!-- New Applications -->
           <div class="col-md-6 col-6">
             <div class="d-flex align-items-center">
               <div class="badge rounded bg-label-primary me-4 p-2">
-<i class="ti tabler-file-text icon-lg"></i>
+                <i class="ti tabler-file-text icon-lg"></i>
               </div>
               <div class="card-info">
-                <h5 class="mb-0 counter">{{ $managerHours ?? 14 }}</h5>
+                <h5 class="mb-0 counter">{{ $statusCounts['Contact'] ?? 0 }}</h5>
                 <small>New Applications</small>
               </div>
             </div>
           </div>
 
-          <!-- Total Interns -->
+          <!-- Contacted -->
           <div class="col-md-6 col-6">
             <div class="d-flex align-items-center">
               <div class="badge rounded bg-label-info me-4 p-2">
                 <i class="ti tabler-users-group icon-lg"></i>
               </div>
               <div class="card-info">
-                <h5 class="mb-0 counter">{{ $totalInterns ?? 0 }}</h5>
-                <small>Contacted</small>
+                <h5 class="mb-0 counter">{{ $pendingInterviews ?? 0 }}</h5>
+                <small>Interview Scheduled</small>
               </div>
             </div>
           </div>
 
-          <!-- Pending Interviews -->
+          <!-- Test Assigned -->
           <div class="col-md-6 col-6">
             <div class="d-flex align-items-center">
               <div class="badge rounded bg-label-warning me-4 p-2">
                 <i class="ti tabler-user-search icon-lg"></i>
               </div>
               <div class="card-info">
-                <h5 class="mb-0 counter">{{ $pendingInterviews ?? 0 }}</h5>
+                <h5 class="mb-0 counter">{{ $statusCounts['Test'] ?? 0 }}</h5>
                 <small>Test Assigned</small>
               </div>
             </div>
           </div>
 
-          <!-- Pending Test Reviews -->
+          <!-- Test Completed -->
           <div class="col-md-6 col-6">
             <div class="d-flex align-items-center">
               <div class="badge rounded bg-label-danger me-4 p-2">
                 <i class="ti tabler-clipboard-check icon-lg"></i>
               </div>
               <div class="card-info">
-                <h5 class="mb-0 counter">{{ $pendingTests ?? 0 }}</h5>
+                <h5 class="mb-0 counter">{{ $statusCounts['Completed'] ?? 0 }}</h5>
                 <small>Test Completed</small>
               </div>
             </div>
           </div>
 
-          <!-- Ongoing Projects -->
+          <!-- Active Interns (Selected) -->
           <div class="col-md-6 col-6">
             <div class="d-flex align-items-center">
               <div class="badge rounded bg-label-success me-4 p-2">
-                <i class="ti tabler-briefcase icon-lg"></i>
+                <i class="ti tabler-user-check icon-lg"></i>
               </div>
               <div class="card-info">
-                <h5 class="mb-0 counter">{{ $ongoingProjects ?? 0 }}</h5>
-                <small>Interview Scheduled</small>
+                <h5 class="mb-0 counter">{{ $activeInterns ?? 0 }}</h5>
+                <small>Selected (Active)</small>
               </div>
             </div>
           </div>
 
-          <!-- Revenue -->
+          <!-- Monthly Commission -->
           <div class="col-md-6 col-6">
             <div class="d-flex align-items-center">
               <div class="badge rounded bg-label-dark me-4 p-2">
-<i class="ti tabler-user-check icon-lg"></i>
+                <i class="ti tabler-currency-dollar icon-lg"></i>
               </div>
               <div class="card-info">
-                <h5 class="mb-0 counter">{{ $monthlyRevenue ?? 0 }}</h5>
-                <small>Selected</small>
+                <h5 class="mb-0 counter">PKR {{ $commissionEarned ?? 0 }}</h5>
+                <small>Commission Earned</small>
               </div>
             </div>
           </div>
