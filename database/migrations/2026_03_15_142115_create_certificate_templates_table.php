@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('certificate_templates', function (Blueprint $table) {
-            $table->id();
-            $table->enum('type', ['internship', 'course']);
-            $table->string('template_path');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('certificate_templates')) {
+            Schema::create('certificate_templates', function (Blueprint $table) {
+                $table->id();
+                $table->enum('type', ['internship', 'course']);
+                $table->string('template_path');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

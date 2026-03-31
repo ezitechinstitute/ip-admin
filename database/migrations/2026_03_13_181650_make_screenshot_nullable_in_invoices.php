@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('invoices', function (Blueprint $table) {
-            $table->string('screenshot')->nullable()->change();
-        });
+        if (Schema::hasTable('invoices')) {
+            Schema::table('invoices', function (Blueprint $table) {
+                $table->string('screenshot')->nullable()->change();
+            });
+        }
     }
 
     public function down()

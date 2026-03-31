@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('password_otp_resets', function (Blueprint $table) {
-        $table->id();
-        $table->string('email')->index(); 
-        $table->string('otp');           // 6-digit numeric code
-        $table->timestamp('created_at')->nullable(); 
-    });
+        if (!Schema::hasTable('password_otp_resets')) {
+            Schema::create('password_otp_resets', function (Blueprint $table) {
+            $table->id();
+            $table->string('email')->index(); 
+            $table->string('otp');           // 6-digit numeric code
+            $table->timestamp('created_at')->nullable(); 
+        });
+        }
     }
 
     /**

@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\ManagerAccount;
+use App\Models\ManagersAccount;
 
 class ManagerRole extends Model
 {
@@ -20,6 +20,6 @@ class ManagerRole extends Model
    
     public function manager()
     {
-        return $this->belongsTo(ManagerAccount::class, 'manager_id', 'manager_id');
+        return $this->belongsTo(ManagersAccount::class, 'manager_id', 'manager_id');
     }
 }

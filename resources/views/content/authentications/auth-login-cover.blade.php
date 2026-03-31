@@ -27,6 +27,11 @@ $configData = Helper::appClasses();
 
 @section('content')
 <div class="authentication-wrapper authentication-cover">
+  <div style="position: absolute; top: 24px; right: 32px; z-index: 10;">
+    <a href="{{ url('/admin/internship-registration') }}" class="btn btn-outline-primary">
+      Ezitech Internship Registration
+    </a>
+  </div>
   <!-- Logo -->
   <a href="{{ url('/') }}" class="app-brand auth-cover-brand">
     @php

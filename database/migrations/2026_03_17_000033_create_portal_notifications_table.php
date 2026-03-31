@@ -11,21 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('portal_notifications', function (Blueprint $table) {
+        if (!Schema::hasTable('portal_notifications')) {
+            Schema::create('portal_notifications', function (Blueprint $table) {
 
-            $table->id();
+                $table->id();
 
-            $table->unsignedBigInteger('user_id');
+                $table->unsignedBigInteger('user_id');
 
-            $table->string('title');
+                $table->string('title');
 
-            $table->text('message');
+                $table->text('message');
 
-            $table->boolean('is_read')->default(false);
+                $table->boolean('is_read')->default(false);
 
-            $table->timestamps();
+                $table->timestamps();
 
-        });
+            });
+        }
     }
 
     /**

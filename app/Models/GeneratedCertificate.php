@@ -2,6 +2,8 @@
 
 namespace App\Models;
 use App\Models\InternAccount;
+use App\Models\User;
+use App\Models\CertificateTemplate;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,7 +12,7 @@ class GeneratedCertificate extends Model
     protected $table = 'generated_certificates';
 
     protected $fillable = [
-        'user_id',
+        'intern_id',
         'template_id',
         'certificate_path',
         'status',
@@ -21,10 +23,10 @@ class GeneratedCertificate extends Model
         return $this->belongsTo(InternAccount::class, 'intern_id', 'int_id');
     }
 
-    public function user()
-    {
-        return $this->belongsTo(User::class,'user_id');
-    }
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class,'user_id');
+    // }
 
     public function template()
     {

@@ -11,26 +11,28 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('messages', function (Blueprint $table) {
+        if (!Schema::hasTable('messages')) {
+            Schema::create('messages', function (Blueprint $table) {
 
-            $table->id();
+                $table->id();
 
-            $table->unsignedBigInteger('manager_id');
+                $table->unsignedBigInteger('manager_id');
 
-            $table->enum('target_type',[
-                'all_interns',
-                'technology',
-                'supervisor'
-            ]);
+                $table->enum('target_type',[
+                    'all_interns',
+                    'technology',
+                    'supervisor'
+                ]);
 
-            $table->string('target_value')->nullable();
+                $table->string('target_value')->nullable();
 
-            $table->string('title');
+                $table->string('title');
 
-            $table->text('message');
+                $table->text('message');
 
-            $table->timestamps();
-        });
+                $table->timestamps();
+            });
+        }
     }
 
     /**

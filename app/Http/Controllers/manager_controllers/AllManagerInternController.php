@@ -25,23 +25,18 @@ class AllManagerInternController extends Controller
 
     // 1. English: Optimized Permission Fetching (Using pluck directly for speed)
     $cacheKey = 'mgr_perms_' . $manager->manager_id;
-    // $permissions = cache()->remember($cacheKey, 3600, function() use ($manager) {
-    //     return DB::table('manager_permissions')
-    //         ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
-    //         ->where('manager_permissions.manager_id', $manager->manager_id)
-    //         ->where('technologies.status', 1)
-    //         ->select('technologies.technology', 'manager_permissions.interview_type')
-    //         ->get();
-    // });
-    $permissions = DB::table('manager_permissions')
+    $permissions = cache()->remember($cacheKey, 3600, function() use ($manager) {
+        return DB::table('manager_permissions')
             ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
             ->where('manager_permissions.manager_id', $manager->manager_id)
             ->where('technologies.status', 1)
             ->select('technologies.technology', 'manager_permissions.interview_type')
             ->get();
+    });
 
     $allowedTechNames = $permissions->pluck('technology')->unique()->toArray();
     $allowedInternTypes = $permissions->pluck('interview_type')->map(fn($t) => trim($t))->unique()->toArray();
+
     // 2. English: Base Query setup (Keeping only essential columns)
     $query = DB::table('intern_table')
         ->select('id', 'name', 'email', 'technology', 'intern_type', 'status', 'created_at', 'image', 'phone', 'city', 'join_date')
@@ -783,7 +778,14 @@ public function completed(Request $request)
                      ->paginate($perPage)
                      ->withQueryString();
 
-    return view('pages.manager.all-interns.completed', compact('interns', 'allowedTechNames', 'perPage'));
+    $internIds = $interns->pluck('id')->toArray();
+    $certificateRequests = DB::table('certificate_requests')
+        ->whereIn('intern_id', $internIds)
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->keyBy('intern_id');
+
+    return view('pages.manager.all-interns.completed', compact('interns', 'allowedTechNames', 'perPage', 'certificateRequests'));
 }
 
 
@@ -908,7 +910,7 @@ public function active(Request $request)
         ->get();
 
     $allowedTechNames = $allowedTechsData->pluck('technology')->unique()->toArray();
-    // dd($allowedTechNames);
+
     // Pagination limit
     $pageLimitSet = AdminSetting::first();
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
@@ -1203,24 +1205,6 @@ public function remove($id)
 }
 
 
-// public function updateStatus(Request $request)
-// {
-//     $request->validate([
-//         'id' => 'required|exists:intern_table,id',
-//         'status' => 'required|in:Active,Interview,Contact,Test,Completed,Removed'
-//     ]);
-
-//     try {
-//         // English comments: Use the Model directly
-//         $intern = \App\Models\Intern::findOrFail($request->id);
-//         $intern->status = $request->status;
-//         $intern->save();
-
-//         return redirect()->back()->with('success', 'Status updated successfully!');
-//     } catch (\Exception $e) {
-//         return redirect()->back()->withErrors(['error' => 'Update failed: ' . $e->getMessage()]);
-//     }
-// }
 public function updateStatus(Request $request)
 {
     $request->validate([
@@ -1229,42 +1213,17 @@ public function updateStatus(Request $request)
     ]);
 
     try {
-
+        // English comments: Use the Model directly
         $intern = \App\Models\Intern::findOrFail($request->id);
         $intern->status = $request->status;
         $intern->save();
 
-        // If status is Completed → insert into intern_accounts
-        if ($request->status === 'Completed') {
-
-            // Check if already exists
-            $exists = DB::table('intern_accounts')
-                ->where('email', $intern->email)
-                ->exists();
-
-            if (!$exists) {
-
-                DB::table('intern_accounts')->insert([
-                    'eti_id' => $intern->id,
-                    'name' => $intern->name,
-                    'email' => $intern->email,
-                    'phone' => $intern->phone,
-                    'password' => bcrypt('123456'), // default password
-                    'int_technology' => $intern->technology,
-                    'start_date' => now()->format('Y-m-d'),
-                    'int_status' => 'Active',
-                    'review' => null,
-                    'reset_token' => null
-                ]);
-            }
-        }
-
         return redirect()->back()->with('success', 'Status updated successfully!');
-
     } catch (\Exception $e) {
         return redirect()->back()->withErrors(['error' => 'Update failed: ' . $e->getMessage()]);
     }
 }
+
     // English comments: Remove or Soft Delete the intern
     public function removeIntern($id)
     {
