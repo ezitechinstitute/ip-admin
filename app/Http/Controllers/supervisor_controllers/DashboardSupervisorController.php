@@ -4,126 +4,163 @@ namespace App\Http\Controllers\supervisor_controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Intern;
+use App\Models\SupervisorPermission;
 
 class DashboardSupervisorController extends Controller
 {
     public function index()
-{
-    $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
-    $supervisorTechnology = trim(session('manager_department'));
-    $today = now()->toDateString();
+    {
+        // ✅ Supervisor ID
+        $supervisorId = Auth::guard('manager')->id() ?? session('manager_id');
 
-    // KPI Cards
-    $totalAssignedInterns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-        ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-        })
-        ->count();
+        // ✅ Department from session
+        $supervisorTechnology = trim(session('manager_department'));
 
-    $activeInterns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-        ->whereRaw('LOWER(int_status) = ?', ['active'])
-        ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-        })
-        ->count();
+        // 🔥 Department → Technology Mapping
+        // $departmentMap = [
+        //     'Web Development' => ['Laravel', 'React', 'NodeJS'],
+        //     'AI' => ['Python'],
+        //     'Data Science' => ['Python'],
+        //     'Mobile Development' => ['Flutter', 'Android'],
+        // ];
 
-    // Selection Phase Counts (New)
-    $interviewCount = \App\Models\Intern::whereRaw('LOWER(status) = ?', ['interview'])
-        ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->whereRaw('LOWER(technology) = ?', [strtolower($supervisorTechnology)]);
-        })->count();
-    
-    $contactCount = \App\Models\Intern::whereRaw('LOWER(status) = ?', ['contact'])
-        ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->whereRaw('LOWER(technology) = ?', [strtolower($supervisorTechnology)]);
-        })->count();
+        // $technologies = $departmentMap[$supervisorTechnology] ?? [];
+        $permissionTechIds = SupervisorPermission::where('manager_id', $supervisorId)
+    ->pluck('tech_id')
+    ->toArray();
 
-    $testCount = \App\Models\Intern::whereRaw('LOWER(status) = ?', ['test'])
-        ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->whereRaw('LOWER(technology) = ?', [strtolower($supervisorTechnology)]);
-        })->count();
+$technologies = DB::table('technologies')
+    ->whereIn('tech_id', $permissionTechIds)
+    ->pluck('technology')
+    ->toArray();
 
-    $completedCount = \App\Models\Intern::whereRaw('LOWER(status) = ?', ['completed'])
-        ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->whereRaw('LOWER(technology) = ?', [strtolower($supervisorTechnology)]);
-        })->count();
+        $today = now()->toDateString();
 
-    $pendingTaskReviews = \Illuminate\Support\Facades\DB::table('intern_tasks')
-        ->where('assigned_by', $supervisorId)
-        ->whereNotNull('submit_description')
-        ->where(function ($query) {
-            $query->whereNull('task_approve')
-                  ->orWhere('task_approve', 0);
-        })
-        ->count();
+        // ================= KPI CARDS =================
 
-    $tasksCompletedToday = \Illuminate\Support\Facades\DB::table('intern_tasks')
-        ->where('assigned_by', $supervisorId)
-        ->whereRaw('LOWER(task_status) = ?', ['completed'])
-        ->whereDate('updated_at', $today)
-        ->count();
+        $totalAssignedInterns = DB::table('intern_accounts')
+            ->when(!empty($technologies), function ($query) use ($technologies) {
+                $query->whereIn('int_technology', $technologies);
+            })
+            ->count();
 
-    $overdueTasks = \Illuminate\Support\Facades\DB::table('intern_tasks')
-        ->where('assigned_by', $supervisorId)
-        ->whereDate('task_end', '<', $today)
-        ->whereRaw('LOWER(task_status) != ?', ['completed'])
-        ->count();
+        $activeInterns = DB::table('intern_accounts')
+            ->where('int_status', 'active')
+            ->when(!empty($technologies), function ($query) use ($technologies) {
+                $query->whereIn('int_technology', $technologies);
+            })
+            ->count();
 
-    $totalProjectsAssigned = \Illuminate\Support\Facades\DB::table('intern_projects')
-        ->where('assigned_by', $supervisorId)
-        ->count();
+        // ================= SELECTION PHASE =================
 
-    // Recent Activity
-    $newInterns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-        ->select('name', 'email', 'int_technology', 'start_date', 'int_status')
-        ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-        })
-        ->orderByDesc('int_id')
-        ->limit(5)
-        ->get();
+        $interviewCount = Intern::where('status', 'interview')
+            ->when(!empty($technologies), function ($query) use ($technologies) {
+                $query->whereIn('technology', $technologies);
+            })
+            ->count();
 
-    $taskSubmissions = \Illuminate\Support\Facades\DB::table('intern_tasks')
-        ->select('eti_id', 'task_title', 'task_status', 'updated_at', 'submit_description')
-        ->where('assigned_by', $supervisorId)
-        ->whereNotNull('submit_description')
-        ->orderByDesc('updated_at')
-        ->limit(5)
-        ->get();
+        $contactCount = Intern::where('status', 'contact')
+            ->when(!empty($technologies), function ($query) use ($technologies) {
+                $query->whereIn('technology', $technologies);
+            })
+            ->count();
 
-    $activityLogs = collect();
-    if (\Illuminate\Support\Facades\Schema::hasTable('supervisor_activity_logs')) {
-        $activityLogs = \Illuminate\Support\Facades\DB::table('supervisor_activity_logs')
-            ->where('supervisor_id', $supervisorId)
-            ->orderByDesc('created_at')
-            ->limit(10)
-            ->get();
-    }
+        $testCount = Intern::where('status', 'test')
+            ->when(!empty($technologies), function ($query) use ($technologies) {
+                $query->whereIn('technology', $technologies);
+            })
+            ->count();
 
-    $notifications = collect();
-    if (\Illuminate\Support\Facades\Schema::hasTable('supervisor_notifications')) {
-        $notifications = \Illuminate\Support\Facades\DB::table('supervisor_notifications')
-            ->where('supervisor_id', $supervisorId)
-            ->orderByDesc('created_at')
+        $completedCount = Intern::where('status', 'completed')
+            ->when(!empty($technologies), function ($query) use ($technologies) {
+                $query->whereIn('technology', $technologies);
+            })
+            ->count();
+
+        // ================= TASKS =================
+
+        $pendingTaskReviews = DB::table('intern_tasks')
+            ->where('assigned_by', $supervisorId)
+            ->whereNotNull('submit_description')
+            ->where(function ($query) {
+                $query->whereNull('task_approve')
+                      ->orWhere('task_approve', 0);
+            })
+            ->count();
+
+        $tasksCompletedToday = DB::table('intern_tasks')
+            ->where('assigned_by', $supervisorId)
+            ->where('task_status', 'completed')
+            ->whereDate('updated_at', $today)
+            ->count();
+
+        $overdueTasks = DB::table('intern_tasks')
+            ->where('assigned_by', $supervisorId)
+            ->whereDate('task_end', '<', $today)
+            ->where('task_status', '!=', 'completed')
+            ->count();
+
+        $totalProjectsAssigned = DB::table('intern_projects')
+            ->where('assigned_by', $supervisorId)
+            ->count();
+
+        // ================= RECENT DATA =================
+
+        $newInterns = DB::table('intern_accounts')
+            ->select('name', 'email', 'int_technology', 'start_date', 'int_status')
+            ->when(!empty($technologies), function ($query) use ($technologies) {
+                $query->whereIn('int_technology', $technologies);
+            })
+            ->orderByDesc('int_id')
             ->limit(5)
             ->get();
-    }
 
-    return view('content.supervisor.dashboard', compact(
-        'totalAssignedInterns',
-        'activeInterns',
-        'interviewCount',
-        'contactCount',
-        'testCount',
-        'completedCount',
-        'pendingTaskReviews',
-        'tasksCompletedToday',
-        'overdueTasks',
-        'totalProjectsAssigned',
-        'newInterns',
-        'taskSubmissions',
-        'activityLogs',
-        'notifications'
-    ));
-}
+        $taskSubmissions = DB::table('intern_tasks')
+            ->select('eti_id', 'task_title', 'task_status', 'updated_at', 'submit_description')
+            ->where('assigned_by', $supervisorId)
+            ->whereNotNull('submit_description')
+            ->orderByDesc('updated_at')
+            ->limit(5)
+            ->get();
+
+        // ================= OPTIONAL TABLES =================
+
+        $activityLogs = collect();
+        if (\Illuminate\Support\Facades\Schema::hasTable('supervisor_activity_logs')) {
+            $activityLogs = DB::table('supervisor_activity_logs')
+                ->where('supervisor_id', $supervisorId)
+                ->orderByDesc('created_at')
+                ->limit(10)
+                ->get();
+        }
+
+        $notifications = collect();
+        if (\Illuminate\Support\Facades\Schema::hasTable('supervisor_notifications')) {
+            $notifications = DB::table('supervisor_notifications')
+                ->where('supervisor_id', $supervisorId)
+                ->orderByDesc('created_at')
+                ->limit(5)
+                ->get();
+        }
+
+        return view('content.supervisor.dashboard', compact(
+            'totalAssignedInterns',
+            'activeInterns',
+            'interviewCount',
+            'contactCount',
+            'testCount',
+            'completedCount',
+            'pendingTaskReviews',
+            'tasksCompletedToday',
+            'overdueTasks',
+            'totalProjectsAssigned',
+            'newInterns',
+            'taskSubmissions',
+            'activityLogs',
+            'notifications'
+        ));
+    }
 }

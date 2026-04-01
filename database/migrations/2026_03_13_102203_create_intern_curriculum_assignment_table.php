@@ -22,7 +22,7 @@ return new class extends Migration
                       ->onDelete('restrict');
 
                 // Match manager_accounts.manager_id type
-                $table->integer('assigned_by');
+                $table->unsignedBigInteger('assigned_by');
                 $table->foreign('assigned_by')
                       ->references('manager_id')
                       ->on('manager_accounts');

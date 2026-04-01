@@ -435,7 +435,8 @@ use Illuminate\Support\Facades\Route;
         <div class="avatar avatar-online">
          @php
   // Fetch the admin account and general settings
-  $account = \App\Models\AdminAccount::first();
+  // $account = \App\Models\AdminAccount::first();
+  
   $settings = \App\Models\AdminSetting::first(); // Assuming you have a settings model
 
   // Logic: 

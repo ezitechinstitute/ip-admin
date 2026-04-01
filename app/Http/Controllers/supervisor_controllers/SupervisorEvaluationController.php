@@ -17,7 +17,7 @@ class SupervisorEvaluationController extends Controller
                 $join->on(DB::raw('intern_evaluations.eti_id COLLATE utf8mb4_unicode_ci'), '=', DB::raw('intern_accounts.eti_id COLLATE utf8mb4_unicode_ci'));
             })
             ->select('intern_evaluations.*', 'intern_accounts.name as intern_name')
-            ->where('supervisor_id', $supervisorId)
+            ->where('intern_evaluations.supervisor_id', $supervisorId)
             ->orderByDesc('id')
             ->paginate(15);
 

@@ -10,10 +10,11 @@ return new class extends Migration
     {
         if (!Schema::hasTable('technology_curriculum')) {
             Schema::create('technology_curriculum', function (Blueprint $table) {
-                $table->id('curriculum_id'); // BIGINT UNSIGNED primary key
+            $table->engine = 'InnoDB';    
+            $table->id('curriculum_id'); // BIGINT UNSIGNED primary key
 
                 // tech_id matches technologies.tech_id exactly
-                $table->integer('tech_id'); 
+                $table->integer('tech_id');
                 $table->foreign('tech_id')
                       ->references('tech_id')
                       ->on('technologies')
@@ -26,7 +27,7 @@ return new class extends Migration
                 $table->boolean('status')->default(1);
 
                 // created_by matches manager_accounts.manager_id exactly
-                $table->integer('created_by'); 
+                $table->unsignedBigInteger('created_by');
                 $table->foreign('created_by')
                       ->references('manager_id')
                       ->on('manager_accounts');

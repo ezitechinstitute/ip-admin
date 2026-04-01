@@ -13,7 +13,8 @@ return new class extends Migration
     {
         if (!Schema::hasTable('manager_accounts')) {
             Schema::create('manager_accounts', function (Blueprint $table) {
-                $table->integer('manager_id', true);
+                // $table->integer('manager_id', true);
+                $table->id('manager_id');
                 $table->string('eti_id');
                 $table->text('image');
                 $table->string('name');

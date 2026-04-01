@@ -5,7 +5,7 @@
       "icon": "menu-icon icon-base ti tabler-smart-home",
       "slug": "supervisor/dashboard",
       "url": "supervisor/dashboard",
-      "permission": "supervisor_dashboard_view"
+      "permission": null
     },
     {
       "menuHeader": "Intern Management"
@@ -15,37 +15,37 @@
       "icon": "menu-icon icon-base ti tabler-users-group",
       "slug": "supervisor/my-interns",
       "url": "supervisor/my-interns",
-      "permission": "view_supervisor_my_interns",
+      "permission": null,
       "submenu": [
         {
           "url": "supervisor/all-interns/active",
           "name": "Active Interns",
           "slug": "supervisor/all-interns/active",
-          "permission": "view_supervisor_active_interns"
+          "permission": null
         },
         {
           "url": "supervisor/all-interns/newInterns",
           "name": "New Interns",
           "slug": "supervisor/all-interns/newInterns",
-          "permission": "view_supervisor_new_interns"
+          "permission": null
         },
         {
           "url": "supervisor/all-interns/contact",
           "name": "Contact With",
           "slug": "supervisor/all-interns/contact",
-          "permission": "view_supervisor_contact_with"
+          "permission": null
         },
         {
           "url": "supervisor/all-interns/test",
           "name": "Interview Test",
           "slug": "supervisor/all-interns/test",
-          "permission": "view_supervisor_interview_test"
+          "permission": null
         },
         {
           "url": "supervisor/all-interns/completed",
           "name": "Test Completed",
           "slug": "supervisor/all-interns/completed",
-          "permission": "view_supervisor_test_completed"
+          "permission": null
         }
       ]
     },
@@ -54,7 +54,7 @@
       "icon": "menu-icon icon-base ti tabler-chart-line",
       "slug": "supervisor/progress-monitoring",
       "url": "supervisor/progress-monitoring",
-      "permission": "view_supervisor_active_interns"
+      "permission": null
     },
     {
       "menuHeader": "Work Management"
@@ -64,42 +64,42 @@
       "icon": "menu-icon icon-base ti tabler-briefcase",
       "slug": "supervisor/projects",
       "url": "supervisor/projects",
-      "permission": "view_supervisor_projects"
+      "permission": null
     },
     {
       "name": "Tasks (Kanban)",
       "icon": "menu-icon icon-base ti tabler-layout-kanban",
       "slug": "supervisor/tasks",
       "url": "supervisor/tasks/kanban",
-      "permission": "supervisor_dashboard_view"
+      "permission": null
     },
     {
       "name": "Monthly Evaluations",
       "icon": "menu-icon icon-base ti tabler-report-analytics",
       "slug": "supervisor/evaluations",
       "url": "supervisor/evaluations",
-      "permission": "supervisor_dashboard_view"
+      "permission": null
     },
     {
       "name": "Attendance",
       "icon": "menu-icon icon-base ti tabler-calendar-stats",
       "slug": "supervisor/attendance",
       "url": "supervisor/attendance",
-      "permission": "view_supervisor_attendance"
+      "permission": null
     },
     {
       "name": "Leaves",
       "icon": "menu-icon icon-base ti tabler-calendar-off",
       "slug": "supervisor/leaves",
       "url": "supervisor/leaves",
-      "permission": "view_supervisor_leaves"
+      "permission": null
     },
     {
       "name": "Feedback",
       "icon": "menu-icon icon-base ti tabler-message-2",
       "slug": "supervisor/feedback",
       "url": "supervisor/feedback",
-      "permission": "view_supervisor_feedback"
+      "permission": null
     },
     {
       "menuHeader": "Supervisor Settings"
@@ -109,14 +109,14 @@
       "name": "Profile Settings",
       "icon": "menu-icon icon-base ti tabler-user",
       "slug": "supervisor/profile-settings",
-      "permission": "view_supervisor_profile_settings"
+      "permission": null
     },
     {
       "url": "supervisor/knowledge-base",
       "name": "Knowledge Base",
       "icon": "menu-icon icon-base ti tabler-book",
       "slug": "supervisor/knowledge-base",
-      "permission": "view_supervisor_knowledge_base"
+      "permission": null
     }
   ]
 }

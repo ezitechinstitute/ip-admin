@@ -14,7 +14,7 @@ class SupervisorKnowledgeBaseController extends Controller
             'id',
             'title',
             'category',
-            'description'
+            'content'
         )
         ->orderByDesc('id')
         ->limit(20)

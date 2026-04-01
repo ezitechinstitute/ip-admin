@@ -14,10 +14,14 @@ return new class extends Migration
         if (!Schema::hasTable('manager_roles')) {
             Schema::create('manager_roles', function (Blueprint $table) {
                 $table->id();
-                $table->integer('manager_id');
+                // $table->integer('manager_id');
                 $table->string('permission_key');
                 $table->timestamps();
-                $table->foreign('manager_id')->references('manager_id')->on('manager_accounts')->onUpdate('cascade')->onDelete('cascade');
+                $table->foreignId('manager_id')
+                    ->constrained('manager_accounts', 'manager_id')
+                    ->cascadeOnDelete()
+                    ->cascadeOnUpdate();
+                // $table->foreign('manager_id')->references('manager_id')->on('manager_accounts')->onUpdate('cascade')->onDelete('cascade');
 
             });
         }

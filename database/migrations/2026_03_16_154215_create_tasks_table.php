@@ -15,7 +15,14 @@ return new class extends Migration
                 $table->text('description')->nullable();
                 
                 // Foreign Keys - Match the exact column types
-                $table->integer('supervisor_id'); // matches manager_id (int)
+                $table->unsignedBigInteger('supervisor_id'); // ✅ create column first
+
+                $table->foreign('supervisor_id')
+                    ->references('manager_id')
+                    ->on('manager_accounts')
+                    ->onDelete('cascade');
+                
+                // $table->integer('supervisor_id'); // matches manager_id (int)
                 $table->integer('intern_id');     // matches int_id (int)
                 $table->integer('project_id')->nullable();
                 
@@ -34,10 +41,10 @@ return new class extends Migration
                 $table->timestamps();
                 
                 // Add foreign key constraints
-                $table->foreign('supervisor_id')
-                      ->references('manager_id')
-                      ->on('manager_accounts')
-                      ->onDelete('cascade');
+                // $table->foreign('supervisor_id')
+                //       ->references('manager_id')
+                //       ->on('manager_accounts')
+                //       ->onDelete('cascade');
                       
                 $table->foreign('intern_id')
                       ->references('int_id')
