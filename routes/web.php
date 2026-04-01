@@ -143,6 +143,7 @@ use App\Http\Controllers\manager_controllers\TaskViewController;
 use App\Http\Controllers\manager_controllers\InvoiceController as ManagerInvoiceController;
 use App\Http\Controllers\manager_controllers\CommunicationController;
 use App\Http\Controllers\manager_controllers\ManagerAttendanceController;
+use App\Http\Controllers\manager_controllers\ManagerLeaveController;
 use App\Http\Controllers\manager_controllers\Supervisorcontroller;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
@@ -768,8 +769,18 @@ Route::get('/communication', [CommunicationController::class, 'index'])->name('m
 Route::post('/send-message', [CommunicationController::class, 'sendMessage'])->name('manager.send.message');
 
 // Attendance Routes
-Route::get('/attendance', [ManagerAttendanceController::class, 'supervisorAttendance'])->name('manager.attendance');
+Route::get('/attendance/manage', [ManagerAttendanceController::class, 'attendanceManagement'])->name('manager.attendance.manage');
+Route::get('/attendance', [ManagerAttendanceController::class, 'attendanceManagement'])->name('manager.attendance'); // Points to new unified view
+Route::get('/attendance/interns', [ManagerAttendanceController::class, 'internAttendance'])->name('manager.attendance.interns');
 Route::get('/attendance-calendar', [ManagerAttendanceController::class, 'attendanceCalendar'])->name('manager.attendance.calendar');
+
+// Leave Management Routes (Intern & Supervisor)
+Route::get('/leaves/intern', [ManagerLeaveController::class, 'intern'])->name('manager.leaves.intern');
+Route::get('/leaves/supervisor', [ManagerLeaveController::class, 'supervisor'])->name('manager.leaves.supervisor');
+Route::post('/leaves/intern/approve/{id}', [ManagerLeaveController::class, 'approve'])->name('manager.leave.approve');
+Route::post('/leaves/intern/reject/{id}', [ManagerLeaveController::class, 'reject'])->name('manager.leave.reject');
+Route::post('/supervisor-leave/approve/{id}', [ManagerLeaveController::class, 'supervisorapprove'])->name('manager.leave.supervisor.approve');
+Route::post('/supervisor-leave/reject/{id}', [ManagerLeaveController::class, 'supervisorreject'])->name('manager.leave.supervisor.reject');
 
 // Supervisor Routes
 Route::get('/supervisors', [Supervisorcontroller::class, 'index'])->name('manager.supervisors');
