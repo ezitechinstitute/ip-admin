@@ -5,6 +5,7 @@ namespace App\Http\Controllers\authentications;
 use App\Http\Controllers\Controller;
 use App\Models\AdminAccount;
 use App\Models\ManagersAccount;
+use App\Models\InternAccount;  
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -67,7 +68,18 @@ if ($manager) {
     return redirect()->route('manager.dashboard');
 }
 
-    // 3. Fallback if both fail
+    // 3. ADD THIS - Check in Intern Table (NEW)
+    $intern = InternAccount::where('email', $request->email)
+                           ->where('password', $request->password)
+                           ->first();
+
+    if ($intern) {
+        Auth::guard('intern')->login($intern);
+        $request->session()->regenerate();
+        return redirect()->route('intern.dashboard');
+    }
+
+    // 4. Fallback if all fail
     return back()->withErrors([
         'email' => 'Invalid email or password. Please try again!',
     ])->onlyInput('email');
@@ -76,6 +88,7 @@ if ($manager) {
   public function logoutAuth(Request $request)
 {
     Auth::guard('admin')->logout();
+    Auth::guard('intern')->logout();  // ← ADD THIS LINE for intern logout
 
     $request->session()->forget('admin'); // optional
     $request->session()->regenerate();

@@ -7,11 +7,13 @@ $configData = Helper::appClasses();
 $currentPath = request()->path();
 $firstSegment = Request::segment(1);
 
-// 1. Menu file decide karein
+// 1. Menu file decide karein - ADDED INTERN
 if ($firstSegment == 'admin') {
     $menuPath = base_path('resources/menu/verticalMenu.json');
 } elseif ($firstSegment == 'supervisor') {
     $menuPath = base_path('resources/menu/supervisorMenu.json');
+} elseif ($firstSegment == 'intern') {
+    $menuPath = base_path('resources/menu/internMenu.json');
 } else {
     $menuPath = base_path('resources/menu/managerMenu.json');
 }
