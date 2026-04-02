@@ -208,6 +208,7 @@ use App\Http\Controllers\wizard_example\CreateDeal;
 use App\Http\Controllers\wizard_example\PropertyListing;
 use App\Http\Middleware\validManager;
 use App\Http\Middleware\ValidUser;
+use App\Http\Controllers\InternPublicRegistrationController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -444,6 +445,16 @@ Route::get('/set-new-password/{email}', [OTPVerifyController::class, 'setNewPass
 
 Route::post('/set-password-generate', [OTPVerifyController::class, 'updateSetPassword'])
     ->name('auth.password.update.set.new');
+
+// Public Intern Registration Routes - Start
+Route::prefix('/intern-register')->group(function () {
+    Route::get('/step1', [InternPublicRegistrationController::class, 'step1'])->name('intern.register.step1');
+    Route::post('/step2', [InternPublicRegistrationController::class, 'step2'])->name('intern.register.step2');
+    Route::post('/step3', [InternPublicRegistrationController::class, 'step3'])->name('intern.register.step3');
+    Route::post('/complete', [InternPublicRegistrationController::class, 'complete'])->name('intern.register.complete');
+    Route::get('/success', [InternPublicRegistrationController::class, 'success'])->name('intern.register.success');
+});
+// Public Intern Registration Routes - End
 
 // Admin routes - Start
 Route::prefix('/admin')->middleware(['validUser'])->group(function (){
