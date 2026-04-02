@@ -60,12 +60,14 @@ class InternProfileController extends Controller
             'github' => 'nullable|string|max:255',
             'linkedin' => 'nullable|string|max:255',
             'portfolio_url' => 'nullable|string|max:255',
+            'internship_type' => 'nullable|string|max:50',
             'skills' => 'nullable', // JSON string from hidden field
         ]);
         
         // Prepare update data - only update fields that exist
         $updateData = [
             'name' => $validated['name'],
+            'updated_at' => now(),
         ];
         
         // Check each column before updating
@@ -97,8 +99,8 @@ class InternProfileController extends Controller
             $updateData['portfolio_url'] = $validated['portfolio_url'] ?? null;
         }
         
-        if (Schema::hasColumn('intern_accounts', 'updated_at')) {
-            $updateData['updated_at'] = now();
+        if (Schema::hasColumn('intern_accounts', 'internship_type')) {
+            $updateData['internship_type'] = $validated['internship_type'] ?? $intern->internship_type;
         }
         
         // Update basic info
@@ -256,8 +258,8 @@ class InternProfileController extends Controller
             // Check if created_at column exists before ordering by it
             if (Schema::hasColumn('intern_projects', 'created_at')) {
                 $query->orderBy('created_at', 'desc');
-            } elseif (Schema::hasColumn('intern_projects', 'id')) {
-                $query->orderBy('id', 'desc');
+            } elseif (Schema::hasColumn('intern_projects', 'project_id')) {
+                $query->orderBy('project_id', 'desc');
             } elseif (Schema::hasColumn('intern_projects', 'end_date')) {
                 $query->orderBy('end_date', 'desc');
             }
@@ -335,29 +337,34 @@ class InternProfileController extends Controller
     }
     
     /**
- * Get intern skills
- */
-private function getInternSkills($internId)
-{
-    if (!Schema::hasTable('intern_skills')) {
-        return collect([]);
-    }
-    
-    try {
-        $skills = DB::table('intern_skills')
-            ->where('intern_id', $internId)
-            ->pluck('skill');
+     * Get intern skills
+     */
+    private function getInternSkills($internId)
+    {
+        if (!Schema::hasTable('intern_skills')) {
+            return collect([]);
+        }
         
-        // Filter out any email addresses from skills
-        $filteredSkills = $skills->filter(function($skill) {
-            return !filter_var($skill, FILTER_VALIDATE_EMAIL);
-        });
-        
-        return $filteredSkills;
-    } catch (\Exception $e) {
-        return collect([]);
+        try {
+            $skills = DB::table('intern_skills')
+                ->where('intern_id', $internId)
+                ->pluck('skill');
+            
+            // Filter out any email addresses from skills
+            $filteredSkills = $skills->filter(function($skill) {
+                return !filter_var($skill, FILTER_VALIDATE_EMAIL);
+            });
+            
+            // Also filter out empty strings
+            $filteredSkills = $filteredSkills->filter(function($skill) {
+                return !empty(trim($skill));
+            });
+            
+            return $filteredSkills;
+        } catch (\Exception $e) {
+            return collect([]);
+        }
     }
-}
 
     /**
      * Show intern's own portfolio (authenticated view)
@@ -385,8 +392,8 @@ private function getInternSkills($internId)
             // Check if created_at column exists before ordering by it
             if (Schema::hasColumn('intern_projects', 'created_at')) {
                 $query->orderBy('created_at', 'desc');
-            } elseif (Schema::hasColumn('intern_projects', 'id')) {
-                $query->orderBy('id', 'desc');
+            } elseif (Schema::hasColumn('intern_projects', 'project_id')) {
+                $query->orderBy('project_id', 'desc');
             } elseif (Schema::hasColumn('intern_projects', 'end_date')) {
                 $query->orderBy('end_date', 'desc');
             }

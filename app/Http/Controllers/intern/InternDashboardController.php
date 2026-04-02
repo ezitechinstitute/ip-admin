@@ -217,13 +217,19 @@ class InternDashboardController extends Controller
     private function getPerformanceData($etiId)
     {
         // Task completion over time (last 30 days)
-        $taskCompletion = DB::table('intern_tasks')
-            ->select(DB::raw('DATE(updated_at) as date'), DB::raw('count(*) as count'))
-            ->where('eti_id', $etiId)
-            ->where('task_status', 'approved')
-            ->where('updated_at', '>=', Carbon::now()->subDays(30))
-            ->groupBy(DB::raw('DATE(updated_at)'))
-            ->get();
+        $taskCompletion = collect([]);
+        try {
+            $taskCompletion = DB::table('intern_tasks')
+                ->select(DB::raw('DATE(updated_at) as date'), DB::raw('count(*) as count'))
+                ->where('eti_id', $etiId)
+                ->where('task_status', 'approved')
+                ->where('updated_at', '>=', Carbon::now()->subDays(30))
+                ->groupBy(DB::raw('DATE(updated_at)'))
+                ->get();
+        } catch (\Exception $e) {
+            // Fallback if group by fails
+            $taskCompletion = collect([]);
+        }
         
         // Calculate average score safely
         $averageScore = 0;
@@ -245,22 +251,43 @@ class InternDashboardController extends Controller
         ];
     }
 
-   /**
- * Mark all notifications as read
- */
-public function markAllRead(Request $request)
-{
-    $intern = Auth::guard('intern')->user();
-    
-    if (Schema::hasTable('intern_notifications')) {
-        $updated = DB::table('intern_notifications')
-            ->where('intern_id', $intern->int_id)
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
+    /**
+     * Mark a single notification as read
+     */
+    public function markNotificationRead($id, Request $request)
+    {
+        $intern = Auth::guard('intern')->user();
         
-        return response()->json(['success' => true, 'count' => $updated]);
+        if (Schema::hasTable('intern_notifications')) {
+            $updated = DB::table('intern_notifications')
+                ->where('id', $id)
+                ->where('intern_id', $intern->int_id)
+                ->update(['is_read' => true]);
+                
+            if ($updated) {
+                return response()->json(['success' => true]);
+            }
+        }
+        
+        return response()->json(['success' => false], 404);
     }
-    
-    return response()->json(['success' => false], 404);
-}
+
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllRead(Request $request)
+    {
+        $intern = Auth::guard('intern')->user();
+        
+        if (Schema::hasTable('intern_notifications')) {
+            $updated = DB::table('intern_notifications')
+                ->where('intern_id', $intern->int_id)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+            
+            return response()->json(['success' => true, 'count' => $updated]);
+        }
+        
+        return response()->json(['success' => false], 404);
+    }
 }
