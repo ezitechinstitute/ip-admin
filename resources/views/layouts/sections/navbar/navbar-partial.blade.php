@@ -1,6 +1,7 @@
 @php
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+    $account = Auth::guard('manager')->user();
 @endphp
 
 <!--  Brand demo (display only for navbar-full and hide on below xl) -->
