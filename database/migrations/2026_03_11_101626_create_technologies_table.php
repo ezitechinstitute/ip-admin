@@ -18,6 +18,7 @@ return new class extends Migration
                 $table->boolean('status')->default(true);
                 $table->dateTime('created_at')->useCurrent();
                 $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
+                
             });
         }
     }

@@ -24,7 +24,8 @@ return new class extends Migration
                 $table->integer('duration_weeks');
 
                 // Fix: match manager_accounts.manager_id type exactly
-                $table->integer('assigned_supervisor')->nullable();
+                // $table->integer('assigned_supervisor')->nullable();
+                $table->unsignedBigInteger('assigned_supervisor')->nullable();
                 $table->foreign('assigned_supervisor')
                       ->references('manager_id')
                       ->on('manager_accounts')

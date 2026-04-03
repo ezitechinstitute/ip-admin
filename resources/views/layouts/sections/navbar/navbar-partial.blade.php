@@ -1,6 +1,7 @@
 @php
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+    $account = Auth::guard('manager')->user();
 @endphp
 
 <!--  Brand demo (display only for navbar-full and hide on below xl) -->
@@ -435,7 +436,8 @@ use Illuminate\Support\Facades\Route;
         <div class="avatar avatar-online">
          @php
   // Fetch the admin account and general settings
-  $account = \App\Models\AdminAccount::first();
+  // $account = \App\Models\AdminAccount::first();
+  
   $settings = \App\Models\AdminSetting::first(); // Assuming you have a settings model
 
   // Logic: 

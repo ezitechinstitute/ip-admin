@@ -17,13 +17,16 @@
   {{-- English comments: Decision logic based on Route first, then Guard --}}
   @if($isManagerRoute)
       @include('layouts/sections/navbar/manager-navbar-partial')
-  @elseif($isSupervisorRoute)
+  {{-- @elseif($isSupervisorRoute)
       {{-- If supervisor partial is missing, fallback to navbar-partial (standard) --}}
       @if(view()->exists('layouts/sections/navbar/supervisor-navbar-partial'))
           @include('layouts/sections/navbar/supervisor-navbar-partial')
       @else
           @include('layouts/sections/navbar/navbar-partial')
-      @endif
+      @endif --}}
+      @elseif($isSupervisorRoute)
+      {{-- @php dd('SUPERVISOR NAVBAR LOADING'); @endphp --}}
+    @include('layouts/sections/navbar/manager-navbar-partial')
   @else
       {{-- English comments: Default to admin/regular navbar for everything else --}}
       @include('layouts/sections/navbar/navbar-partial')
@@ -35,12 +38,15 @@
   <div class="{{ $containerNav }}">
       @if($isManagerRoute)
           @include('layouts/sections/navbar/manager-navbar-partial')
-      @elseif($isSupervisorRoute)
+      {{-- @elseif($isSupervisorRoute)
           @if(view()->exists('layouts/sections/navbar/supervisor-navbar-partial'))
               @include('layouts/sections/navbar/supervisor-navbar-partial')
           @else
               @include('layouts/sections/navbar/navbar-partial')
-          @endif
+          @endif --}}
+          @elseif($isSupervisorRoute)
+          {{-- @php dd('SUPERVISOR NAVBAR LOADING'); @endphp --}}
+    @include('layouts/sections/navbar/manager-navbar-partial')
       @else
           @include('layouts/sections/navbar/navbar-partial')
       @endif

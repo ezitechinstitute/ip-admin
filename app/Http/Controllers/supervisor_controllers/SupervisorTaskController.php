@@ -14,23 +14,66 @@ class SupervisorTaskController extends Controller
     public function index()
     {
         $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+        // $tasks = DB::table('intern_tasks')
+        //     ->join('intern_accounts', 'intern_tasks.eti_id', '=', 'intern_accounts.eti_id')
+        //     ->select('intern_tasks.*', 'intern_accounts.name as intern_name')
+        //     ->where('assigned_by', $supervisorId)
+        //     ->orderByDesc('task_id')
+        //     ->paginate(15);
+        // 🔥 Get allowed technologies
+        $permissionTechIds = \App\Models\SupervisorPermission::where('manager_id', $supervisorId)
+            ->pluck('tech_id')
+            ->toArray();
+
+        $technologies = DB::table('technologies')
+            ->whereIn('tech_id', $permissionTechIds)
+            ->pluck('technology')
+            ->toArray();
+
         $tasks = DB::table('intern_tasks')
             ->join('intern_accounts', 'intern_tasks.eti_id', '=', 'intern_accounts.eti_id')
             ->select('intern_tasks.*', 'intern_accounts.name as intern_name')
             ->where('assigned_by', $supervisorId)
+            ->when(!empty($technologies), function ($query) use ($technologies) {
+                $query->whereIn('intern_accounts.int_technology', $technologies);
+            })
             ->orderByDesc('task_id')
             ->paginate(15);
 
         return view('content.supervisor.tasks.index', compact('tasks'));
     }
 
+    // public function create()
+    // {
+    //     $supervisorTechnology = trim(session('manager_department'));
+    //     $interns = DB::table('intern_accounts')
+    //         ->whereRaw('LOWER(int_status) = ?', ['active'])
+    //         ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
+    //             $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
+    //         })
+    //         ->get();
+
+    //     return view('content.supervisor.tasks.create', compact('interns'));
+    // }
     public function create()
     {
-        $supervisorTechnology = trim(session('manager_department'));
+        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+
+        // 🔥 Get allowed technologies from permissions
+        $permissionTechIds = \App\Models\SupervisorPermission::where('manager_id', $supervisorId)
+            ->pluck('tech_id')
+            ->toArray();
+
+        $technologies = DB::table('technologies')
+            ->whereIn('tech_id', $permissionTechIds)
+            ->pluck('technology')
+            ->toArray();
+
+        // 🔥 Get only allowed interns
         $interns = DB::table('intern_accounts')
-            ->whereRaw('LOWER(int_status) = ?', ['active'])
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
+            ->where('int_status', 'active')
+            ->when(!empty($technologies), function ($query) use ($technologies) {
+                $query->whereIn('int_technology', $technologies);
             })
             ->get();
 
@@ -58,27 +101,69 @@ class SupervisorTaskController extends Controller
         $end = \Carbon\Carbon::parse($request->task_end);
         $days = $start->diffInDays($end) + 1;
 
-        foreach ($request->eti_ids as $eti_id) {
-            DB::table('intern_tasks')->insert([
-                'eti_id' => $eti_id,
-                'task_title' => $request->task_title,
-                'task_description' => $request->task_description,
-                'task_start' => $request->task_start,
-                'task_end' => $request->task_end,
-                'task_days' => $days,
-                'task_duration' => $days,
-                'task_points' => $request->task_points,
-                'task_obt_points' => 0,
-                'assigned_by' => $supervisorId,
-                'task_status' => 'Assigned',
-                'review' => '',
-                'task_screenshot' => '',
-                'task_live_url' => '',
-                'task_git_url' => '',
-                'submit_description' => '',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        // foreach ($request->eti_ids as $eti_id) {
+        //     DB::table('intern_tasks')->insert([
+        //         'eti_id' => $eti_id,
+        //         'task_title' => $request->task_title,
+        //         'task_description' => $request->task_description,
+        //         'task_start' => $request->task_start,
+        //         'task_end' => $request->task_end,
+        //         'task_days' => $days,
+        //         'task_duration' => $days,
+        //         'task_points' => $request->task_points,
+        //         'task_obt_points' => 0,
+        //         'assigned_by' => $supervisorId,
+        //         'task_status' => 'Assigned',
+        //         'review' => '',
+        //         'task_screenshot' => '',
+        //         'task_live_url' => '',
+        //         'task_git_url' => '',
+        //         'submit_description' => '',
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ]);
+        // }
+        DB::beginTransaction();
+
+        try {
+            // 🔥 Validate interns exist
+            $validInterns = DB::table('intern_accounts')
+                ->whereIn('eti_id', $request->eti_ids)
+                ->pluck('eti_id')
+                ->toArray();
+
+            $start = \Carbon\Carbon::parse($request->task_start);
+            $end = \Carbon\Carbon::parse($request->task_end);
+            $days = $start->diffInDays($end) + 1;
+
+            foreach ($validInterns as $eti_id) {
+                DB::table('intern_tasks')->insert([
+                    'eti_id' => $eti_id,
+                    'task_title' => $request->task_title,
+                    'task_description' => $request->task_description,
+                    'task_start' => $request->task_start,
+                    'task_end' => $request->task_end,
+                    'task_days' => $days,
+                    'task_duration' => $days,
+                    'task_points' => $request->task_points,
+                    'task_obt_points' => 0,
+                    'assigned_by' => $supervisorId,
+                    'task_status' => 'Assigned',
+                    'review' => '',
+                    'task_screenshot' => '',
+                    'task_live_url' => '',
+                    'task_git_url' => '',
+                    'submit_description' => '',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Task assignment failed');
         }
 
             $this->logActivity('Assigned Task', "Task: '{$request->task_title}' assigned to Interns: " . implode(', ', $request->eti_ids));
@@ -209,6 +294,8 @@ class SupervisorTaskController extends Controller
 
         return redirect()->route('supervisor.tasks.index')->with('success', 'Task details updated successfully.');
     }
+    
+    
 
     public function destroy($id)
     {

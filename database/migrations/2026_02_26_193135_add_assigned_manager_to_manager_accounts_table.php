@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('manager_accounts')) {
-            Schema::table('manager_accounts', function (Blueprint $table) {
-                $table->unsignedBigInteger('assigned_manager')->nullable()->after('manager_id');
-            });
-        }
+        // if (Schema::hasTable('manager_accounts')) {
+        //     Schema::table('manager_accounts', function (Blueprint $table) {
+        //         $table->unsignedBigInteger('assigned_manager')->nullable()->after('manager_id');
+        //     });
+        // }
     }
 
     public function down(): void
