@@ -9,6 +9,8 @@ use App\Models\SupervisorPermission;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use App\Models\SupervisorRole;
+// dd('Controller hit');
 
 class SupervisorsController extends Controller
 {
@@ -40,12 +42,35 @@ class SupervisorsController extends Controller
     // 📄 Efficient Sorting & Pagination
     // English: Sorting by manager_id (Primary Key) is much faster than created_at on huge tables
     $allSupervisors = $query->latest('manager_id')->paginate($perPage)->withQueryString();
+    // $jsonPath = base_path('resources/menu/supervisorRolePrivileges.json');
+    // $privilegeFile = resource_path('menu/supervisorRolePrivileges.json');
+    // if (!file_exists($privilegeFile)) {
+    //     abort(500, 'Supervisor privileges file not found');
+    // }
 
-    return view('pages.admin.supervisor.supervisor', compact('allSupervisors', 'perPage'));
+    // $privilegeGroups = json_decode(file_get_contents($privilegeFile), true)['privileges'];
+    $jsonPath = base_path('resources/menu/supervisorRolePrivileges.json');
+    $privilegeGroups = [];
+    if (file_exists($jsonPath)) {
+        $jsonData = json_decode(file_get_contents($jsonPath), true);
+        $privilegeGroups = $jsonData['privileges'] ?? [];
+    }
+
+        // $privilegeGroups = [];
+
+        // if (file_exists($jsonPath)) {
+        //     $jsonData = json_decode(file_get_contents($jsonPath), true);
+        //     $privilegeGroups = $jsonData['privileges'] ?? [];
+        // }
+        return view('pages.admin.supervisor.supervisor', compact('allSupervisors', 'perPage', 'privilegeGroups'));
+        
+
+    // return view('pages.admin.supervisor.supervisor', compact('allSupervisors', 'perPage'));
 }
 
     public function addSupervisor(Request $request)
 {
+    // dd($request->permissions);
     $request->validate([
         'name'      => 'required|string|max:255',
         'email'     => 'required|email|unique:manager_accounts,email',
@@ -77,6 +102,22 @@ class SupervisorsController extends Controller
         'comission' => $request->comission,
         'emergency_contact'=> $request->emergency_contact ?? 0,
     ]);
+    // saving permission
+    if ($request->has('permissions')) {
+
+        $data = [];
+
+        foreach ($request->permissions as $permission) {
+            $data[] = [
+                'supervisor_id' => $supervisor->manager_id,
+                'permission_key' => $permission,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        SupervisorRole::insert($data);
+    }
 
     return back()->with('success', 'Supervisor added successfully!');
 }
@@ -87,12 +128,11 @@ public function update(Request $request, $id)
     $request->validate([
         'name'      => 'required|string|max:255',
         'email'     => 'required|email|unique:manager_accounts,email,' . $id . ',manager_id',
-        // 'contact'   => 'required',
         'join_date' => 'required|date',
         'comission' => 'required|numeric',
         'status'    => 'required|in:0,1',
-        'department'      => 'required|string|max:255',
-        'password'   => 'nullable|min:5',
+        'department'=> 'required|string|max:255',
+        'password'  => 'nullable|min:5',
     ]);
 
     // Find Supervisor
@@ -101,80 +141,159 @@ public function update(Request $request, $id)
     // Update Data
     $supervisor->name      = $request->name;
     $supervisor->email     = $request->email;
-    // $supervisor->contact   = $request->contact;
     $supervisor->join_date = $request->join_date;
     $supervisor->comission = $request->comission;
-    $supervisor->password = $request->password;
     $supervisor->status    = $request->status;
     $supervisor->department = $request->department; 
-    // Password Update logic (only if user typed something)
+    
+    // Password Update logic
     if ($request->filled('password')) {
         $supervisor->password = $request->password; 
     }
 
     $supervisor->save();
 
+    // ==========================================
+    // 🔥 STEP 2: THIS IS WHERE YOU ADD THE LOGIC
+    // ==========================================
+    
+    // 1. Delete old role privileges to avoid duplicates
+    \App\Models\SupervisorRole::where('supervisor_id', $id)->delete();
+
+    // 2. Insert the newly checked boxes
+    if ($request->has('permissions')) {
+        $data = [];
+        foreach ($request->permissions as $key) {
+            $data[] = [
+                'supervisor_id'  => $id,
+                'permission_key' => $key,
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ];
+        }
+        \App\Models\SupervisorRole::insert($data);
+    }
+
     return redirect()->back()->with('success', 'Supervisor updated successfully!');
 }
 
 
-    public function storePermissions(Request $request)
+//     public function storePermissions(Request $request)
+// {
+//     $request->validate([
+//         'manager_id' => 'required|integer',
+//         'permissions' => 'nullable|array',
+//     ]);
+
+//     $supervisorId = $request->manager_id;
+
+//     try {
+//         DB::transaction(function () use ($supervisorId, $request) {
+//             SupervisorPermission::where('manager_id', $supervisorId)->delete();
+
+//             if ($request->has('permissions')) {
+//                 $insertData = [];
+//                 foreach ($request->permissions as $techId => $interviewTypes) {
+//                     if ($techId === 'undefined' || empty($techId)) continue;
+
+//                     foreach ($interviewTypes as $type) {
+//                         $insertData[] = [
+//                             'manager_id'     => (int) $supervisorId,
+//                             'tech_id'        => (int) $techId,
+//                             'internship_type' => $type
+//                         ];
+//                     }
+//                 }
+
+//                 if (!empty($insertData)) {
+//                     SupervisorPermission::insert($insertData);
+//                 }
+//             }
+//         });
+
+//         //  CHANGE THIS: Redirect instead of JSON
+//         return redirect()->back()->with('success', 'Permissions updated successfully!');
+        
+//     } catch (\Exception $e) {
+//         // For errors, go back with the error message
+//         return redirect()->back()->with('error', 'Failed to save: ' . $e->getMessage());
+//     }
+// }
+public function storePermissions(Request $request)
 {
+    // dd($request->all());
     $request->validate([
         'manager_id' => 'required|integer',
         'permissions' => 'nullable|array',
     ]);
 
     $supervisorId = $request->manager_id;
+    
+    // dd($request->manager_id, $request->permissions);
+    // $supervisorId = $request->id;
+    // dd($supervisorId);
 
-    try {
-        DB::transaction(function () use ($supervisorId, $request) {
-            SupervisorPermission::where('manager_id', $supervisorId)->delete();
+    // DELETE OLD
+    // SupervisorRole::where('supervisor_id', $supervisorId)->delete();
+    SupervisorRole::where('supervisor_id', $supervisorId)->delete();
 
-            if ($request->has('permissions')) {
-                $insertData = [];
-                foreach ($request->permissions as $techId => $interviewTypes) {
-                    if ($techId === 'undefined' || empty($techId)) continue;
+    // INSERT NEW
+    if ($request->has('permissions')) {
 
-                    foreach ($interviewTypes as $type) {
-                        $insertData[] = [
-                            'manager_id'     => (int) $supervisorId,
-                            'tech_id'        => (int) $techId,
-                            'internship_type' => $type
-                        ];
-                    }
-                }
+        $data = [];
 
-                if (!empty($insertData)) {
-                    SupervisorPermission::insert($insertData);
-                }
-            }
-        });
+        foreach ($request->permissions as $permission) {
+            $data[] = [
+                'supervisor_id' => $supervisorId,
+                'permission_key' => $permission,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
 
-        //  CHANGE THIS: Redirect instead of JSON
-        return redirect()->back()->with('success', 'Permissions updated successfully!');
-        
-    } catch (\Exception $e) {
-        // For errors, go back with the error message
-        return redirect()->back()->with('error', 'Failed to save: ' . $e->getMessage());
+        SupervisorRole::insert($data);
     }
+
+    return redirect()->back()->with('success', 'Permissions updated successfully!');
 }
 
 
-public function getSupervisorPermissions($id)
-{
-    $permissions = SupervisorPermission::where('manager_id', $id)
-        ->get()
-        ->groupBy('tech_id')
-        ->map(function ($rows) {
-            return $rows->pluck('internship_type')->toArray();
-        });
+// public function getSupervisorPermissions($id)
+// {
+//     $permissions = SupervisorPermission::where('manager_id', $id)
+//         ->get()
+//         ->groupBy('tech_id')
+//         ->map(function ($rows) {
+//             return $rows->pluck('internship_type')->toArray();
+//         });
 
-    return response()->json([
-        'success' => true,
-        'data' => $permissions,
-    ]);
-}
+//     return response()->json([
+//         'success' => true,
+//         'data' => $permissions,
+//     ]);
+// }
+        public function getSupervisorPermissions($id)
+        {
+            // 1. Fetch Tech Permissions and format them so the JS understands
+            $permissions = SupervisorPermission::where('manager_id', $id) // Note: check if this should be manager_id or supervisor_id based on your table
+                ->get()
+                ->groupBy('tech_id')
+                ->map(function ($rows) {
+                    return $rows->pluck('internship_type')->toArray();
+                });
+
+            // 2. Fetch Role Privileges (The JSON Checkboxes)
+            $rolePrivileges = \App\Models\SupervisorRole::where('supervisor_id', $id)
+                ->pluck('permission_key')
+                ->toArray();
+
+            // 3. Return BOTH arrays
+            return response()->json([
+                'success' => true,
+                'data' => $permissions,          // Fix: Uses the correctly mapped tech permissions
+                'role_privileges' => $rolePrivileges 
+            ]);
+        }
 
 
 

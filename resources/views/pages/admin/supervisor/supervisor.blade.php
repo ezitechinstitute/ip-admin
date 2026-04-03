@@ -100,11 +100,11 @@
 
         <div
           class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-md-4 justify-content-md-between justify-content-center gap-2 flex-wrap">
-          <form method="GET" action="{{ route('supervisors.admin') }}" id="filterForm" class="d-flex gap-2">
-
+          <form method="GET" method="POST" action="{{ route('supervisors.admin') }}" id="filterForm" class="d-flex gap-2">
+            @csrf
             <input type="search" name="search" id="searchInput" class="form-control" placeholder="Search supervisor"
               value="{{ request('search') }}">
-<style>
+            <style>
               input[type="search"]::-webkit-search-cancel-button,
               input[type="search"]::-webkit-search-decoration {
                 -webkit-appearance: none;
@@ -239,7 +239,7 @@
                       </div>
                     </div>
                     <div class="col-12 col-md-6 form-control-validation mb-3">
-                      <label for="manager" class="form-label">Role</label>
+                      <label for="supervisor" class="form-label">Role</label>
                       <div class="form-check mb-0 me-1 me-lg-1 mt-2">
                         <input class="form-check-input" type="checkbox" name='manager' id="manager" />
                         <label class="form-check-label" for="manager"> Supervisor </label>
@@ -353,6 +353,58 @@
                       </div>
                     </div>
 
+
+                    <div class="col-12 mt-4">
+                    <div class="d-flex mb-3" style="justify-content: space-between; align-items: center">
+                      <h5 class="mb-0">Edit Privileges</h5>
+
+                      <div class="d-flex align-items-center">
+                        <input type="checkbox" class="form-check-input me-2 mt-0" id="editSelectAll">
+                        <label class="small text-muted mb-0" style="font-size: 13px; cursor: pointer;">
+                          Select All Privileges
+                        </label>
+                      </div>
+                    </div>
+
+  <div class="privilege-masonry">
+    @foreach($privilegeGroups as $group)
+    <div class="masonry-item mb-3">
+      <div class="card shadow-sm border border-light">
+
+        <div class="card-header d-flex justify-content-between align-items-center p-2 bg-light">
+          <span class="fw-bold small">{{ $group['title'] }}</span>
+
+          <div class="d-flex align-items-center">
+            <input type="checkbox" class="form-check-input edit-select-all-group me-2">
+            <label class="small text-muted mb-0">All</label>
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush">
+
+            @foreach($group['privileges'] as $privilege)
+            <li class="list-group-item py-1 px-3 border-light">
+              <input type="checkbox"
+                     name="permissions[]"
+                     value="{{ $privilege['key'] }}"
+                     class="form-check-input me-2 edit-group-item"
+                     data-key="{{ $privilege['key'] }}">
+              <span style="font-size: 13px;">{{ $privilege['title'] }}</span>
+            </li>
+            @endforeach
+
+          </ul>
+        </div>
+
+      </div>
+    </div>
+    @endforeach
+  </div>
+</div>
+
+
+
                     <div class="col-12 text-end mt-3">
                       <button type="reset" class="btn btn-label-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                       <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -379,9 +431,10 @@
                     <p class="text-body-secondary">Set Supervisor Permissions</p>
                   </div>
 
-                  <form id="addSupervisorForm" action="{{ route('supervisor.permissions.store') }}" method="POST">
+                  <form id="supervisorPermissionsForm" action="{{ route('supervisor.permissions.store') }}">
+                  {{-- <form id="addSupervisorForm" action="{{ route('supervisor.permissions.store') }}" method="POST"> --}}
                     @csrf
-                    <input type="hidden" name="manager_id" id="perm_supervisor_id">
+                    <input type="hidden" name="supervisor_id" id="perm_supervisor_id">
 
                     <div class="table-responsive">
                       <table class="table table-flush-spacing">
@@ -389,6 +442,8 @@
                         </tbody>
                       </table>
                     </div>
+
+                    
 
                     <div class="col-12 text-end mt-4">
                       <button type="reset" class="btn btn-label-secondary me-2" data-bs-dismiss="modal">Cancel</button>
@@ -657,7 +712,36 @@
 
 @push('scripts')
 <script>
+
+// EDIT SELECT ALL
+document.getElementById('editSelectAll')?.addEventListener('change', function () {
+    document.querySelectorAll('.edit-group-item').forEach(cb => {
+        cb.checked = this.checked;
+    });
+});
+
+// GROUP SELECT
+document.querySelectorAll('.edit-select-all-group').forEach(group => {
+    group.addEventListener('change', function () {
+        const card = this.closest('.card');
+        card.querySelectorAll('.edit-group-item').forEach(cb => {
+            cb.checked = this.checked;
+        });
+    });
+});
+
   document.addEventListener('DOMContentLoaded', function () {
+    // 🔥 ADD THIS HERE
+    document.querySelectorAll('.select-all-group').forEach(group => {
+        group.addEventListener('change', function () {
+            const card = this.closest('.card');
+            card.querySelectorAll('.group-item').forEach(cb => {
+                cb.checked = this.checked;
+            });
+        });
+    });
+
+});
 
     const form = document.getElementById('addSupervisorForm');
     const nameInput     = document.getElementById('name');
@@ -665,7 +749,7 @@
     const passwordInput = document.getElementById('password');
     // const phoneInput    = document.getElementById('contact');
     const commissionInput = document.getElementById('comission');
-    const supervisorCheckbox = document.getElementById('manager');
+    const supervisorCheckbox = document.getElementById('supervisor');
     const departmentInput = document.getElementById('department');
 
 
@@ -934,39 +1018,115 @@
     icon.classList.toggle('tabler-eye-off', !show);
   });
 
+  // /* =========================
+  //    POPULATE MODAL
+  // ========================== */
+  // document.querySelectorAll('.edit-btn').forEach(btn => {
+  //   btn.addEventListener('click', function () {
+  //     const d = this.dataset;
+  //     let url = "{{ route('update-supervisor.admin', ':id') }}";
+  //     editForm.action = url.replace(':id', d.id);
+
+  //     edit_supervisor_id.value = d.id;
+  //     edit_name.value = d.name;
+  //     edit_email.value = d.email;
+  //     edit_comission.value = d.comission;
+  //     departmentInput.value = d.department ?? '';
+
+  //     // ✅ store original password
+  //     editPasswordInput.value = d.password;
+  //     originalPassword = d.password;
+
+  //     d.join_date
+  //       ? editPicker.setDate(d.join_date, true)
+  //       : editPicker.clear();
+
+  //     d.status == 1
+  //       ? editStatusActive.checked = true
+  //       : editStatusFreeze.checked = true;
+
+  //     roleCheckbox.checked = true;
+
+  //     editPasswordInput.type = 'password';
+  //     toggleEditPassword.querySelector('i').className = 'ti tabler-eye-off';
+  //   });
+  // });
+
   /* =========================
      POPULATE MODAL
-  ========================== */
-  document.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const d = this.dataset;
-      let url = "{{ route('update-supervisor.admin', ':id') }}";
-      editForm.action = url.replace(':id', d.id);
+========================== */
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', function () {
+            const d = this.dataset;
+            
+            // 1. Set the form action URL so it saves to the right ID
+            let url = "{{ route('update-supervisor.admin', ':id') }}";
+            const editForm = document.getElementById('editSupervisorForm');
+            editForm.action = url.replace(':id', d.id);
 
-      edit_supervisor_id.value = d.id;
-      edit_name.value = d.name;
-      edit_email.value = d.email;
-      edit_comission.value = d.comission;
-      departmentInput.value = d.department ?? '';
+            // 2. Fill in the standard text inputs
+            document.getElementById('edit_supervisor_id').value = d.id;
+            document.getElementById('edit_name').value = d.name;
+            document.getElementById('edit_email').value = d.email;
+            document.getElementById('edit_comission').value = d.comission;
+            document.getElementById('edit_department').value = d.department ?? '';
 
-      // ✅ store original password
-      editPasswordInput.value = d.password;
-      originalPassword = d.password;
+            // 3. Handle the password logic
+            const editPasswordInput = document.getElementById('edit_password');
+            editPasswordInput.value = d.password;
+            originalPassword = d.password;
+            editPasswordInput.type = 'password';
+            document.getElementById('toggleEditPassword').querySelector('i').className = 'ti tabler-eye-off';
 
-      d.join_date
-        ? editPicker.setDate(d.join_date, true)
-        : editPicker.clear();
+            // 4. Handle Date and Status
+            d.join_date ? editPicker.setDate(d.join_date, true) : editPicker.clear();
+            d.status == 1 ? document.getElementById('editStatusActive').checked = true : document.getElementById('editStatusFreeze').checked = true;
+            
+            // Check the main role box
+            document.getElementById('edit_role_supervsior').checked = true;
 
-      d.status == 1
-        ? editStatusActive.checked = true
-        : editStatusFreeze.checked = true;
+            // ==========================================
+            // 🔥 THE NEW AUTO-CHECK LOGIC FOR PRIVILEGES
+            // ==========================================
+            
+            // Step A: Uncheck every single privilege box in the modal first (start fresh)
+            document.querySelectorAll('#editSupervisorModal .edit-group-item').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Step B: Ask the server for this supervisor's specific permissions
+            fetch('{{ url("admin/supervisor") }}/' + d.id + '/permissions')
+              .then(response => response.json())
+              .then(data => {
+                  // If the server replies successfully and gives us the role_privileges array...
+                  if(data.success && data.role_privileges) {
+                      
+                      // Step C: Loop through the array (e.g., ['view_tasks', 'edit_users'])
+                      data.role_privileges.forEach(permissionKey => {
+                          
+                          // Find the checkbox on the screen that matches this key
+                          const targetCheckbox = document.querySelector(`#editSupervisorModal .edit-group-item[value="${permissionKey}"]`);
+                          
+                          // If we found it, check it!
+                          if (targetCheckbox) {
+                              targetCheckbox.checked = true;
+                          }
+                      });
+                  }
+              })
+              .catch(error => console.error('Error fetching permissions:', error));
+          });
+        });
 
-      roleCheckbox.checked = true;
 
-      editPasswordInput.type = 'password';
-      toggleEditPassword.querySelector('i').className = 'ti tabler-eye-off';
-    });
-  });
+
+
+
+
+
+
+
+
 
   /* =========================
      RESET MODAL
@@ -1011,10 +1171,28 @@
         
       ]).then(([techRes, permRes]) => {
 
+        // if (!techRes.success) return;
+
+        // const savedPermissions = permRes.data ?? {};
+        // techTableBody.innerHTML = '';
+
         if (!techRes.success) return;
 
-        const savedPermissions = permRes.data ?? {};
-        techTableBody.innerHTML = '';
+          const savedPermissions = permRes.data ?? {};
+          const savedRolePrivileges = permRes.role_privileges ?? []; // Add this: Assume your API returns the supervisor's existing keys
+
+          // 1. Clear all previously checked role privilege checkboxes
+          document.querySelectorAll('#SupervisorPermissionsModel .group-item').forEach(cb => cb.checked = false);
+
+          // 2. Check the ones the supervisor actually has
+          if(savedRolePrivileges.length > 0) {
+              savedRolePrivileges.forEach(key => {
+                  const checkbox = document.querySelector(`#SupervisorPermissionsModel input.group-item[value="${key}"]`);
+                  if (checkbox) checkbox.checked = true;
+              });
+          }
+
+          techTableBody.innerHTML = '';
 
         // Header row
         techTableBody.insertAdjacentHTML('beforeend', `

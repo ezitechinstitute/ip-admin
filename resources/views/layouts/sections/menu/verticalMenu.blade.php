@@ -8,12 +8,31 @@ $currentPath = request()->path();
 $firstSegment = Request::segment(1);
 
 // 1. Menu file decide karein
-if ($firstSegment == 'admin') {
+// if ($firstSegment == 'admin') {
+//     $menuPath = base_path('resources/menu/verticalMenu.json');
+// } elseif ($firstSegment == 'supervisor') {
+//     $menuPath = base_path('resources/menu/supervisorMenu.json');
+// } else {
+//     $menuPath = base_path('resources/menu/managerMenu.json');
+// }
+$menuPath = base_path('resources/menu/verticalMenu.json');
+
+// 🔴 ADMIN AREA → ALWAYS ADMIN MENU
+if (request()->is('admin/*')) {
+
     $menuPath = base_path('resources/menu/verticalMenu.json');
-} elseif ($firstSegment == 'supervisor') {
-    $menuPath = base_path('resources/menu/supervisorMenu.json');
-} else {
-    $menuPath = base_path('resources/menu/managerMenu.json');
+
+} 
+// 🟢 MANAGER / SUPERVISOR AREA
+elseif (Auth::guard('manager')->check()) {
+
+    $user = Auth::guard('manager')->user();
+
+    if ($user->loginas === 'Supervisor') {
+        $menuPath = base_path('resources/menu/supervisorMenu.json');
+    } elseif ($user->loginas === 'Manager') {
+        $menuPath = base_path('resources/menu/managerMenu.json');
+    }
 }
 
 if (!file_exists($menuPath)) {
