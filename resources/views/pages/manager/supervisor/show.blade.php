@@ -32,7 +32,7 @@
         </form>
     </div>
 
-    <div class="card mb-4 p-3">
+    {{-- <div class="card mb-4 p-3">
         <h5>Reassign Intern</h5>
         <form method="POST" action="{{ route('manager.supervisor.reassignIntern', $supervisor->manager_id) }}">
             @csrf
@@ -57,7 +57,7 @@
                 </div>
             </div>
         </form>
-    </div>
+    </div> --}}
 
     <div class="card mb-4 p-3">
         <h5>Activity Log</h5>

@@ -78,8 +78,9 @@ class ManagersController extends Controller
 
     // 3. Standard Validation
     $request->validate([
-        'name'  => 'required|string|max:255',
-        'email' => 'required|email|unique:manager_accounts,email',
+        'name'       => 'required|string|max:255',
+        'email'      => 'required|email|unique:manager_accounts,email',
+        'comission'  => 'required|numeric|between:0,100',
     ]);
 
     // 4. Generate ETI ID (Original Logic)
@@ -148,7 +149,7 @@ public function getManagerRoles($id)
         'name'      => 'required|string|max:255',
         'email'     => 'required|email|unique:manager_accounts,email,' . $id . ',manager_id',
         // 'join_date' => 'required|date',
-        'comission' => 'required|numeric',
+        'comission' => 'required|numeric|between:0,100',
         'status'    => 'required|in:0,1',
         // 'contact' => 'required', 
     ]);

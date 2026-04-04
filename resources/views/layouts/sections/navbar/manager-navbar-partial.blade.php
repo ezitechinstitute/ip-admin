@@ -482,7 +482,7 @@ use Illuminate\Support\Facades\Route;
 
     <!-- Profile Header -->
     <li>
-      <a class="dropdown-item mt-0" href="{{ route('manager.dashboard') }}">
+      <a class="dropdown-item mt-0" href="{{ session('loginas') === 'Supervisor' ? route('supervisor.dashboard') : route('manager.dashboard') }}">
         <div class="d-flex align-items-center">
           <div class="flex-shrink-0 me-2">
             <div class="avatar avatar-online">
@@ -490,8 +490,8 @@ use Illuminate\Support\Facades\Route;
             </div>
           </div>
           <div class="flex-grow-1">
-            <h6 class="mb-0">{{ $manager->name ?? 'Manager' }}</h6>
-            <small class="text-body-secondary">Manager</small>
+            <h6 class="mb-0">{{ $manager->name ?? 'User' }}</h6>
+            <small class="text-body-secondary">{{ session('loginas') ?? 'Manager' }}</small>
           </div>
         </div>
       </a>
@@ -503,7 +503,7 @@ use Illuminate\Support\Facades\Route;
 
     <!-- My Profile -->
     <li>
-      <a class="dropdown-item" href="{{ route('manager.profile.settings') }}">
+      <a class="dropdown-item" href="{{ session('loginas') === 'Supervisor' ? route('supervisor.profile.settings') : route('manager.profile.settings') }}">
         <i class="icon-base ti tabler-user me-3 icon-md"></i>
         <span class="align-middle">My Profile</span>
       </a>

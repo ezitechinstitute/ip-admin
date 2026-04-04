@@ -233,9 +233,10 @@
                         id="flatpickr-date" />
                     </div> --}}
                     <div class="col-12 col-md-12 form-control-validation mb-3">
-                      <label class="form-label" for="comission">Comission (Rs:)</label>
+                      <label class="form-label" for="comission">Commission (%)</label>
                       <input type="number" id="comission" name="comission" class="form-control"
-                        placeholder="Enter comission" tabindex="-1" value="1000" />
+                        placeholder="Enter commission % (e.g. 10 for 10%)" tabindex="-1" value="10" min="0" max="100" step="0.01" />
+                      <small class="text-muted">Value will be used as a percentage (e.g. 10 = 10%).</small>
                     </div>
                     <div class="col-12 col-md-6 form-control-validation mb-3">
                       <label class="form-label">Status</label>
@@ -361,9 +362,10 @@
 
 
                     <div class="col-12 col-md-12 form-control-validation mb-3">
-                      <label class="form-label" for="edit_comission">Commission (Rs:)</label>
+                      <label class="form-label" for="edit_comission">Commission (%)</label>
                       <input type="number" id="edit_comission" name="comission" class="form-control"
-                        placeholder="Enter commission" />
+                        placeholder="Enter commission % (e.g. 10 for 10%)" min="0" max="100" step="0.01" />
+                      <small class="text-muted">Value will be used as a percentage (e.g. 10 = 10%).</small>
                     </div>
 
                     <div class="col-12 col-md-6 form-control-validation mb-3">
@@ -571,8 +573,8 @@
                 @else
                   <span class="text-heading text-nowrap">N/A</span>
                   @endif</td>
-                <td><span class="fw-bold">Rs: </span><span
-                    class="text-heading text-nowrap">{{$manager->comission}}</span>
+                <td><span class="fw-bold">%</span> <span
+                    class="text-heading text-nowrap">{{ number_format($manager->comission, 2) }}</span>
                 </td>
                 <td>
                   @php
@@ -868,12 +870,15 @@
 
     function validateCommission() {
         const value = commissionInput.value.trim();
+        const num = Number(value);
         if (value === '') {
             showError(commissionInput, 'Commission is required');
-        } else if (isNaN(value)) {
+        } else if (isNaN(num)) {
             showError(commissionInput, 'Commission must be a number');
-        } else if (Number(value) < 0) {
+        } else if (num < 0) {
             showError(commissionInput, 'Commission cannot be negative');
+        } else if (num > 100) {
+            showError(commissionInput, 'Commission cannot exceed 100%');
         } else {
             removeError(commissionInput);
         }
@@ -1109,7 +1114,12 @@
         // },
         comm: () => {
             const el = document.getElementById('edit_comission');
-            el.value.trim() === '' || isNaN(el.value) ? showError(el, 'Commission must be a number') : removeError(el);
+            const val = parseFloat(el.value);
+            if (el.value.trim() === '' || isNaN(val) || val < 0 || val > 100) {
+                showError(el, 'Commission must be a number between 0 and 100');
+            } else {
+                removeError(el);
+            }
         },
         manager: () => {
             if (!editManagerCheckbox.checked) {

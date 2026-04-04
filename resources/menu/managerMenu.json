@@ -11,6 +11,20 @@
       "menuHeader": "Intern Management"
     },
     {
+      "name": "Curriculum",
+      "icon": "menu-icon icon-base ti tabler-book",
+      "slug": "manager/curriculum",
+      "url": "manager/curriculum",
+      "permission": "view_manager_curriculum"
+    },
+    {
+      "name": "Tasks",
+      "icon": "menu-icon icon-base ti tabler-clipboard-list",
+      "slug": "manager/tasks",
+      "url": "manager/tasks",
+      "permission": "view_manager_tasks"
+    },
+    {
       "name": "My Interns",
       "icon": "menu-icon icon-base ti tabler-users-group",
       "slug": "manager/my-interns",
@@ -18,34 +32,34 @@
       "permission": "view_my_interns",
       "submenu": [
         {
+          "url": "manager/all-interns/active",
+          "name": "Active Interns",
+          "slug": "manager/all-interns/active",
+          "permission": "view_active_interns"
+        },
+        {
           "url": "manager/all-interns/newInterns",
-          "name": "Interview",
+          "name": "New Interns",
           "slug": "manager/all-interns/newInterns",
           "permission": "view_new_interns"
         },
         {
           "url": "manager/all-interns/contact",
-          "name": "Contact",
+          "name": "Contact With",
           "slug": "manager/all-interns/contact",
           "permission": "view_contact_with"
         },
         {
           "url": "manager/all-interns/test",
-          "name": "Test",
+          "name": "Interview Test",
           "slug": "manager/all-interns/test",
           "permission": "view_interview_test"
         },
         {
           "url": "manager/all-interns/completed",
-          "name": "Completed",
+          "name": "Test Completed",
           "slug": "manager/all-interns/completed",
           "permission": "view_test_completed"
-        },
-        {
-          "url": "manager/all-interns/active",
-          "name": "Active Interns",
-          "slug": "manager/all-interns/active",
-          "permission": "view_active_interns"
         }
       ]
     },
@@ -57,55 +71,42 @@
       "permission": "view_manager_international_interns"
     },
     {
-      "name": "Curriculum Management",
-      "icon": "menu-icon icon-base ti tabler-layout-grid",
-      "slug": "manager/curriculum",
-      "url": "manager/curriculum",
-      "permission": "view_manager_curriculum"
-    },
-
-    {
-      "menuHeader": "Supervisor"
-    },
-    {
-      "name": "Supervisor",
-      "icon": "menu-icon icon-base ti tabler-cash",
-      "slug": "manager/Supervisor",
-      "url": "manager/Supervisor"
-    },
-    {
-      "menuHeader": "Attend & Leaves"
-    },
-    {
-      "name": "Intern Leaves",
-      "icon": "menu-icon icon-base ti tabler-user-check",
-      "slug": "manager/attendance/intern-leaves",
-      "url": "manager/attendance/intern-leaves",
-      "permission": "view_intern_leaves"
-    },
-    {
-      "name": "Supervisor Leaves",
-      "icon": "menu-icon icon-base ti tabler-checklist",
-      "slug": "manager/attendance/supervisor-leaves",
-      "url": "manager/attendance/supervisor-leaves",
-      "permission": "approve_supervisor_leaves"
-    },
-    {
-      "name": "Supervisor Attendance",
-      "icon": "menu-icon icon-base ti tabler-calendar-check",
-      "slug": "manager/attendance/supervisor-attendance",
-      "url": "manager/attendance/supervisor-attendance",
-      "permission": "view_supervisor_attendance"
-    },
-    {
-      "name": "Attendance Calendar",
-      "icon": "menu-icon icon-base ti tabler-calendar",
-      "slug": "manager/attendance-calendar",
-      "url": "manager/attendance-calendar",
-      "permission": "view_attendance_calendar"
-    },
-    {
       "menuHeader": "Reports & Logs"
+    },
+    {
+      "name": "Invoices",
+      "icon": "menu-icon icon-base ti tabler-receipt",
+      "slug": "manager/invoices",
+      "url": "manager/invoices",
+      "permission": "view_manager_invoices"
+    },
+    {
+      "name": "Attendance",
+      "icon": "menu-icon icon-base ti tabler-calendar-check",
+      "slug": "manager/attendance",
+      "url": "manager/attendance",
+      "permission": "view_manager_attendance"
+    },
+    {
+      "name": "Supervisors",
+      "icon": "menu-icon icon-base ti tabler-user-check",
+      "slug": "manager/supervisors",
+      "url": "manager/supervisors",
+      "permission": "view_manager_supervisors"
+    },
+    {
+      "name": "Communication",
+      "icon": "menu-icon icon-base ti tabler-message-circle",
+      "slug": "manager/communication",
+      "url": "manager/communication",
+      "permission": "view_manager_communication"
+    },
+    {
+      "name": "Withdrawal",
+      "icon": "menu-icon icon-base ti tabler-wallet",
+      "slug": "manager/withdraw",
+      "url": "manager/withdraw",
+      "permission": "view_manager_withdraw"
     },
     {
       "name": "Remaining Amount",
@@ -115,14 +116,33 @@
       "permission": "view_manager_remaining_amount"
     },
     {
+      "name": "Revenue & Commission",
+      "icon": "menu-icon icon-base ti tabler-chart-bar",
+      "slug": "manager/revenue",
+      "url": "manager/revenue",
+      "permission": "view_manager_revenue"
+    },
+    {
       "url": "manager/offer-letter-request",
       "name": "Offer Letter Request",
       "icon": "menu-icon icon-base ti tabler-file-certificate",
       "slug": "manager/offer-letter-request",
       "permission": "view_manager_offer_letter_request"
     },
+    {      "url": "manager/certificate-requests",
+      "name": "Certificate Requests",
+      "icon": "menu-icon icon-base ti tabler-certificate",
+      "slug": "manager/certificate-requests",
+      "permission": "view_manager_certificate_requests"
+    },
     {
-      "url": "manager/offer-letter-template",
+      "url": "manager/certificate-templates",
+      "name": "Certificate Templates",
+      "icon": "menu-icon icon-base ti tabler-file-certificate",
+      "slug": "manager/certificate-templates",
+      "permission": "view_manager_certificate_templates"
+    },
+    {      "url": "manager/offer-letter-template",
       "name": "Offer Letter Template",
       "icon": "menu-icon icon-base ti tabler-certificate",
       "slug": "manager/offer-letter-template",

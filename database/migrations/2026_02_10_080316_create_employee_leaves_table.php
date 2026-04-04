@@ -11,21 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-         Schema::create('employee_leaves', function (Blueprint $table) {
+         if (!Schema::hasTable('employee_leaves')) {
+             Schema::create('employee_leaves', function (Blueprint $table) {
 
-            $table->id('leave_id');           // matches your primary key
-            $table->string('employee_id');    // was varchar(255)
-            $table->string('name');
-            $table->string('email');
-            $table->date('from_date');
-            $table->date('to_date');
-            $table->text('reason');
-            $table->integer('days');
-            $table->tinyInteger('leave_status')->nullable();
+                $table->id('leave_id');           // matches your primary key
+                $table->string('employee_id');    // was varchar(255)
+                $table->string('name');
+                $table->string('email');
+                $table->date('from_date');
+                $table->date('to_date');
+                $table->text('reason');
+                $table->integer('days');
+                $table->tinyInteger('leave_status')->nullable();
 
-            // Laravel standard timestamps (same behavior as your current datetime)
-            $table->timestamps();
-        });
+                // Laravel standard timestamps (same behavior as your current datetime)
+                $table->timestamps();
+            });
+         }
     }
     /**
      * Reverse the migrations.

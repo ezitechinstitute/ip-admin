@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-      Schema::table('invoices', function (Blueprint $table) {
-    $table->string('invoice_type')->default('internship');
-});
+      if (Schema::hasTable('invoices')) {
+          Schema::table('invoices', function (Blueprint $table) {
+        $table->string('invoice_type')->default('internship');
+    });
+      }
     }
 
     /**

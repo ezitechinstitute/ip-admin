@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('admin_settings', function (Blueprint $table) {
+        if (!Schema::hasTable('admin_settings')) {
+            Schema::create('admin_settings', function (Blueprint $table) {
             $table->id();
             
             // 1. System Branding
@@ -40,7 +41,8 @@ return new class extends Migration
             $table->json('export_permissions')->nullable(); 
             
             $table->timestamps();
-        });
+            });
+        }
     }
 
     /**

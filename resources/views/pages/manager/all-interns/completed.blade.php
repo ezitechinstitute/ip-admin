@@ -204,7 +204,9 @@ $manager = auth()->guard('manager')->user();
 
                 <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
                     class="dt-column-title">Status</span><span class="dt-column-order"></span></th>
-                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
+                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Certificate"><span
+                    class="dt-column-title">Certificate</span><span class="dt-column-order"></span></th>
+                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Action"><span
                     class="dt-column-title">Action</span><span class="dt-column-order"></span></th>
 
 
@@ -274,6 +276,33 @@ $manager = auth()->guard('manager')->user();
 
                   <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span></td>
                   <td>
+                    @php
+                      $certReq = $certificateRequests[$intern->id] ?? null;
+                      $certBadge = 'bg-secondary';
+                      if ($certReq) {
+                          if ($certReq->status === 'pending') $certBadge = 'bg-warning';
+                          elseif ($certReq->status === 'approved') $certBadge = 'bg-success';
+                          elseif ($certReq->status === 'rejected') $certBadge = 'bg-danger';
+                      }
+                    @endphp
+                    @if($certReq)
+                      <span class="badge {{ $certBadge }} text-capitalize">{{ $certReq->status }}</span>
+                    @else
+                      <span class="badge bg-secondary">No Request</span>
+                    @endif
+                  </td>
+                  <td>
+                    <form method="POST" action="{{ route('manager.certificate.request.submit') }}" class="d-inline-block">
+                      @csrf
+                      <input type="hidden" name="intern_id" value="{{ $intern->id }}">
+                      <input type="hidden" name="intern_name" value="{{ $intern->name }}">
+                      <input type="hidden" name="email" value="{{ $intern->email }}">
+                      <input type="hidden" name="certificate_type" value="internship">
+                      <button type="submit" class="btn btn-sm btn-outline-primary" {{ $certReq ? 'disabled' : '' }}>Request Certificate</button>
+                    </form>
+                    @if($certReq && $certReq->status === 'approved' && $certReq->pdf_path)
+                      <a href="{{ route('manager.certificate.request.download',['id'=>$certReq->id]) }}" class="btn btn-sm btn-success">Download</a>
+                    @endif
                     @if($manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
   'edit_status_test_completed') || $manager && \Illuminate\Support\Facades\Gate::forUser($manager)->allows('check-privilege',
   'remove_test_completed'))

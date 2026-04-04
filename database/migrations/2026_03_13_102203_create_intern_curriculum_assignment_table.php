@@ -8,35 +8,37 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('intern_curriculum_assignment', function (Blueprint $table) {
-            $table->id('assignment_id');
+        if (!Schema::hasTable('intern_curriculum_assignment')) {
+            Schema::create('intern_curriculum_assignment', function (Blueprint $table) {
+                $table->id('assignment_id');
 
-            // Just store eti_id without foreign key
-            $table->string('eti_id', 255)->charset('utf8mb4')->collation('utf8mb4_unicode_ci');
+                // Just store eti_id without foreign key
+                $table->string('eti_id', 255)->charset('utf8mb4')->collation('utf8mb4_unicode_ci');
 
-            $table->unsignedBigInteger('curriculum_id');
-            $table->foreign('curriculum_id')
-                  ->references('curriculum_id')
-                  ->on('technology_curriculum')
-                  ->onDelete('restrict');
+                $table->unsignedBigInteger('curriculum_id');
+                $table->foreign('curriculum_id')
+                      ->references('curriculum_id')
+                      ->on('technology_curriculum')
+                      ->onDelete('restrict');
 
-            // Match manager_accounts.manager_id type
-            $table->integer('assigned_by');
-            $table->foreign('assigned_by')
-                  ->references('manager_id')
-                  ->on('manager_accounts');
+                // Match manager_accounts.manager_id type
+                $table->integer('assigned_by');
+                $table->foreign('assigned_by')
+                      ->references('manager_id')
+                      ->on('manager_accounts');
 
-            $table->integer('current_project_index')->default(1);
-            $table->dateTime('assigned_date')->useCurrent();
-            $table->date('start_date')->nullable();
-            $table->date('expected_end_date')->nullable();
-            $table->date('actual_end_date')->nullable();
-            $table->enum('status',['active','completed','paused','cancelled'])->default('active');
-            $table->integer('completion_percentage')->default(0);
-            $table->text('notes')->nullable();
+                $table->integer('current_project_index')->default(1);
+                $table->dateTime('assigned_date')->useCurrent();
+                $table->date('start_date')->nullable();
+                $table->date('expected_end_date')->nullable();
+                $table->date('actual_end_date')->nullable();
+                $table->enum('status',['active','completed','paused','cancelled'])->default('active');
+                $table->integer('completion_percentage')->default(0);
+                $table->text('notes')->nullable();
 
-            $table->timestamps();
-        });
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void
