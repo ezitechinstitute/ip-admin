@@ -16,7 +16,7 @@ return new class extends Migration
                 $table->id();
                 $table->string('title');
                 $table->text('content');
-                $table->enum('certificate_type', ['internship', 'course_completion'])->default('internship');
+                $table->enum('type', ['internship', 'course_completion'])->default('internship');
                 $table->unsignedBigInteger('manager_id')->nullable();
                 $table->boolean('status')->default(1);
                 $table->boolean('is_deleted')->default(0);

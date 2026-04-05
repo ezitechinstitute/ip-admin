@@ -308,4 +308,50 @@ class Helpers
 }
 CSS;
   }
+
+  /**
+ * Get user profile image URL with fallback
+ *
+ * @param mixed $user The user object (should have image property)
+ * @param string $default Default image path
+ * @return string Image URL
+ */
+public static function getProfileImage($user, $default = null)
+{
+    // Set default image if not provided
+    if (!$default) {
+        $default = asset('assets/img/branding/ezitech.png');
+    }
+    
+    // If no user, return default
+    if (!$user) {
+        return $default;
+    }
+    
+    // Check if the image property exists and has a value
+    $image = property_exists($user, 'image') ? $user->image : null;
+    
+    // If user has no image, return default
+    if (empty($image)) {
+        return $default;
+    }
+    
+    // Check if it's already a full URL
+    if (filter_var($image, FILTER_VALIDATE_URL)) {
+        return $image;
+    }
+    
+    // Check if it's a base64 encoded image
+    if (str_starts_with($image, 'data:image')) {
+        return $image;
+    }
+    
+    // Check if it's a stored path starting with storage/
+    if (str_starts_with($image, 'storage/')) {
+        return asset($image);
+    }
+    
+    // Otherwise, treat as stored path and add asset helper
+    return asset($image);
+}
 }

@@ -867,10 +867,83 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
     Route::delete('/evaluations/delete/{id}', [SupervisorEvaluationController::class, 'destroy'])->name('supervisor.evaluations.delete');
 });
 
+// ============================================
+// PUBLIC PORTFOLIO ROUTE (No authentication required)
+// ============================================
+Route::get('/portfolio/{identifier}', [App\Http\Controllers\intern\InternProfileController::class, 'publicProfile'])->name('public.portfolio');
 
+// ============================================
+// INTERN PANEL ROUTES 
+// ============================================
 
+Route::prefix('intern')->name('intern.')->middleware(['auth:intern'])->group(function() {
+    
+    // Dashboard
+    Route::get('/dashboard', [App\Http\Controllers\intern\InternDashboardController::class, 'index'])->name('dashboard');
+    Route::post('/notification/{id}/mark-read', [App\Http\Controllers\intern\InternDashboardController::class, 'markNotificationRead'])->name('notification.mark-read');
+    Route::post('/notifications/mark-all-read', [App\Http\Controllers\intern\InternDashboardController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    
+    // Profile Routes
+    Route::get('/profile', [App\Http\Controllers\intern\InternProfileController::class, 'index'])->name('profile');
+    Route::get('/profile/edit', [App\Http\Controllers\intern\InternProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [App\Http\Controllers\intern\InternProfileController::class, 'update'])->name('profile.update');
+    Route::post('/update-profile-image', [App\Http\Controllers\intern\InternProfileController::class, 'updateProfileImage'])->name('update-profile-image');
+    Route::post('/update-password', [App\Http\Controllers\intern\InternProfileController::class, 'updatePassword'])->name('update-password');
+    
+    // Portfolio
+    Route::get('/portfolio', [App\Http\Controllers\intern\InternProfileController::class, 'portfolio'])->name('portfolio');
+    Route::get('/public-profile/{identifier?}', [App\Http\Controllers\intern\InternProfileController::class, 'publicProfile'])->name('profile.public');
+    
+    // Projects
+    Route::get('/projects', [App\Http\Controllers\intern\InternProjectController::class, 'index'])->name('projects');
+    Route::get('/projects/{id}', [App\Http\Controllers\intern\InternProjectController::class, 'show'])->name('projects.show');
+    
+    // Tasks
+    Route::get('/tasks', [App\Http\Controllers\intern\InternTaskController::class, 'index'])->name('tasks');
+    Route::get('/tasks/{id}', [App\Http\Controllers\intern\InternTaskController::class, 'show'])->name('tasks.show');
+    Route::post('/tasks/{id}/submit', [App\Http\Controllers\intern\InternTaskController::class, 'submit'])->name('tasks.submit');
+    
+    // Invoices
+    Route::get('/invoices', [App\Http\Controllers\intern\InternInvoiceController::class, 'index'])->name('invoices');
+    Route::get('/invoices/{id}', [App\Http\Controllers\intern\InternInvoiceController::class, 'show'])->name('invoices.show');
+    
+    // Certificates
+    Route::get('/certificates', [App\Http\Controllers\intern\InternCertificateController::class, 'index'])->name('certificates');
+    Route::post('/certificates/request', [App\Http\Controllers\intern\InternCertificateController::class, 'requestCertificate'])->name('certificates.request');
+    Route::get('/certificates/download/{id}', [App\Http\Controllers\intern\InternCertificateController::class, 'downloadCertificate'])->name('certificates.download');
+    
+    // Offer Letter
+    Route::get('/offer-letter', [App\Http\Controllers\intern\InternOfferLetterController::class, 'index'])->name('offer-letter');
+    Route::get('/offer-letter/download', [App\Http\Controllers\intern\InternOfferLetterController::class, 'download'])->name('offer-letter.download');
+    
+    // Attendance
+    Route::get('/attendance', [App\Http\Controllers\intern\InternAttendanceController::class, 'index'])->name('attendance');
+    
+    // Leave
+    Route::get('/leave', [App\Http\Controllers\intern\InternLeaveController::class, 'index'])->name('leave');
+    Route::post('/leave/request', [App\Http\Controllers\intern\InternLeaveController::class, 'requestLeave'])->name('leave.request');
+    
+    // Feedback
+    Route::get('/feedback', [App\Http\Controllers\intern\InternFeedbackController::class, 'index'])->name('feedback');
+    Route::post('/feedback/submit', [App\Http\Controllers\intern\InternFeedbackController::class, 'submitFeedback'])->name('feedback.submit');
+    
+    // Resources
+    Route::get('/resources', [App\Http\Controllers\intern\InternResourceController::class, 'index'])->name('resources');
+    Route::get('/resources/search', [App\Http\Controllers\intern\InternResourceController::class, 'search'])->name('resources.search');
+    Route::get('/resources/{id}', [App\Http\Controllers\intern\InternResourceController::class, 'show'])->name('resources.show');
+    
+    // Settings
+    Route::get('/settings', [App\Http\Controllers\intern\InternSettingsController::class, 'index'])->name('settings');
+    Route::post('/settings/update', [App\Http\Controllers\intern\InternSettingsController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/settings/update-password', [App\Http\Controllers\intern\InternSettingsController::class, 'updatePassword'])->name('settings.update-password');
+    
+    // Logout
+    Route::post('/logout', function() {
+        Auth::guard('intern')->logout();
+        return redirect()->route('login');
+    })->name('logout');
+});
 
-   
 Route::fallback(function (){
     return view('pages.pageNotFound');
 });

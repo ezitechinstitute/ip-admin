@@ -6,10 +6,12 @@ abstract class Controller
 {
     protected function logActivity($action, $details = null)
     {
-        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+        $managerId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+
         if (\Illuminate\Support\Facades\Schema::hasTable('supervisor_activity_logs')) {
             \Illuminate\Support\Facades\DB::table('supervisor_activity_logs')->insert([
-                'supervisor_id' => $supervisorId,
+                'manager_id' => $managerId,        // ✅ FIX ADDED
+                'supervisor_id' => $managerId,     // ✅ keep this (your system uses same ID)
                 'action' => $action,
                 'details' => $details,
                 'created_at' => now(),

@@ -16,11 +16,11 @@ return new class extends Migration
                 $table->foreign('cp_id')->references('cp_id')->on('curriculum_projects')->onDelete('cascade');
 
                 // Match manager_accounts.manager_id type exactly
-                $table->integer('supervisor_id'); // use integer(), not unsignedBigInteger()
+                $table->unsignedBigInteger('supervisor_id'); // use integer(), not unsignedBigInteger()
                 $table->foreign('supervisor_id')->references('manager_id')->on('manager_accounts');
 
                 $table->dateTime('assigned_date')->useCurrent();
-                $table->integer('assigned_by');
+                $table->unsignedBigInteger('assigned_by');
                 $table->foreign('assigned_by')->references('manager_id')->on('manager_accounts');
 
                 $table->boolean('is_primary')->default(1);

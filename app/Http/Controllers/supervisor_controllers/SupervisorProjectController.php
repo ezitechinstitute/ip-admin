@@ -292,4 +292,4 @@ public function tasks($project_id)
 
         return redirect()->route('supervisor.projects')->with('error', 'Project not found.');
     }
-}
+}

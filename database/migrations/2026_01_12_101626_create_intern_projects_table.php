@@ -24,7 +24,9 @@ return new class extends Migration
                 $table->string('project_marks', 250);
                 $table->double('obt_marks');
                 $table->text('description');
-                $table->integer('assigned_by')->index('supkey');
+                $table->foreignId('assigned_by')
+                    ->constrained('manager_accounts', 'manager_id');  
+                // $table->integer('assigned_by')->index('supkey');
                 $table->string('pstatus', 10)->default('Ongoing');
                 $table->timestamp('createdat')->useCurrent();
                 $table->timestamp('updatedat')->useCurrentOnUpdate()->useCurrent();

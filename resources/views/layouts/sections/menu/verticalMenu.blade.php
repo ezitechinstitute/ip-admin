@@ -7,15 +7,18 @@ $configData = Helper::appClasses();
 $currentPath = request()->path();
 $firstSegment = Request::segment(1);
 
-// 1. Menu file decide karein
+// 1. Menu file decide karein - ADDED INTERN & SUPERVISOR
 if ($firstSegment == 'admin') {
     $menuPath = base_path('resources/menu/verticalMenu.json');
 } elseif ($firstSegment == 'supervisor') {
     $menuPath = base_path('resources/menu/supervisorMenu.json');
+} elseif ($firstSegment == 'intern') {
+    $menuPath = base_path('resources/menu/internMenu.json');
 } else {
     $menuPath = base_path('resources/menu/managerMenu.json');
 }
 
+// Fallback if file doesn't exist
 if (!file_exists($menuPath)) {
     $menuPath = base_path('resources/menu/verticalMenu.json');
 }
@@ -30,11 +33,9 @@ if (($firstSegment == 'manager' || $firstSegment == 'supervisor') && Auth::guard
     
     // Permission filter function
     $filteredMenu = array_filter($menuData->menu, function ($menu) use ($manager) {
-        // Agar permission set nahi hai, toh menu dikha do
         if (!isset($menu->permission)) {
             return true;
         }
-        // --- KEY CHANGE: Gate check for the menu item ---
         return Gate::forUser($manager)->allows('check-privilege', $menu->permission);
     });
 
@@ -43,17 +44,14 @@ if (($firstSegment == 'manager' || $firstSegment == 'supervisor') && Auth::guard
         if (isset($menu->submenu)) {
             $menu->submenu = array_filter($menu->submenu, function ($sub) use ($manager) {
                 if (!isset($sub->permission)) return true;
-                // --- KEY CHANGE: Gate check for the submenu item ---
                 return Gate::forUser($manager)->allows('check-privilege', $sub->permission);
             });
-            // Re-index submenu array
             $menu->submenu = array_values($menu->submenu);
         }
     }
 
     $menuData->menu = array_values($filteredMenu);
 }
-// -------------------------------------
 
 // Final data for loop
 $menuDataFinal = [$menuData];
@@ -68,36 +66,23 @@ $menuDataFinal = [$menuData];
   {{-- App Brand - Same for everyone --}}
   @if (!isset($navbarFull))
   <style>
-  /* Display logic for full and small logo */
   .logo-full { display: block; }
   .logo-small { display: none; }
-
-  /* When menu is collapsed, hide full logo and show small one */
   .layout-menu-collapsed:not(.layout-menu-hover) .logo-full { display: none !important; }
   .layout-menu-collapsed:not(.layout-menu-hover) .logo-small { display: block !important; }
-
-  /* Hide the toggle button (i tags) when the menu is collapsed */
-  .layout-menu-collapsed:not(.layout-menu-hover) .layout-menu-toggle i { 
-    display: none !important; 
-  }
+  .layout-menu-collapsed:not(.layout-menu-hover) .layout-menu-toggle i { display: none !important; }
 </style>
     <div class="app-brand demo">
-      {{-- <a href="{{ url('/') }}" class="app-brand-link"> --}}
         @php
-          // Fetch dynamic logo from AdminSettings for both roles
           $settings = \App\Models\AdminSetting::first();
           $dynamicLogo = $settings && $settings->system_logo 
                          ? asset($settings->system_logo) 
                          : asset('assets/img/branding/logo.png');
         @endphp
         <span class="app-brand-logo demo">
-          {{-- 1. Full Logo --}}
           <img src="{{ $dynamicLogo }}" class="logo-full" style="width: 150px;">
-          
-          {{-- 2. Small Logo (Collapsed state) --}}
           <img src="{{ asset('assets/img/branding/ezitech.png') }}" class="logo-small" style="display: none; width: 35px;">
         </span>
-      {{-- </a> --}}
 
       <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
         <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
@@ -109,10 +94,8 @@ $menuDataFinal = [$menuData];
   <div class="menu-inner-shadow"></div>
 
   <ul class="menu-inner py-1">
-    {{-- Loop mein $menuData[0] ki jagah $menuDataFinal[0] use karein --}}
     @foreach ($menuDataFinal[0]->menu as $menu)
 
-      {{-- MENU HEADER --}}
       @if (isset($menu->menuHeader))
         <li class="menu-header small">
           <span class="menu-header-text">{{ __($menu->menuHeader) }}</span>
@@ -120,7 +103,6 @@ $menuDataFinal = [$menuData];
         @continue
       @endif
 
-      {{-- ACTIVE LOGIC --}}
       @php
         $activeClass = '';
         $menuSlug = ltrim($menu->slug ?? '', '/');
