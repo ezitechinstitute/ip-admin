@@ -12,6 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('manager_roles')) {
+            // Drop constraint first if it exists
+            Schema::table('manager_roles', function (Blueprint $table) {
+                try { $table->dropForeign('manager_roles_manager_id_foreign'); } catch (\Exception $e) {}
+            });
+            
+            // Add constraint fresh
             Schema::table('manager_roles', function (Blueprint $table) {
                 $table->foreign(['manager_id'])->references(['manager_id'])->on('manager_accounts')->onUpdate('cascade')->onDelete('cascade');
             });

@@ -14,6 +14,14 @@ return new class extends Migration
                 $table->index('manager_id');
             }
         });
+        
+        // Ensure column exists even if migration already ran
+        if (Schema::hasTable('intern_accounts') && !Schema::hasColumn('intern_accounts', 'manager_id')) {
+            Schema::table('intern_accounts', function (Blueprint $table) {
+                $table->unsignedBigInteger('manager_id')->nullable()->after('supervisor_id');
+                $table->index('manager_id');
+            });
+        }
     }
 
     public function down()

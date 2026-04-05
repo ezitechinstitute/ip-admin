@@ -12,6 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('offer_letter_templates')) {
+            // Drop constraint first if it exists
+            Schema::table('offer_letter_templates', function (Blueprint $table) {
+                try { $table->dropForeign('offer_letter_templates_manager_id_foreign'); } catch (\Exception $e) {}
+            });
+            
+            // Add constraint fresh
             Schema::table('offer_letter_templates', function (Blueprint $table) {
                 $table->foreign(['manager_id'])->references(['manager_id'])->on('manager_accounts')->onUpdate('restrict')->onDelete('restrict');
             });
