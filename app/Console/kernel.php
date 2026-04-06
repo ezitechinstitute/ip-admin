@@ -13,6 +13,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         // yahan apna custom command add karein
         \App\Console\Commands\SendInvoiceReminders::class,
+        \App\Console\Commands\CheckInterviewEscalation::class,
     ];
 
     /**
@@ -22,6 +23,9 @@ class Kernel extends ConsoleKernel
     {
         // Daily 9:00 AM pe invoice reminder bhejne ka scheduler
         $schedule->command('invoice:send-reminders')->dailyAt('09:00');
+
+        // Check for interview/test escalations every hour (8-hour threshold)
+        $schedule->command('interview:check-escalation --hours=8')->hourly();
     }
 
     /**

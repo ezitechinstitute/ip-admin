@@ -71,14 +71,14 @@
       "icon": "menu-icon icon-base ti tabler-layout-kanban",
       "slug": "supervisor/tasks",
       "url": "supervisor/tasks/kanban",
-      "permission": "supervisor_dashboard_view"
+      "permission": "view_supervisor_tasks"
     },
     {
       "name": "Monthly Evaluations",
       "icon": "menu-icon icon-base ti tabler-report-analytics",
       "slug": "supervisor/evaluations",
       "url": "supervisor/evaluations",
-      "permission": "supervisor_dashboard_view"
+      "permission": "view_supervisor_evaluations"
     },
     {
       "name": "Attendance",

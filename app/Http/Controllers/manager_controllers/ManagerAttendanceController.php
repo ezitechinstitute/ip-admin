@@ -5,54 +5,10 @@ namespace App\Http\Controllers\manager_controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\SupervisorAttendance;
 use App\Models\AdminSetting;
 
 class ManagerAttendanceController extends Controller
 {
-public function supervisorAttendance(Request $request)
-{
-    $manager = auth()->guard('manager')->user();
-    $managerId = $manager->manager_id;
-    if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_supervisor_attendance')) {
-        return redirect()->route('manager.dashboard')->withErrors(['access_denied' => 'Access Denied.']);
-    }
-    // Get supervisors assigned to this manager
-    $assignedSupervisors = DB::table('manager_accounts')
-        ->where('assigned_manager', $managerId)
-        ->pluck('manager_id');
-
-    // Get supervisors list for filter dropdown
-    $supervisorsList = DB::table('manager_accounts')
-        ->whereIn('manager_id', $assignedSupervisors)
-        ->select('manager_id as id', 'name', 'email')
-        ->get();
-    // Get pagination limit from settings
-    // dd($supervisorsList, $assignedSupervisors);
-    $pageLimitSet = AdminSetting::first();
-    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
-    // Build attendance query with filters
-    $query = SupervisorAttendance::whereIn('supervisor_id', $assignedSupervisors);
-
-    // Apply date filter
-    // if ($request->filled('date')) {
-    //     $query->whereDate('date', $request->date);
-    // } else {
-    //     $query->whereDate('date', date('Y-m-d'));
-    // }
-
-    // Apply supervisor filter
-    if ($request->filled('supervisor_id')) {
-        $query->where('supervisor_id', $request->supervisor_id);
-    }
-
-    // Get paginated results
-   $attendanceRecords = $query->orderBy('date', 'desc')
-                           ->orderBy('check_in', 'desc')
-                           ->paginate($perPage)
-                           ->withQueryString();
-    return view('pages.manager.attendance.supervisor', compact('attendanceRecords', 'supervisorsList'));
-}
 public function attendanceCalendar(Request $request)
 {
     $manager = auth()->guard('manager')->user();
@@ -229,6 +185,184 @@ public function attendanceCalendar(Request $request)
         'startDate',
         'endDate',
         'dateLabel'
+    ));
+}
+
+public function internAttendance(Request $request)
+{
+    $manager = auth()->guard('manager')->user();
+    $managerId = $manager->manager_id;
+
+    // Check permission
+    if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_intern_attendance')) {
+        return redirect()->route('manager.dashboard')->withErrors(['access_denied' => 'Access Denied.']);
+    }
+
+    // Get technologies assigned to this manager
+    $managerTechs = DB::table('manager_permissions')
+        ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
+        ->where('manager_permissions.manager_id', $managerId)
+        ->where('technologies.status', 1)
+        ->pluck('technologies.technology')
+        ->toArray();
+
+    // Get interview types assigned to this manager
+    $managerInterviewTypes = DB::table('manager_permissions')
+        ->where('manager_id', $managerId)
+        ->pluck('interview_type')
+        ->map(fn($type) => trim($type))
+        ->unique()
+        ->toArray();
+
+    // Get pagination limit from settings
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+
+    // Build intern attendance query with filters
+    $query = DB::table('intern_attendance as ia')
+        ->join('intern_table as it', 'ia.eti_id', '=', 'it.id')
+        ->whereIn('it.technology', $managerTechs)
+        ->whereIn('it.interview_type', $managerInterviewTypes)
+        ->select('ia.id', 'ia.eti_id', 'ia.email', 'ia.start_shift', 'ia.end_shift', 'ia.duration', 'ia.status', 'it.name', 'it.technology');
+
+    // Apply date filter
+    if ($request->filled('date')) {
+        $query->whereDate('ia.start_shift', $request->date);
+    }
+
+    // Apply intern filter
+    if ($request->filled('intern_id')) {
+        $query->where('ia.eti_id', $request->intern_id);
+    }
+
+    // Apply status filter
+    if ($request->filled('status')) {
+        $query->where('ia.status', $request->status);
+    }
+
+    // Get paginated results
+    $attendanceRecords = $query->orderBy('ia.start_shift', 'desc')
+                              ->paginate($perPage)
+                              ->withQueryString();
+
+    // Get interns list for filter dropdown
+    $internsList = DB::table('intern_table')
+        ->whereIn('technology', $managerTechs)
+        ->whereIn('interview_type', $managerInterviewTypes)
+        ->select('id as eti_id', 'name', 'email', 'technology')
+        ->get();
+
+    return view('pages.manager.attendance.internAttendance', compact('attendanceRecords', 'internsList'));
+}
+
+public function attendanceManagement(Request $request)
+{
+    $manager = auth()->guard('manager')->user();
+    $managerId = $manager->manager_id;
+    $tab = $request->get('tab', 'supervisor'); // Default to supervisor attendance tab
+
+    // Get technologies assigned to this manager
+    $managerTechs = DB::table('manager_permissions')
+        ->join('technologies', 'manager_permissions.tech_id', '=', 'technologies.tech_id')
+        ->where('manager_permissions.manager_id', $managerId)
+        ->where('technologies.status', 1)
+        ->pluck('technologies.technology')
+        ->toArray();
+
+    // Get interview types assigned to this manager
+    $managerInterviewTypes = DB::table('manager_permissions')
+        ->where('manager_id', $managerId)
+        ->pluck('interview_type')
+        ->map(fn($type) => trim($type))
+        ->unique()
+        ->toArray();
+
+    // Get supervisors assigned to this manager
+    $assignedSupervisors = DB::table('manager_accounts')
+        ->where('assigned_manager', $managerId)
+        ->pluck('manager_id');
+
+    // Get pagination limit from settings
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
+
+    // ==================== INTERN ATTENDANCE ====================
+    $internAttendanceQuery = DB::table('intern_attendance as ia')
+        ->join('intern_table as it', 'ia.eti_id', '=', 'it.id')
+        ->whereIn('it.technology', $managerTechs)
+        ->whereIn('it.interview_type', $managerInterviewTypes)
+        ->select('ia.id', 'ia.eti_id', 'ia.email', 'ia.start_shift', 'ia.end_shift', 'ia.duration', 'ia.status', 'it.name', 'it.technology');
+
+    if ($request->filled('intern_date')) {
+        $internAttendanceQuery->whereDate('ia.start_shift', $request->intern_date);
+    }
+
+    if ($request->filled('intern_id')) {
+        $internAttendanceQuery->where('ia.eti_id', $request->intern_id);
+    }
+
+    if ($request->filled('intern_status')) {
+        $internAttendanceQuery->where('ia.status', $request->intern_status);
+    }
+
+    $internAttendance = $internAttendanceQuery->orderBy('ia.start_shift', 'desc')
+                                            ->paginate($perPage, ['*'], 'intern_page')
+                                            ->withQueryString();
+
+    $internsList = DB::table('intern_table')
+        ->whereIn('technology', $managerTechs)
+        ->whereIn('interview_type', $managerInterviewTypes)
+        ->select('id as eti_id', 'name', 'email', 'technology')
+        ->get();
+
+    // ==================== SUPERVISOR ATTENDANCE ====================
+    $supervisorAttendanceQuery = DB::table('supervisor_attendance as sa')
+        ->whereIn('sa.supervisor_id', $assignedSupervisors)
+        ->select('sa.*');
+
+    if ($request->filled('supervisor_date')) {
+        $supervisorAttendanceQuery->whereDate('sa.date', $request->supervisor_date);
+    }
+
+    if ($request->filled('supervisor_id')) {
+        $supervisorAttendanceQuery->where('sa.supervisor_id', $request->supervisor_id);
+    }
+
+    $supervisorAttendance = $supervisorAttendanceQuery->orderBy('sa.date', 'desc')
+                                                    ->orderBy('sa.check_in', 'desc')
+                                                    ->paginate($perPage, ['*'], 'supervisor_page')
+                                                    ->withQueryString();
+
+    $supervisorsList = DB::table('manager_accounts')
+        ->whereIn('manager_id', $assignedSupervisors)
+        ->select('manager_id as id', 'name', 'email')
+        ->get();
+
+    // ==================== SUPERVISOR LEAVE REQUESTS ====================
+    $supervisorLeaveQuery = DB::table('supervisor_leaves as sl')
+        ->whereIn('sl.supervisor_id', $assignedSupervisors)
+        ->select('sl.leave_id', 'sl.supervisor_id', 'sl.name', 'sl.email', 'sl.from_date', 'sl.to_date', 'sl.reason', 'sl.leave_status', 'sl.days');
+
+    if ($request->filled('leave_status')) {
+        $supervisorLeaveQuery->where('sl.leave_status', $request->leave_status);
+    }
+
+    if ($request->filled('leave_supervisor_id')) {
+        $supervisorLeaveQuery->where('sl.supervisor_id', $request->leave_supervisor_id);
+    }
+
+    $supervisorLeaves = $supervisorLeaveQuery->orderBy('sl.created_at', 'desc')
+                                             ->paginate($perPage, ['*'], 'leave_page')
+                                             ->withQueryString();
+
+    return view('pages.manager.attendance.attendanceManagement', compact(
+        'manager',
+        'tab',
+        'internAttendance',
+        'internsList',
+        'supervisorAttendance',
+        'supervisorsList',
+        'supervisorLeaves'
     ));
 }
 }

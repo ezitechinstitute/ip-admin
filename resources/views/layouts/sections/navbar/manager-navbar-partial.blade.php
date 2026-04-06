@@ -200,41 +200,41 @@ use Illuminate\Support\Facades\Route;
 
   <div class="row row-bordered overflow-visible g-0">
 
-    <div class="dropdown-shortcuts-item col">
-      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-        <i class="icon-base ti tabler-world icon-26px text-heading"></i>
-      </span>
-      <a href="{{ route('manager.international.interns') }}" class="stretched-link">International Interns</a>
-      <small>Overseas Interns</small>
-    </div>
+    @if(session('loginas') !== 'Supervisor')
 
-    <div class="dropdown-shortcuts-item col">
-      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-        <i class="icon-base ti tabler-cash icon-26px text-heading"></i>
-      </span>
-      <a href="{{ route('manager.remainingamount') }}" class="stretched-link">Remaining Amount</a>
-      <small>Payment Overview</small>
-    </div>
 <div class="dropdown-shortcuts-item col">
-      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-        <i class="icon-base ti tabler-file-certificate icon-26px text-heading"></i>
-      </span>
-      <a href="{{ route('manager.offer.letter.request') }}" class="stretched-link">Offer Letter Request</a>
-      <small>Request Status</small>
-    </div>
-
-    <div class="dropdown-shortcuts-item col">
-      <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-        <i class="icon-base ti tabler-file-certificate icon-26px text-heading"></i>
-      </span>
-      <a href="{{ route('manager.offer.letter.template') }}" class="stretched-link">Offer Letter Template</a>
-      <small>Request Template</small>
-    </div>
-  </div>
- 
+  <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+    <i class="icon-base ti tabler-world icon-26px text-heading"></i>
+  </span>
+  <a href="{{ route('manager.international.interns') }}" class="stretched-link">International Interns</a>
+  <small>Overseas Interns</small>
 </div>
-      </div>
-    </li>
+
+<div class="dropdown-shortcuts-item col">
+  <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+    <i class="icon-base ti tabler-cash icon-26px text-heading"></i>
+  </span>
+  <a href="{{ route('manager.remainingamount') }}" class="stretched-link">Remaining Amount</a>
+  <small>Payment Overview</small>
+</div>
+
+<div class="dropdown-shortcuts-item col">
+  <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+    <i class="icon-base ti tabler-file-certificate icon-26px text-heading"></i>
+  </span>
+  <a href="{{ route('manager.offer.letter.request') }}" class="stretched-link">Offer Letter Request</a>
+  <small>Request Status</small>
+</div>
+
+<div class="dropdown-shortcuts-item col">
+  <span class="dropdown-shortcuts-icon rounded-circle mb-3">
+    <i class="icon-base ti tabler-file-certificate icon-26px text-heading"></i>
+  </span>
+  <a href="{{ route('manager.offer.letter.template') }}" class="stretched-link">Offer Letter Template</a>
+  <small>Request Template</small>
+</div>
+
+@endif
     <!-- Quick links -->
 
     <!-- Notification -->

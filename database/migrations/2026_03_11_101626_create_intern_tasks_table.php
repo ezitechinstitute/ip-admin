@@ -23,7 +23,11 @@ return new class extends Migration
                 $table->integer('task_days');
                 $table->double('task_points');
                 $table->double('task_obt_points');
-                $table->integer('assigned_by')->index('tasksupkey');
+                // $table->integer('assigned_by')->index('tasksupkey');
+                $table->foreignId('assigned_by')
+                ->constrained('manager_accounts', 'manager_id')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
                 $table->string('task_status')->default('Ongoing');
                 $table->boolean('task_approve')->nullable();
                 $table->text('review');

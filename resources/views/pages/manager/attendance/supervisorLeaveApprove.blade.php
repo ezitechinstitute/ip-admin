@@ -145,14 +145,18 @@
                                             <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
                                         </a>
                                         <div class="dropdown-menu dropdown-menu-end m-0">
-                                            <a href="{{ route('manager.leave.approve',$leave->leave_id) }}"
-                                                class="dropdown-item text-success">
-                                                <i class="icon-base ti tabler-check me-1"></i> Approve
-                                            </a>
-                                            <a href="{{ route('manager.leave.reject',$leave->leave_id) }}"
-                                                class="dropdown-item text-danger">
-                                                <i class="icon-base ti tabler-x me-1"></i> Reject
-                                            </a>
+                                            <form action="{{ route('manager.leave.supervisor.approve', $leave->leave_id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="dropdown-item text-success" onclick="return confirm('Approve this leave request?')">
+                                                    <i class="icon-base ti tabler-check me-1"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form action="{{ route('manager.leave.supervisor.reject', $leave->leave_id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Reject this leave request?')">
+                                                    <i class="icon-base ti tabler-x me-1"></i> Reject
+                                                </button>
+                                            </form>
                                             <div class="dropdown-divider"></div>
                                             {{-- <a href="{{ route('manager.leave.view',$leave->leave_id) }}"
                                                 class="dropdown-item">

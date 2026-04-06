@@ -13,15 +13,15 @@ class SupervisorLeaveController extends Controller
 
     $leaves = \Illuminate\Support\Facades\DB::table('supervisor_leaves')
         ->select(
-            'id',
+            'leave_id',
             'supervisor_id',
-            'leave_type',
+            'reason',
             'from_date',
             'to_date',
-            'status'
+            'leave_status'
         )
         ->where('supervisor_id', $supervisorId)
-        ->orderByDesc('id')
+        ->orderByDesc('leave_id')
         ->limit(20)
         ->get();
 
