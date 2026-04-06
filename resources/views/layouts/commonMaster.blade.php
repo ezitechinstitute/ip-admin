@@ -86,26 +86,6 @@
   <!-- Include Scripts for customizer, helper, analytics, config -->
   <!-- $isFront is used to append the front layout scriptsIncludes only on the front layout otherwise the variable will be blank -->
   @include('layouts/sections/scriptsIncludes' . $isFront)
-
- {{--  supervisor role based menu filtering logic --}}
-  @php
-  use App\Models\SupervisorRole;
-
-  $supervisorPermissions = [];
-
-    // 🔥 USE CORRECT GUARD
-    $authUser = \Illuminate\Support\Facades\Auth::guard('manager')->user();
-
-    if ($authUser && $authUser->loginas === 'Supervisor') {
-        $supervisorPermissions = SupervisorRole::where('supervisor_id', $authUser->manager_id)
-            ->pluck('permission_key')
-            ->toArray();
-    }
-    @endphp
-  <script>
-      window.userPermissions = @json($supervisorPermissions);
-  </script> 
-
 </head>
 
 <body>
