@@ -93,124 +93,10 @@ use Illuminate\Support\Facades\Route;
 
     @if ($configData['hasCustomizer'] == true)
     <!-- Style Switcher -->
-    <li class="nav-item dropdown">
-      <a class="nav-link dropdown-toggle hide-arrow btn btn-icon btn-text-secondary rounded-pill" id="nav-theme"
-        href="javascript:void(0);" data-bs-toggle="dropdown">
-        <i class="icon-base ti tabler-sun icon-22px theme-icon-active text-heading"></i>
-        <span class="d-none ms-2" id="nav-theme-text">Toggle theme</span>
-      </a>
-      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-theme-text">
-        <li>
-          <button type="button" class="dropdown-item align-items-center active" data-bs-theme-value="light"
-            aria-pressed="false">
-            <span><i class="icon-base ti tabler-sun icon-22px me-3" data-icon="sun"></i>Light</span>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="dropdown-item align-items-center" data-bs-theme-value="dark" aria-pressed="true">
-            <span><i class="icon-base ti tabler-moon-stars icon-22px me-3" data-icon="moon-stars"></i>Dark</span>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="dropdown-item align-items-center" data-bs-theme-value="system"
-            aria-pressed="false">
-            <span><i class="icon-base ti tabler-device-desktop-analytics icon-22px me-3"
-                data-icon="device-desktop-analytics"></i>System</span>
-          </button>
-        </li>
-      </ul>
-    </li>
+    
     <!-- / Style Switcher-->
     @endif
 
-    <!-- Quick links  -->
-    <li class="nav-item dropdown-shortcuts navbar-dropdown dropdown">
-      <a class="nav-link dropdown-toggle hide-arrow btn btn-icon btn-text-secondary rounded-pill"
-        href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-        <i class="icon-base ti tabler-layout-grid-add icon-22px text-heading"></i>
-      </a>
-      <div class="dropdown-menu dropdown-menu-end p-0">
-        <div class="dropdown-menu-header border-bottom">
-          <div class="dropdown-header d-flex align-items-center py-3">
-            <h6 class="mb-0 me-auto">Shortcuts</h6>
-            {{-- <a href="javascript:void(0)"
-              class="dropdown-shortcuts-add py-2 btn btn-text-secondary rounded-pill btn-icon" data-bs-toggle="tooltip"
-              data-bs-placement="top" title="Add shortcuts"><i
-                class="icon-base ti tabler-plus icon-20px text-heading"></i></a> --}}
-          </div>
-        </div>
-        
-        <div class="dropdown-shortcuts-list scrollable-container">
-          <div class="row row-bordered overflow-visible g-0">
-              <div class="row row-bordered overflow-visible g-0">
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-device-desktop-analytics icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/dashboard') }}" class="stretched-link">Dashboard</a>
-              <small>User Dashboard</small>
-            </div>
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-settings icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/settings') }}" class="stretched-link">Setting</a>
-              <small>Account Settings</small>
-            </div>
-          </div>
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-id icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/intern-accounts') }}" class="stretched-link">Intern Accounts</a>
-              <small>Tech & Status</small>
-            </div>
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-file-invoice icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/invoice') }}" class="stretched-link">Invoices</a>
-              <small>Amount & Remaining</small>
-            </div>
-          </div>
-          <div class="row row-bordered overflow-visible g-0">
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-user icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/managers') }}" class="stretched-link">Role Managers</a>
-              <small>Permission</small>
-            </div>
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-users icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/supervisors') }}" class="stretched-link">Role Supervisors</a>
-              <small>Permission</small>
-            </div>
-          </div>
-        
-          <div class="row row-bordered overflow-visible g-0">
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                <i class="icon-base ti tabler-cash-banknote icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/withdraw') }}" class="stretched-link">Withdraw</a>
-              <small>Amount & Status</small>
-            </div>
-            <div class="dropdown-shortcuts-item col">
-              <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-               
-                <i class="icon-base ti tabler-book icon-26px text-heading"></i>
-              </span>
-              <a href="{{ url('admin/knowledge-base') }}" class="stretched-link">Knowledge Base</a>
-              <small>Useful Knowledge</small>
-            </div>
-          </div>
-        </div>
-      </div>
-    </li>
-    <!-- Quick links -->
 
     <!-- Notification -->
     {{-- <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-2">
@@ -431,9 +317,9 @@ use Illuminate\Support\Facades\Route;
     </li> --}}
     <!--/ Notification -->
     <!-- User -->
-    <li class="nav-item navbar-dropdown dropdown-user dropdown ms-2">
+    <!-- <li class="nav-item navbar-dropdown dropdown-user dropdown ms-2">
       <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
-        <div class="avatar avatar-online">
+        <div class="avatar avatar-online"> -->
          @php
   // Fetch the admin account and general settings
   // $account = \App\Models\AdminAccount::first();
@@ -455,9 +341,9 @@ use Illuminate\Support\Facades\Route;
   }
 @endphp
 
-<img src="{{ $dynamicImage }}" alt="Profile Picture" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
-        </div>
-      </a>
+<!-- <img src="{{ $dynamicImage }}" alt="Profile Picture" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" /> -->
+        <!-- </div>
+      </a> -->
       <ul class="dropdown-menu dropdown-menu-end">
         <li>
           <a class="dropdown-item mt-0"
@@ -486,13 +372,13 @@ use Illuminate\Support\Facades\Route;
             href="{{ Route::has('profile.show') ? route('profile.show') : url('/admin/settings') }}">
             <i class="icon-base ti tabler-user me-3 icon-md"></i><span class="align-middle">My Profile</span> </a>
         </li>
-@if (Auth::check() && class_exists(\Laravel\Jetstream\Jetstream::class) && \Laravel\Jetstream\Jetstream::hasApiFeatures())        <li>
+  @if (Auth::check() && class_exists(\Laravel\Jetstream\Jetstream::class) && \Laravel\Jetstream\Jetstream::hasApiFeatures())        <li>
           <a class="dropdown-item" href="{{ route('api-tokens.index') }}">
             <i class="icon-base ti tabler-settings me-3 icon-md"></i><span class="align-middle">API Tokens</span> </a>
         </li>
         @endif
       
-@if (Auth::user() && class_exists(\Laravel\Jetstream\Jetstream::class) && \Laravel\Jetstream\Jetstream::hasTeamFeatures())        <li>
+  @if (Auth::user() && class_exists(\Laravel\Jetstream\Jetstream::class) && \Laravel\Jetstream\Jetstream::hasTeamFeatures())        <li>
           <div class="dropdown-divider my-1 mx-n2"></div>
         </li>
         <li>
