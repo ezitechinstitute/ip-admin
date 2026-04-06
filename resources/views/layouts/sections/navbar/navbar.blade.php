@@ -33,7 +33,7 @@
   @endif
 
 </nav>
-@else
+@elseif(!isset($navbarDetached) || $navbarDetached != 'navbar-detached')
 <nav class="layout-navbar navbar navbar-expand-xl align-items-center" id="layout-navbar">
   <div class="{{ $containerNav }}">
       @if($isManagerRoute)
