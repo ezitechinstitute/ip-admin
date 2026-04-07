@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Request;
 
     
 
-/* class InternTask extends Model
+class InternTask extends Model
 {
     protected $table = 'intern_tasks';
     protected $primaryKey = 'task_id'; // Add this because your PK is not 'id'
@@ -38,22 +38,22 @@ use Illuminate\Support\Facades\Request;
         'submit_description',
     ];
 
-     Intern Relationship
+    // Intern Relationship
     public function intern()
     {
         return $this->belongsTo(InternAccount::class, 'eti_id', 'eti_id');
-   /}
+   }
 
-     Supervisor Relationship
+    // Supervisor Relationship
     public function supervisor()
     {
         return $this->belongsTo(ManagersAccount::class, 'assigned_by', 'manager_id');
     }
 
-     Project Relationship (Only if project_id exists in intern_tasks table)
+    // Project Relationship (Only if project_id exists in intern_tasks table)
     public function project()
     {
-   /    return $this->belongsTo(InternProject::class, 'project_id', 'project_id');
+      return $this->belongsTo(InternProject::class, 'project_id', 'project_id');
     }
 
 
@@ -61,6 +61,5 @@ use Illuminate\Support\Facades\Request;
     
 }
 
-*/
 
-// Model is commented out because table 'project_tasks' was deleted
+

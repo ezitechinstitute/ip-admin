@@ -66,14 +66,14 @@
                         @forelse($tasks as $task)
                         <tr>
                             <td>
-                                <div class="fw-semibold">{{ $task->title }}</div>
-                                <small class="text-muted">{{ \Illuminate\Support\Str::limit($task->description ?? 'No description', 50) }}</small>
+                                <div class="fw-semibold">{{ $task->task_title }}</div>
+                                <small class="text-muted">{{ \Illuminate\Support\Str::limit($task->task_description ?? 'No description', 50) }}</small>
                             </td>
                             <td>
-                                <span class="badge bg-{{ isset($task->deadline) && \Carbon\Carbon::parse($task->deadline)->isPast() ? 'danger' : 'info' }}">
-                                    {{ isset($task->deadline) ? \Carbon\Carbon::parse($task->deadline)->format('d M, Y') : 'No deadline' }}
+                                <span class="badge bg-{{ Carbon\Carbon::parse($task->task_end)->isPast() ? 'danger' : 'info' }}">
+                                    {{ Carbon\Carbon::parse($task->task_end)->format('d M, Y') }}
                                 </span>
-                                @if(isset($task->deadline) && \Carbon\Carbon::parse($task->deadline)->isPast() && $task->status != 'approved')
+                                @if(Carbon\Carbon::parse($task->task_end)->isPast() && $task->task_status != 'approved')
                                     <br><small class="text-danger">Overdue</small>
                                 @endif
                             </td>
@@ -93,11 +93,11 @@
                                         'rejected' => 'x-circle',
                                         'completed' => 'check',
                                     ];
-                                    $color = $statusColors[$task->status] ?? 'secondary';
-                                    $icon = $statusIcons[$task->status] ?? 'circle';
+                                    $color = $statusColors[$task->task_status] ?? 'secondary';
+                                    $icon = $statusIcons[$task->task_status] ?? 'circle';
                                 @endphp
                                 <span class="badge bg-{{ $color }}">
-                                    <i class="ti ti-{{ $icon }} me-1"></i>{{ ucfirst($task->status) }}
+                                    <i class="ti ti-{{ $icon }} me-1"></i>{{ ucfirst($task->task_status) }}
                                 </span>
                             </td>
                             <td>
@@ -108,7 +108,7 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('intern.tasks.show', $task->id) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ route('intern.tasks.show', $task->task_id) }}" class="btn btn-sm btn-primary">
                                     <i class="ti ti-eye"></i> View
                                 </a>
                             </td>
