@@ -45,16 +45,15 @@ return [
             'provider' => 'admins',
         ],
         'manager' => [
-        'driver' => 'session',
-        'provider' => 'managers',
+            'driver' => 'session',
+            'provider' => 'managers',
+        ],
+        // ADD - INTERN GUARD
+        'intern' => [
+            'driver' => 'session',
+            'provider' => 'interns',
+        ],
     ],
-    ],
-
-
-
-
-
-    
 
     /*
     |--------------------------------------------------------------------------
@@ -84,9 +83,14 @@ return [
             'model' => App\Models\AdminAccount::class,
         ],
         'managers' => [
-        'driver' => 'eloquent',
-        'model' => App\Models\ManagersAccount::class, 
-    ],
+            'driver' => 'eloquent',
+            'model' => App\Models\ManagersAccount::class, 
+        ],
+        // ADD - INTERN PROVIDER
+        'interns' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\InternAccount::class,
+        ],
     ],
 
     /*

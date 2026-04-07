@@ -5,8 +5,10 @@ namespace App\Http\Controllers\authentications;
 use App\Http\Controllers\Controller;
 use App\Models\AdminAccount;
 use App\Models\ManagersAccount;
+use App\Models\InternAccount;  
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+  
 
 class LoginCover extends Controller
 {
@@ -24,6 +26,20 @@ class LoginCover extends Controller
     ]);
 
     $credentials = ['email' => $request->email, 'password' => $request->password];
+
+
+
+
+// Check Intern (same pattern as admin and manager)
+$intern = InternAccount::where('email', $request->email)
+                       ->where('password', $request->password)
+                       ->first();
+
+if ($intern) {
+    Auth::guard('intern')->login($intern);
+    $request->session()->regenerate();
+    return redirect()->route('intern.dashboard');
+}
 
     // 1. Check in Admin Table using 'admin' guard
     // Attempt to find user in AdminAccount table
@@ -67,7 +83,9 @@ if ($manager) {
     return redirect()->route('manager.dashboard');
 }
 
-    // 3. Fallback if both fail
+ 
+
+    // 4. Fallback if all fail
     return back()->withErrors([
         'email' => 'Invalid email or password. Please try again!',
     ])->onlyInput('email');
@@ -76,6 +94,7 @@ if ($manager) {
   public function logoutAuth(Request $request)
 {
     Auth::guard('admin')->logout();
+    Auth::guard('intern')->logout();  // ← intern logout
 
     $request->session()->forget('admin'); // optional
     $request->session()->regenerate();

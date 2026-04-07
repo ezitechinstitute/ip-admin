@@ -1,0 +1,101 @@
+{
+  "menu": [
+    {
+      "name": "Intern Dashboard",
+      "icon": "menu-icon icon-base ti tabler-smart-home",
+      "slug": "intern/dashboard",
+      "url": "intern/dashboard"
+    },
+    {
+      "menuHeader": "My Account"
+    },
+    {
+      "name": "My Profile",
+      "icon": "menu-icon icon-base ti tabler-user",
+      "slug": "intern/profile",
+      "url": "intern/profile"
+    },
+    {
+      "name": "Public Portfolio",
+      "icon": "menu-icon icon-base ti tabler-world",
+      "slug": "intern/portfolio",
+      "url": "intern/portfolio"
+    },
+    {
+      "menuHeader": "My Work"
+    },
+    {
+      "name": "My Projects",
+      "icon": "menu-icon icon-base ti tabler-briefcase",
+      "slug": "intern/projects",
+      "url": "intern/projects"
+    },
+    {
+      "name": "My Tasks",
+      "icon": "menu-icon icon-base ti tabler-checklist",
+      "slug": "intern/tasks",
+      "url": "intern/tasks"
+    },
+    {
+      "menuHeader": "Finance"
+    },
+    {
+      "name": "My Invoices",
+      "icon": "menu-icon icon-base ti tabler-file-invoice",
+      "slug": "intern/invoices",
+      "url": "intern/invoices"
+    },
+    {
+      "menuHeader": "Documents"
+    },
+    {
+      "name": "My Certificates",
+      "icon": "menu-icon icon-base ti tabler-certificate",
+      "slug": "intern/certificates",
+      "url": "intern/certificates"
+    },
+    {
+      "name": "Offer Letter",
+      "icon": "menu-icon icon-base ti tabler-file",
+      "slug": "intern/offer-letter",
+      "url": "intern/offer-letter"
+    },
+    {
+      "menuHeader": "Support"
+    },
+    {
+      "name": "Attendance",
+      "icon": "menu-icon icon-base ti tabler-calendar-check",
+      "slug": "intern/attendance",
+      "url": "intern/attendance"
+    },
+    {
+      "name": "Leave Request",
+      "icon": "menu-icon icon-base ti tabler-logout",
+      "slug": "intern/leave",
+      "url": "intern/leave"
+    },
+    {
+      "name": "Feedback",
+      "icon": "menu-icon icon-base ti tabler-message-circle",
+      "slug": "intern/feedback",
+      "url": "intern/feedback"
+    },
+    {
+      "name": "Learning Resources",
+      "icon": "menu-icon icon-base ti tabler-book",
+      "slug": "intern/resources",
+      "url": "intern/resources"
+    },
+    {
+      "menuHeader": "Settings"
+    },
+    {
+      "name": "Profile Settings",
+      "icon": "menu-icon icon-base ti tabler-settings",
+      "slug": "intern/settings",
+      "url": "intern/settings"
+    }
+    
+  ]
+}

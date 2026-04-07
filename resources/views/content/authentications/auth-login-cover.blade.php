@@ -28,8 +28,8 @@ $configData = Helper::appClasses();
 @section('content')
 <div class="authentication-wrapper authentication-cover">
   <div style="position: absolute; top: 24px; right: 32px; z-index: 10;">
-    <a href="{{ url('/admin/internship-registration') }}" class="btn btn-outline-primary">
-      Ezitech Internship Registration
+    <a href="{{ route('intern.register.step1') }}" class="btn btn-outline-primary">
+      Register as Intern
     </a>
   </div>
   <!-- Logo -->
@@ -136,6 +136,16 @@ $configData = Helper::appClasses();
             <span>Create an account</span>
           </a>
         </p> --}}
+
+        <div class="text-center mb-6 p-4" style="background: #f5f5ff; border-radius: 0.375rem;">
+          <p class="mb-2 text-muted"><strong>New to Ezitech?</strong></p>
+          <p class="mb-3 text-muted" style="font-size: 0.9rem;">
+            Start your internship journey with our skill-based assessment
+          </p>
+          <a href="{{ route('intern.register.step1') }}" class="btn btn-primary btn-sm">
+            Apply for Internship
+          </a>
+        </div>
 
         <div class="divider my-6">
           <div class="divider-text">or</div>

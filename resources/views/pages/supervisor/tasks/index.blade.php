@@ -183,7 +183,6 @@
             <td>{{ $tasks->firstItem() + $index }}</td>
             <td>
               <div class="fw-semibold">{{ $task->title }}</div>
-              {{-- FIXED: Replaced Str::limit with PHP substr --}}
               <small class="text-muted">{{ strlen($task->description) > 50 ? substr($task->description, 0, 50) . '...' : $task->description }}</small>
             </td>
             <td>
@@ -320,16 +319,18 @@ function deleteTask(id) {
     if (result.isConfirmed) {
       $.ajax({
         url: `/supervisor/tasks/${id}`,
-        type: 'DELETE',
+        type: 'POST',
         data: {
-          _token: '{{ csrf_token() }}'
+          _token: '{{ csrf_token() }}',
+          _method: 'DELETE'
         },
         success: function(response) {
           Swal.fire('Deleted!', 'Task has been deleted.', 'success')
             .then(() => window.location.reload());
         },
         error: function(xhr) {
-          Swal.fire('Error!', 'Failed to delete task.', 'error');
+          console.log(xhr.responseText);
+          Swal.fire('Error!', xhr.responseJSON?.message || 'Failed to delete task.', 'error');
         }
       });
     }
@@ -337,12 +338,13 @@ function deleteTask(id) {
 }
 
 function gradeTask(id) {
-  // Get task points via AJAX
   $.get(`/supervisor/tasks/${id}`, function(task) {
     $('#max_points').text(task.points);
     $('#grade_input').attr('max', task.points);
     $('#gradeForm').attr('action', `/supervisor/tasks/${id}/grade`);
     $('#gradeModal').modal('show');
+  }).fail(function(xhr) {
+    Swal.fire('Error!', 'Could not load task details.', 'error');
   });
 }
 
@@ -360,6 +362,8 @@ function viewSubmission(id) {
       icon: 'info',
       confirmButtonText: 'OK'
     });
+  }).fail(function(xhr) {
+    Swal.fire('Error!', 'Could not load submission details.', 'error');
   });
 }
 </script>
