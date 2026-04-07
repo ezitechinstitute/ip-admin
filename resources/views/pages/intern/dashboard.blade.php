@@ -3,6 +3,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Helpers\Helpers;
 use Carbon\Carbon;
 
+
 $configData = Helper::appClasses();
 $intern = Auth::guard('intern')->user();
 $profileImage = Helpers::getProfileImage($intern);
