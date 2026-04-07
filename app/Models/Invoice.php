@@ -21,7 +21,7 @@ protected $fillable = [
     'due_date', 
     'received_by',
     'status',
-    'invoice_type', // <--- ADD THIS
+    'invoice_type', 
     'created_at',
 ];
 

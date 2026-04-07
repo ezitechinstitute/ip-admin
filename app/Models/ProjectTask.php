@@ -54,3 +54,6 @@ class ProjectTask extends Model
         );
     }
 }
+
+
+// Model is commented out because table 'project_tasks' was deleted
