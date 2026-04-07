@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\InternAccount;
 use App\Models\InternTask;
 
+
 class SupervisorTaskController extends Controller
 {
     public function index()

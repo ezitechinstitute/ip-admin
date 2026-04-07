@@ -839,6 +839,8 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
     Route::get('/attendance', [SupervisorAttendanceController::class, 'index'])->name('supervisor.attendance');
     Route::get('/leaves', [SupervisorLeaveController::class, 'index'])->name('supervisor.leaves');
     Route::get('/feedback', [SupervisorFeedbackController::class, 'index'])->name('supervisor.feedback');
+    Route::post('/feedback/store', [SupervisorFeedbackController::class, 'store'])
+    ->name('supervisor.feedback.store');
 
     Route::get('/profile-settings', [SupervisorProfileController::class, 'index'])->name('supervisor.profile.settings');
     Route::get('/knowledge-base', [SupervisorKnowledgeBaseController::class, 'index'])->name('supervisor.knowledge.base');
