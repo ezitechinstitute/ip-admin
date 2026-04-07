@@ -22,11 +22,11 @@ class InternDashboardController extends Controller
         $internEmail = $intern->email;
         $internId = $intern->int_id;
 
-        // Task counts
-        $totalTasks = DB::table('intern_tasks')->where('eti_id', $internEtiId)->count();
-        $completedTasks = DB::table('intern_tasks')->where('eti_id', $internEtiId)->where('task_status', 'approved')->count();
-        $pendingTasks = DB::table('intern_tasks')->where('eti_id', $internEtiId)->where('task_status', 'pending')->count();
-        $submittedTasks = DB::table('intern_tasks')->where('eti_id', $internEtiId)->where('task_status', 'submitted')->count();
+        // ✅ FIXED: Task counts from 'tasks' table
+        $totalTasks = DB::table('tasks')->where('intern_id', $internId)->count();
+        $completedTasks = DB::table('tasks')->where('intern_id', $internId)->where('status', 'approved')->count();
+        $pendingTasks = DB::table('tasks')->where('intern_id', $internId)->where('status', 'pending')->count();
+        $submittedTasks = DB::table('tasks')->where('intern_id', $internId)->where('status', 'submitted')->count();
 
         // Project counts
         $totalProjects = DB::table('intern_projects')->where('eti_id', $internEtiId)->count();
@@ -74,19 +74,19 @@ class InternDashboardController extends Controller
         $paidAmount = $invoices->sum('received_amount');
         $paymentPercentage = $totalAmount > 0 ? round(($paidAmount / $totalAmount) * 100) : 0;
 
-        // Recent tasks
-        $recentTasks = DB::table('intern_tasks')
-            ->where('eti_id', $internEtiId)
+        // ✅ FIXED: Recent tasks from 'tasks' table
+        $recentTasks = DB::table('tasks')
+            ->where('intern_id', $internId)
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
-        // Upcoming deadlines
-        $upcomingDeadlines = DB::table('intern_tasks')
-            ->where('eti_id', $internEtiId)
-            ->where('task_status', '!=', 'approved')
-            ->where('task_end', '>=', Carbon::now())
-            ->orderBy('task_end', 'asc')
+        // ✅ FIXED: Upcoming deadlines from 'tasks' table
+        $upcomingDeadlines = DB::table('tasks')
+            ->where('intern_id', $internId)
+            ->where('status', '!=', 'approved')
+            ->where('deadline', '>=', Carbon::now())
+            ->orderBy('deadline', 'asc')
             ->limit(5)
             ->get();
 
@@ -96,8 +96,8 @@ class InternDashboardController extends Controller
         // Notifications
         $notifications = $this->getNotifications($internId);
 
-        // Performance data
-        $performance = $this->getPerformanceData($internEtiId);
+        // ✅ FIXED: Performance data from 'tasks' table
+        $performance = $this->getPerformanceData($internId);
 
         $stats = [
             'internship_status' => $internshipStatus,
@@ -214,15 +214,15 @@ class InternDashboardController extends Controller
     /**
      * Get performance data
      */
-    private function getPerformanceData($etiId)
+    private function getPerformanceData($internId)
     {
-        // Task completion over time (last 30 days)
+        // ✅ FIXED: Task completion over time (last 30 days) from 'tasks' table
         $taskCompletion = collect([]);
         try {
-            $taskCompletion = DB::table('intern_tasks')
+            $taskCompletion = DB::table('tasks')
                 ->select(DB::raw('DATE(updated_at) as date'), DB::raw('count(*) as count'))
-                ->where('eti_id', $etiId)
-                ->where('task_status', 'approved')
+                ->where('intern_id', $internId)
+                ->where('status', 'approved')
                 ->where('updated_at', '>=', Carbon::now()->subDays(30))
                 ->groupBy(DB::raw('DATE(updated_at)'))
                 ->get();
@@ -231,11 +231,11 @@ class InternDashboardController extends Controller
             $taskCompletion = collect([]);
         }
         
-        // Calculate average score safely
+        // ✅ FIXED: Calculate average score from 'tasks' table
         $averageScore = 0;
         try {
-            $averageScore = DB::table('intern_tasks')
-                ->where('eti_id', $etiId)
+            $averageScore = DB::table('tasks')
+                ->where('intern_id', $internId)
                 ->whereNotNull('grade')
                 ->avg('grade');
             $averageScore = round($averageScore ?? 0, 2);
@@ -245,8 +245,8 @@ class InternDashboardController extends Controller
         
         return [
             'task_completion' => $taskCompletion,
-            'total_tasks' => DB::table('intern_tasks')->where('eti_id', $etiId)->count(),
-            'completed_tasks' => DB::table('intern_tasks')->where('eti_id', $etiId)->where('task_status', 'approved')->count(),
+            'total_tasks' => DB::table('tasks')->where('intern_id', $internId)->count(),
+            'completed_tasks' => DB::table('tasks')->where('intern_id', $internId)->where('status', 'approved')->count(),
             'average_score' => $averageScore,
         ];
     }

@@ -393,31 +393,31 @@ $progressPercent = $totalDays > 0 ? round(($elapsedDays / $totalDays) * 100) : 0
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($recentTasks as $task)
-                            <tr>
-                                <td class="fw-semibold ps-4" style="font-size:.84rem;">{{ \Illuminate\Support\Str::limit($task->task_title, 50) }}</td>
-                                <td>
-                                    <span class="fw-semibold text-{{ Carbon::parse($task->task_end)->isPast() ? 'danger' : 'muted' }}" style="font-size:.74rem;">
-                                        <i class="ti ti-calendar me-1"></i>{{ Carbon::parse($task->task_end)->format('d M Y') }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @php
-                                        $statusMap = [
-                                            'approved'    => ['bg' => 'success', 'icon' => 'check-circle'],
-                                            'rejected'    => ['bg' => 'danger',  'icon' => 'x-circle'],
-                                            'submitted'   => ['bg' => 'info',    'icon' => 'send'],
-                                            'pending'     => ['bg' => 'warning', 'icon' => 'clock'],
-                                            'in_progress' => ['bg' => 'primary', 'icon' => 'loader'],
-                                            'completed'   => ['bg' => 'success', 'icon' => 'check'],
-                                        ];
-                                        $sc = $statusMap[$task->task_status] ?? ['bg' => 'secondary', 'icon' => 'circle'];
-                                    @endphp
-                                    <span class="badge bg-{{ $sc['bg'] }} bg-opacity-10 text-{{ $sc['bg'] }} rounded-pill px-3 py-2 fw-semibold" style="font-size:.7rem;">
-                                        <i class="ti ti-{{ $sc['icon'] }} me-1"></i>{{ ucfirst(str_replace('_', ' ', $task->task_status)) }}
-                                    </span>
-                                </td>
-                            </tr>
+    @forelse($recentTasks as $task)
+    <tr>
+        <td class="fw-semibold ps-4" style="font-size:.84rem;">{{ \Illuminate\Support\Str::limit($task->title, 50) }}</td>
+        <td>
+            <span class="fw-semibold text-{{ isset($task->deadline) && Carbon::parse($task->deadline)->isPast() ? 'danger' : 'muted' }}" style="font-size:.74rem;">
+                <i class="ti ti-calendar me-1"></i>{{ isset($task->deadline) ? Carbon::parse($task->deadline)->format('d M Y') : 'No deadline' }}
+            </span>
+        </td>
+        <td>
+            @php
+                $statusMap = [
+                    'approved'    => ['bg' => 'success', 'icon' => 'check-circle'],
+                    'rejected'    => ['bg' => 'danger',  'icon' => 'x-circle'],
+                    'submitted'   => ['bg' => 'info',    'icon' => 'send'],
+                    'pending'     => ['bg' => 'warning', 'icon' => 'clock'],
+                    'in_progress' => ['bg' => 'primary', 'icon' => 'loader'],
+                    'completed'   => ['bg' => 'success', 'icon' => 'check'],
+                ];
+                $sc = $statusMap[$task->status] ?? ['bg' => 'secondary', 'icon' => 'circle'];
+            @endphp
+            <span class="badge bg-{{ $sc['bg'] }} bg-opacity-10 text-{{ $sc['bg'] }} rounded-pill px-3 py-2 fw-semibold" style="font-size:.7rem;">
+                <i class="ti ti-{{ $sc['icon'] }} me-1"></i>{{ ucfirst(str_replace('_', ' ', $task->status)) }}
+            </span>
+        </td>
+    </tr>
                             @empty
                             <tr>
                                 <td colspan="3" class="text-center py-5">
@@ -493,25 +493,25 @@ $progressPercent = $totalDays > 0 ? round(($elapsedDays / $totalDays) * 100) : 0
             <div class="card-body p-0">
                 @if($upcomingDeadlines->count() > 0)
                 <div class="list-group list-group-flush">
-                    @foreach($upcomingDeadlines as $task)
-                    @php
-                        $daysLeft = Carbon::parse($task->task_end)->diffInDays(Carbon::now());
-                        $dc = $daysLeft <= 1 ? 'danger' : ($daysLeft <= 3 ? 'warning' : 'info');
-                    @endphp
-                    <div class="list-group-item border-0 border-bottom px-3 py-3">
-                        <div class="d-flex justify-content-between align-items-center gap-3">
-                            <div>
-                                <div class="fw-semibold mb-1" style="font-size:.84rem;">{{ $task->task_title }}</div>
-                                <small class="text-muted" style="font-size:.7rem;">
-                                    <i class="ti ti-calendar me-1"></i>Due {{ Carbon::parse($task->task_end)->format('d M Y') }}
-                                </small>
-                            </div>
-                            <span class="badge bg-{{ $dc }} bg-opacity-10 text-{{ $dc }} rounded-pill px-3 py-2 fw-semibold flex-shrink-0" style="font-size:.7rem;">
-                                <i class="ti ti-alarm me-1"></i>{{ number_format($daysLeft) }}d left
-                            </span>
-                        </div>
-                    </div>
-                    @endforeach
+                   @foreach($upcomingDeadlines as $task)
+@php
+    $daysLeft = isset($task->deadline) ? Carbon::parse($task->deadline)->diffInDays(Carbon::now()) : 0;
+    $dc = $daysLeft <= 1 ? 'danger' : ($daysLeft <= 3 ? 'warning' : 'info');
+@endphp
+<div class="list-group-item border-0 border-bottom px-3 py-3">
+    <div class="d-flex justify-content-between align-items-center gap-3">
+        <div>
+            <div class="fw-semibold mb-1" style="font-size:.84rem;">{{ $task->title }}</div>
+            <small class="text-muted" style="font-size:.7rem;">
+                <i class="ti ti-calendar me-1"></i>Due {{ isset($task->deadline) ? Carbon::parse($task->deadline)->format('d M Y') : 'No deadline' }}
+            </small>
+        </div>
+        <span class="badge bg-{{ $dc }} bg-opacity-10 text-{{ $dc }} rounded-pill px-3 py-2 fw-semibold flex-shrink-0" style="font-size:.7rem;">
+            <i class="ti ti-alarm me-1"></i>{{ number_format(abs($daysLeft)) }}d left
+        </span>
+    </div>
+</div>
+@endforeach
                 </div>
                 @else
                 <div class="text-center py-5">

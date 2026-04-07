@@ -24,17 +24,17 @@ class InternProjectController extends Controller
             ->orderBy('createdat', 'desc')
             ->paginate(10);
         
-        // Calculate progress for each project based on tasks
+        // Calculate progress for each project based on tasks - FIXED: Use 'tasks' table
         foreach ($projects as $project) {
-            $totalTasks = DB::table('intern_tasks')
-                ->where('eti_id', $intern->eti_id)
-                ->where('task_title', 'LIKE', '%' . $project->title . '%')
+            $totalTasks = DB::table('tasks')
+                ->where('intern_id', $intern->int_id)
+                ->where('title', 'LIKE', '%' . $project->title . '%')
                 ->count();
             
-            $completedTasks = DB::table('intern_tasks')
-                ->where('eti_id', $intern->eti_id)
-                ->where('task_title', 'LIKE', '%' . $project->title . '%')
-                ->whereIn('task_status', ['Completed', 'approved', 'Approved'])
+            $completedTasks = DB::table('tasks')
+                ->where('intern_id', $intern->int_id)
+                ->where('title', 'LIKE', '%' . $project->title . '%')
+                ->where('status', 'approved')
                 ->count();
             
             $project->progress = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
@@ -68,10 +68,10 @@ class InternProjectController extends Controller
             abort(404, 'Project not found');
         }
         
-        // Get tasks for this project
-        $tasks = DB::table('intern_tasks')
-            ->where('eti_id', $intern->eti_id)
-            ->where('task_title', 'LIKE', '%' . $project->title . '%')
+        // Get tasks for this project - FIXED: Use 'tasks' table
+        $tasks = DB::table('tasks')
+            ->where('intern_id', $intern->int_id)
+            ->where('title', 'LIKE', '%' . $project->title . '%')
             ->orderBy('created_at', 'desc')
             ->get();
         

@@ -20,19 +20,19 @@ class InternTaskController extends Controller
             return redirect()->route('login');
         }
         
-        // Get all tasks for this intern
-        $tasks = DB::table('intern_tasks')
-            ->where('eti_id', $intern->eti_id)
+        // ✅ FIXED: Use 'tasks' table instead of 'intern_tasks'
+        $tasks = DB::table('tasks')
+            ->where('intern_id', $intern->int_id)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
         
-        // Get task statistics
+        // ✅ FIXED: Get task statistics from 'tasks' table
         $stats = [
-            'total' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->count(),
-            'pending' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->where('task_status', 'Assigned')->count(),
-            'submitted' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->where('task_status', 'submitted')->count(),
-            'approved' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->whereIn('task_status', ['Completed', 'approved'])->count(),
-            'rejected' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->where('task_status', 'Rejected')->count(),
+            'total' => DB::table('tasks')->where('intern_id', $intern->int_id)->count(),
+            'pending' => DB::table('tasks')->where('intern_id', $intern->int_id)->where('status', 'pending')->count(),
+            'submitted' => DB::table('tasks')->where('intern_id', $intern->int_id)->where('status', 'submitted')->count(),
+            'approved' => DB::table('tasks')->where('intern_id', $intern->int_id)->where('status', 'approved')->count(),
+            'rejected' => DB::table('tasks')->where('intern_id', $intern->int_id)->where('status', 'rejected')->count(),
         ];
         
         return view('pages.intern.tasks.index', compact('tasks', 'stats'));
@@ -46,9 +46,10 @@ class InternTaskController extends Controller
             return redirect()->route('login');
         }
         
-        $task = DB::table('intern_tasks')
-            ->where('task_id', $id)
-            ->where('eti_id', $intern->eti_id)
+        // ✅ FIXED: Use 'tasks' table
+        $task = DB::table('tasks')
+            ->where('id', $id)
+            ->where('intern_id', $intern->int_id)
             ->first();
         
         if (!$task) {
@@ -56,9 +57,9 @@ class InternTaskController extends Controller
         }
         
         // Check if task can be resubmitted
-$canResubmit = in_array($task->task_status, ['Rejected', 'Assigned', 'pending']);
-        $isSubmitted = $task->task_status == 'submitted';
-        $isApproved = in_array($task->task_status, ['Completed', 'approved']);
+        $canResubmit = in_array($task->status, ['rejected', 'pending']);
+        $isSubmitted = $task->status == 'submitted';
+        $isApproved = in_array($task->status, ['approved']);
         
         return view('pages.intern.tasks.show', compact('task', 'canResubmit', 'isSubmitted', 'isApproved'));
     }
@@ -71,9 +72,10 @@ $canResubmit = in_array($task->task_status, ['Rejected', 'Assigned', 'pending'])
             return redirect()->route('login');
         }
         
-        $task = DB::table('intern_tasks')
-            ->where('task_id', $id)
-            ->where('eti_id', $intern->eti_id)
+        // ✅ FIXED: Use 'tasks' table
+        $task = DB::table('tasks')
+            ->where('id', $id)
+            ->where('intern_id', $intern->int_id)
             ->first();
         
         if (!$task) {
@@ -81,40 +83,36 @@ $canResubmit = in_array($task->task_status, ['Rejected', 'Assigned', 'pending'])
         }
         
         // Check if task can be submitted
-        if (in_array($task->task_status, ['Completed', 'approved'])) {
+        if (in_array($task->status, ['approved'])) {
             return redirect()->back()->with('error', 'This task is already completed. You cannot resubmit.');
         }
         
         $validated = $request->validate([
-            'task_git_url' => 'nullable|url|max:500',
-            'task_live_url' => 'nullable|url|max:500',
-            'task_screenshot' => 'nullable|file|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'submit_description' => 'nullable|string|max:1000',
+            'github_url' => 'nullable|url|max:500',
+            'live_url' => 'nullable|url|max:500',
+            'screenshot' => 'nullable|file|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'submission_notes' => 'nullable|string|max:1000',
         ]);
         
         $updateData = [
-            'task_git_url' => $validated['task_git_url'] ?? null,
-            'task_live_url' => $validated['task_live_url'] ?? null,
-            'submit_description' => $validated['submit_description'] ?? null,
-            'task_status' => 'submitted',
+            'github_url' => $validated['github_url'] ?? null,
+            'live_url' => $validated['live_url'] ?? null,
+            'submission_notes' => $validated['submission_notes'] ?? null,
+            'status' => 'submitted',
+            'submitted_at' => now(),
             'updated_at' => now(),
         ];
         
         // Handle file upload
-        if ($request->hasFile('task_screenshot')) {
-            $file = $request->file('task_screenshot');
+        if ($request->hasFile('screenshot')) {
+            $file = $request->file('screenshot');
             $fileName = time() . '_' . $intern->int_id . '_' . $id . '.' . $file->getClientOriginalExtension();
             $path = $file->storeAs('uploads/task_submissions', $fileName, 'public');
-            $updateData['task_screenshot'] = 'storage/' . $path;
-            
-            // Delete old screenshot if exists
-            if ($task->task_screenshot && $task->task_screenshot != 'NULL' && Storage::disk('public')->exists(str_replace('storage/', '', $task->task_screenshot))) {
-                Storage::disk('public')->delete(str_replace('storage/', '', $task->task_screenshot));
-            }
+            $updateData['submission_notes'] = ($updateData['submission_notes'] ?? '') . "\n[Screenshot: storage/" . $path . "]";
         }
         
-        DB::table('intern_tasks')
-            ->where('task_id', $id)
+        DB::table('tasks')
+            ->where('id', $id)
             ->update($updateData);
         
         // Create notification for intern
@@ -133,7 +131,7 @@ $canResubmit = in_array($task->task_status, ['Rejected', 'Assigned', 'pending'])
         DB::table('intern_notifications')->insert([
             'intern_id' => $intern->int_id,
             'title' => 'Task Submitted',
-            'message' => 'You have successfully submitted "' . $task->task_title . '". Please wait for supervisor review.',
+            'message' => 'You have successfully submitted "' . $task->title . '". Please wait for supervisor review.',
             'type' => 'task',
             'is_read' => false,
             'created_at' => now(),
