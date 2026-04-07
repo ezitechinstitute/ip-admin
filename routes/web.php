@@ -120,31 +120,30 @@ use App\Http\Controllers\layouts\ContentNavbar;
 use App\Http\Controllers\layouts\ContentNavSidebar;
 use App\Http\Controllers\layouts\Fluid;
 use App\Http\Controllers\layouts\Horizontal;
-// use App\Http\Controllers\layouts\NavbarFull;
-// use App\Http\Controllers\layouts\NavbarFullSidebar;
 use App\Http\Controllers\layouts\Vertical;
 use App\Http\Controllers\layouts\WithoutMenu;
 use App\Http\Controllers\layouts\WithoutNavbar;
 use App\Http\Controllers\leavecontroller;
 use App\Http\Controllers\manager_controllers\AllManagerInternController;
+use App\Http\Controllers\manager_controllers\CertificateController;
+use App\Http\Controllers\manager_controllers\CommunicationController;
 use App\Http\Controllers\manager_controllers\DashboardManagerController;
 use App\Http\Controllers\manager_controllers\InternationalInternsManagerController;
+use App\Http\Controllers\manager_controllers\InternPerformanceController;
+use App\Http\Controllers\manager_controllers\InvoiceController as ManagerInvoiceController;
+use App\Http\Controllers\manager_controllers\ManagerAttendanceController;
+use App\Http\Controllers\manager_controllers\ManagerCurriculumController;
+use App\Http\Controllers\manager_controllers\ManagerCurriculumProjectController;
 use App\Http\Controllers\manager_controllers\ManagerKnowledgeBaseController;
+use App\Http\Controllers\manager_controllers\ManagerLeaveController;
 use App\Http\Controllers\manager_controllers\OfferLetterRequestController;
 use App\Http\Controllers\manager_controllers\OfferLetterTemplateController;
 use App\Http\Controllers\manager_controllers\PaymentReceiptController;
 use App\Http\Controllers\manager_controllers\ProfileSettingsController;
 use App\Http\Controllers\manager_controllers\RemainingAmountController;
 use App\Http\Controllers\manager_controllers\RevenueController;
-use App\Http\Controllers\manager_controllers\CertificateController;
-use App\Http\Controllers\manager_controllers\ManagerCurriculumController;
-use App\Http\Controllers\manager_controllers\ManagerCurriculumProjectController;
-use App\Http\Controllers\manager_controllers\TaskViewController;
-use App\Http\Controllers\manager_controllers\InvoiceController as ManagerInvoiceController;
-use App\Http\Controllers\manager_controllers\CommunicationController;
-use App\Http\Controllers\manager_controllers\ManagerAttendanceController;
-use App\Http\Controllers\manager_controllers\ManagerLeaveController;
 use App\Http\Controllers\manager_controllers\Supervisorcontroller;
+use App\Http\Controllers\manager_controllers\TaskViewController;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\modal\ModalExample;
@@ -166,17 +165,17 @@ use App\Http\Controllers\pages\UserProjects;
 use App\Http\Controllers\pages\UserTeams;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\SupervisorsController;
 use App\Http\Controllers\supervisor_controllers\DashboardSupervisorController;
-use App\Http\Controllers\supervisor_controllers\SupervisorInternController;
-use App\Http\Controllers\supervisor_controllers\SupervisorProjectController;
 use App\Http\Controllers\supervisor_controllers\SupervisorAttendanceController;
-use App\Http\Controllers\supervisor_controllers\SupervisorLeaveController;
-use App\Http\Controllers\supervisor_controllers\SupervisorFeedbackController;
-use App\Http\Controllers\supervisor_controllers\SupervisorProfileController;
-use App\Http\Controllers\supervisor_controllers\SupervisorKnowledgeBaseController;
-use App\Http\Controllers\supervisor_controllers\SupervisorTaskController;
 use App\Http\Controllers\supervisor_controllers\SupervisorEvaluationController;
+use App\Http\Controllers\supervisor_controllers\SupervisorFeedbackController;
+use App\Http\Controllers\supervisor_controllers\SupervisorInternController;
+use App\Http\Controllers\supervisor_controllers\SupervisorKnowledgeBaseController;
+use App\Http\Controllers\supervisor_controllers\SupervisorLeaveController;
+use App\Http\Controllers\supervisor_controllers\SupervisorProfileController;
+use App\Http\Controllers\supervisor_controllers\SupervisorProjectController;
+use App\Http\Controllers\supervisor_controllers\SupervisorTaskController;
+use App\Http\Controllers\SupervisorsController;
 use App\Http\Controllers\tables\Basic as TablesBasic;
 use App\Http\Controllers\tables\DatatableAdvanced;
 use App\Http\Controllers\tables\DatatableBasic;
@@ -788,6 +787,15 @@ Route::get('/supervisors', [Supervisorcontroller::class, 'index'])->name('manage
 // Withdraw Routes
 Route::get('/withdraw', [RevenueController::class, 'index'])->name('manager.withdraw.request');
 Route::post('/withdraw', [RevenueController::class, 'index'])->name('manager.withdraw.store');
+// LIST PAGE
+Route::get('/performance-analytics', 
+    [InternPerformanceController::class, 'index']
+)->name('performance.analytics');
+
+// DETAIL PAGE
+Route::get('/performance-analytics/{id}', 
+    [InternPerformanceController::class, 'show']
+)->name('performance.detail');
 
 });
 

@@ -4,7 +4,7 @@
   use App\Helpers\Helpers;
 
   $menuFixed =
-      $configData['layout'] === 'vertical'
+      $configData['layout'] === 'vertical' 
           ? $menuFixed ?? ''
           : ($configData['layout'] === 'front'
               ? ''
