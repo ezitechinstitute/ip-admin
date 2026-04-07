@@ -4,8 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-
-
 return new class extends Migration
 {
     /**
@@ -13,24 +11,32 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('intern_performance', function (Blueprint $table) {
-            $table->id();
+        // ✅ Prevent duplicate table error
+        if (!Schema::hasTable('intern_performance')) {
 
-            // Intern basic info
-            $table->unsignedBigInteger('intern_id');
-            $table->string('name');
-            $table->string('email');
-            $table->string('technology')->nullable();
+            Schema::create('intern_performance', function (Blueprint $table) {
+                $table->id();
 
-            // Performance metrics
-            $table->float('task_completion')->default(0);
-            $table->float('deadline')->default(0);
-            $table->float('quality')->default(0);
-            $table->float('attendance')->default(0);
-            $table->float('overall')->default(0);
+                // Intern basic info
+                $table->unsignedBigInteger('intern_id');
+                $table->string('name');
+                $table->string('email');
+                $table->string('technology')->nullable();
 
-            $table->timestamps();
-        });
+                // Performance metrics
+                $table->float('task_completion')->default(0);
+                $table->float('deadline')->default(0);
+                $table->float('quality')->default(0);
+                $table->float('attendance')->default(0);
+                $table->float('overall')->default(0);
+
+                $table->timestamps();
+
+                // ✅ Optional: foreign key (if interns table exists)
+                // $table->foreign('intern_id')->references('id')->on('interns')->onDelete('cascade');
+            });
+
+        }
     }
 
     /**
@@ -40,5 +46,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('intern_performance');
     }
-
 };
