@@ -210,6 +210,7 @@ use App\Http\Middleware\validManager;
 use App\Http\Middleware\ValidUser;
 use App\Http\Controllers\InternPublicRegistrationController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 
 
