@@ -33,16 +33,25 @@
                         <label class="form-label">Communication (0-10)</label>
                         <input type="number" name="communication" class="form-control" min="0" max="10" required>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    {{-- <div class="col-md-6 mb-3">
                         <label class="form-label">Professionalism (0-10)</label>
                         <input type="number" name="professionalism" class="form-control" min="0" max="10" required>
-                    </div>
+                    </div> --}}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Task Completion</label>
+                    <input type="text" class="form-control" value="Auto calculated from tasks" disabled>
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label">Overall Score</label>
+                    <input type="text" class="form-control" value="Auto calculated" disabled>
+                </div>
+
+                {{-- <div class="mb-3">
                     <label class="form-label">Overall Score (0-10)</label>
                     <input type="number" name="overall_score" class="form-control" min="0" max="10" required>
-                </div>
+                </div> --}}
 
                 <div class="mb-3">
                     <label class="form-label">Detailed Remarks / Feedback</label>
