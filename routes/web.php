@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AdminLeaveController;
+use Illuminate\Support\Facades\Auth;  //
+
 use App\Http\Controllers\AllInternsController;
 use App\Http\Controllers\apps\AcademyCourse;
 use App\Http\Controllers\apps\AcademyCourseDetails;
