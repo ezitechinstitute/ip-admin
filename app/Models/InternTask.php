@@ -15,16 +15,16 @@ class InternTask extends Model
 
     protected $fillable = [
         'eti_id',
-       'task_title',
+        'task_title',
         'task_description',
         'task_start',
         'task_end',
-       'task_duration',
+        'task_duration',
         'task_days',
         'task_points',
         'task_obt_points',
-       'assigned_by',
-       'task_status',
+        'assigned_by',
+        'task_status',
         'penalty_flag',
         'code_quality_score',
         'task_approve',
@@ -47,7 +47,7 @@ class InternTask extends Model
     public function intern()
     {
         return $this->belongsTo(InternAccount::class, 'eti_id', 'eti_id');
-   }
+    }
 
     // Supervisor Relationship
     public function supervisor()
@@ -58,7 +58,7 @@ class InternTask extends Model
     // Project Relationship (Only if project_id exists in intern_tasks table)
     public function project()
     {
-      return $this->belongsTo(InternProject::class, 'project_id', 'project_id');
+        return $this->belongsTo(InternProject::class, 'project_id', 'project_id');
     }
 
     // ==================== SCOPES ====================

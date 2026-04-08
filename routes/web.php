@@ -81,6 +81,7 @@ use App\Http\Controllers\extended_ui\TimelineBasic;
 use App\Http\Controllers\extended_ui\TimelineFullscreen;
 use App\Http\Controllers\extended_ui\Tour;
 use App\Http\Controllers\extended_ui\Treeview;
+use App\Http\Controllers\EscalationController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\form_elements\BasicInput;
 use App\Http\Controllers\form_elements\CustomOptions;
