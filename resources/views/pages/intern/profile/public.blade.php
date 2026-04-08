@@ -1,6 +1,13 @@
 @php
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
+    use Illuminate\Support\Facades\Auth;
+    use Carbon\Carbon;
+
+    $statItems = [
+        ['icon' => 'ti-list-check',   'value' => $stats['total_tasks']        ?? 0, 'label' => 'Total Tasks'],
+        ['icon' => 'ti-circle-check', 'value' => $stats['completed_tasks']    ?? 0, 'label' => 'Tasks Completed'],
+        ['icon' => 'ti-briefcase',    'value' => $stats['total_projects']     ?? 0, 'label' => 'Total Projects'],
+        ['icon' => 'ti-trophy',       'value' => $stats['completed_projects'] ?? 0, 'label' => 'Projects Done'],
+    ];
 @endphp
 
 <!DOCTYPE html>
@@ -10,417 +17,238 @@ use Carbon\Carbon;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{{ $intern->name }} - Intern Portfolio at Ezitech">
     <title>{{ $intern->name }} | Intern Portfolio - Ezitech</title>
-    
-    <!-- Favicon -->
+
+    {{-- Favicon --}}
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}">
-    
-    <!-- Fonts and Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    {{-- Bootstrap 5 --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    {{-- Tabler Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-    
+
+    {{-- Google Font --}}
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    {{-- Minimal styles: only what Bootstrap cannot provide via utilities --}}
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 2rem;
-        }
-        
-        .portfolio-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        /* Profile Card */
-        .profile-card {
-            background: white;
-            border-radius: 1.5rem;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-        
-        .profile-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2rem;
-            text-align: center;
-            color: white;
-        }
-        
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 4px solid white;
-            object-fit: cover;
-            margin-bottom: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-        
-        .profile-name {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        
-        .profile-id {
-            opacity: 0.9;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .profile-tech {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.25rem 1rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-        
-        /* Content Sections */
-        .profile-bio {
-            padding: 2rem;
-            border-bottom: 1px solid #e9ecef;
-        }
-        
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .section-title i {
-            color: #667eea;
-            font-size: 1.25rem;
-        }
-        
-        /* Skills */
-        .skill-badge {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: #f1f5f9;
-            border-radius: 8px;
-            margin: 0.25rem;
-            font-size: 0.8rem;
-            color: #667eea;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .skill-badge:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        /* Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-card {
-            background: #f8fafc;
-            border-radius: 1rem;
-            padding: 1rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 0.25rem;
-        }
-        
-        .stat-label {
-            font-size: 0.75rem;
-            color: #64748b;
-        }
-        
-        /* Projects Grid */
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1rem;
-        }
-        
-        .project-card {
-            background: #f8fafc;
-            border-radius: 1rem;
-            padding: 1.25rem;
-            transition: all 0.3s ease;
-        }
-        
-        .project-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .project-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-        }
-        
-        .project-date {
-            font-size: 0.7rem;
-            color: #94a3b8;
-            margin-bottom: 0.5rem;
-        }
-        
-        .project-description {
-            font-size: 0.8rem;
-            color: #475569;
-            line-height: 1.5;
-        }
-        
-        /* Certificates */
-        .certificates-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-        
-        .certificate-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-radius: 1rem;
-            padding: 1rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .certificate-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .certificate-card i {
-            font-size: 2rem;
-            color: #667eea;
-            margin-bottom: 0.5rem;
-        }
-        
-        .certificate-title {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 0.25rem;
-        }
-        
-        .btn-download {
-            display: inline-block;
-            margin-top: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-download:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-        }
-        
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 2rem;
-            color: white;
-            opacity: 0.8;
-        }
-        
-        /* Back Link for Authenticated Users */
-        .back-link {
-            margin-bottom: 1rem;
-            text-align: right;
-        }
-        
-        .back-link a {
-            color: white;
-            text-decoration: none;
-            font-size: 0.85rem;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .back-link a:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            body {
-                padding: 1rem;
-            }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .projects-grid {
-                grid-template-columns: 1fr;
-            }
-            .profile-header {
-                padding: 1.5rem;
-            }
-            .profile-avatar {
-                width: 80px;
-                height: 80px;
-            }
-            .profile-name {
-                font-size: 1.25rem;
-            }
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .page-bg   { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); min-height: 100vh; }
+        .banner-bg { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+        .accent-bar { width: 36px; height: 3px; background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 99px; }
+        .hover-lift { transition: transform .2s, box-shadow .2s; }
+        .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(79,70,229,.15) !important; }
+        .skill-badge { transition: background .2s, color .2s, transform .2s; cursor: default; }
+        .skill-badge:hover { background-color: #4f46e5 !important; color: #fff !important; transform: translateY(-2px); }
+        .project-card { border-left: 3px solid #4f46e5 !important; }
+        .btn-gradient { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; transition: opacity .2s, transform .2s; }
+        .btn-gradient:hover { opacity: .88; transform: translateY(-1px); }
+        .glass-btn { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); backdrop-filter: blur(4px); }
+        .glass-btn:hover { background: rgba(255,255,255,.28); }
+        .cert-icon { background: linear-gradient(135deg, rgba(79,70,229,.1), rgba(124,58,237,.1)); }
+        .section-eyebrow { font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
     </style>
 </head>
-<body>
-    <div class="portfolio-container">
-        @if(Auth::guard('intern')->check() && Auth::guard('intern')->user()->int_id == $intern->int_id)
-        <div class="back-link">
-            <a href="{{ route('intern.profile') }}">
+
+<body class="page-bg py-4 py-md-5">
+<div class="container" style="max-width: 960px;">
+
+    {{-- ── Back link (shown only to the authenticated intern viewing their own portfolio) ── --}}
+    @if(Auth::guard('intern')->check() && Auth::guard('intern')->user()->int_id == $intern->int_id)
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ route('intern.profile') }}"
+               class="btn btn-sm glass-btn rounded-pill text-white fw-semibold d-inline-flex align-items-center gap-1">
                 <i class="ti ti-arrow-left"></i> Back to My Profile
             </a>
         </div>
-        @endif
-        
-        <!-- Profile Card -->
-        <div class="profile-card">
-            <div class="profile-header">
-                <img src="{{ $profileImage }}" alt="{{ $intern->name }}" class="profile-avatar">
-                <h1 class="profile-name">{{ $intern->name }}</h1>
-                <div class="profile-id">{{ $intern->eti_id }}</div>
-                <div class="profile-tech">{{ $intern->int_technology ?? 'Technology Intern' }}</div>
-            </div>
-            
-            <!-- Bio -->
+    @endif
+
+    {{-- ══════════════════════════════════════════════════
+         PROFILE CARD
+    ══════════════════════════════════════════════════ --}}
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4">
+
+        {{-- ── Banner / Hero ── --}}
+        <div class="banner-bg text-white text-center px-4 py-5">
+            <img src="{{ $profileImage }}"
+                 alt="{{ $intern->name }}"
+                 class="rounded-circle object-fit-cover border border-4 border-white shadow mb-3"
+                 width="112" height="112">
+
+            <h1 class="fs-4 fw-bold mb-1">{{ $intern->name }}</h1>
+            <p class="mb-0 opacity-75 small">{{ $intern->eti_id }}</p>
+
+            <span class="badge rounded-pill px-3 py-2 small fw-semibold mt-2 d-inline-flex align-items-center gap-1"
+                  style="background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.35);">
+                <i class="ti ti-device-laptop"></i>
+                {{ $intern->int_technology ?? 'Technology Intern' }}
+            </span>
+        </div>
+
+        <div class="card-body p-0">
+
+            {{-- ══════════════════════
+                 ABOUT ME
+            ══════════════════════ --}}
             @if($intern->bio)
-            <div class="profile-bio">
-                <div class="section-title">
-                    <i class="ti ti-user"></i>
-                    <span>About Me</span>
-                </div>
-                <p style="line-height: 1.6; color: #475569;">{{ $intern->bio }}</p>
+            <div class="px-4 px-md-5 py-4 border-bottom">
+                <p class="section-eyebrow text-primary mb-1">About</p>
+                <h2 class="fs-5 fw-bold mb-2">About Me</h2>
+                <div class="accent-bar mb-3"></div>
+                <p class="text-secondary lh-lg mb-0">{{ $intern->bio }}</p>
             </div>
             @endif
-            
-            <!-- Statistics -->
-            <div class="profile-bio">
-                <div class="section-title">
-                    <i class="ti ti-chart-line"></i>
-                    <span>Statistics</span>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number">{{ number_format($stats['total_tasks'] ?? 0) }}</div>
-                        <div class="stat-label">Total Tasks</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">{{ number_format($stats['completed_tasks'] ?? 0) }}</div>
-                        <div class="stat-label">Tasks Completed</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">{{ number_format($stats['total_projects'] ?? 0) }}</div>
-                        <div class="stat-label">Total Projects</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">{{ number_format($stats['completed_projects'] ?? 0) }}</div>
-                        <div class="stat-label">Projects Completed</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Skills -->
-            @if($skills->count() > 0)
-            <div class="profile-bio">
-                <div class="section-title">
-                    <i class="ti ti-code"></i>
-                    <span>Technical Skills</span>
-                </div>
-                <div>
-                    @foreach($skills as $skill)
-                        <span class="skill-badge">{{ $skill }}</span>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-            
-            <!-- Projects -->
-            @if($projects->count() > 0)
-            <div class="profile-bio">
-                <div class="section-title">
-                    <i class="ti ti-briefcase"></i>
-                    <span>Featured Projects</span>
-                </div>
-                <div class="projects-grid">
-                    @foreach($projects as $project)
-                    <div class="project-card">
-                        <h4 class="project-title">{{ $project->title }}</h4>
-                        @if(isset($project->end_date))
-                        <div class="project-date">
-                            <i class="ti ti-calendar"></i> Completed: {{ Carbon::parse($project->end_date)->format('M Y') }}
+
+            {{-- ══════════════════════
+                 STATISTICS
+            ══════════════════════ --}}
+            <div class="px-4 px-md-5 py-4 border-bottom">
+                <p class="section-eyebrow text-primary mb-1">Overview</p>
+                <h2 class="fs-5 fw-bold mb-2">Statistics</h2>
+                <div class="accent-bar mb-4"></div>
+
+                <div class="row g-3">
+                    @foreach($statItems as $item)
+                    <div class="col-6 col-md-3">
+                        <div class="card border-0 bg-light rounded-3 text-center py-3 px-2 h-100 shadow-sm hover-lift">
+                            <i class="ti {{ $item['icon'] }} fs-2 text-primary mb-2"></i>
+                            <div class="fw-bold text-primary mb-1" style="font-size: 1.6rem;">
+                                {{ number_format($item['value']) }}
+                            </div>
+                            <div class="text-muted fw-semibold" style="font-size: .72rem; letter-spacing: .04em;">
+                                {{ $item['label'] }}
+                            </div>
                         </div>
-                        @endif
-                        <p class="project-description">{{ $project->description ?? 'No description available' }}</p>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- ══════════════════════
+                 TECHNICAL SKILLS
+            ══════════════════════ --}}
+            @if($skills->count() > 0)
+            <div class="px-4 px-md-5 py-4 border-bottom">
+                <p class="section-eyebrow text-primary mb-1">Expertise</p>
+                <h2 class="fs-5 fw-bold mb-2">Technical Skills</h2>
+                <div class="accent-bar mb-3"></div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach($skills as $skill)
+                        <span class="skill-badge badge rounded-pill border border-primary text-primary bg-white px-3 py-2"
+                              style="font-size: .8rem; font-weight: 500;">
+                            {{ $skill }}
+                        </span>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- ══════════════════════
+                 FEATURED PROJECTS
+            ══════════════════════ --}}
+            @if($projects->count() > 0)
+            <div class="px-4 px-md-5 py-4 border-bottom">
+                <p class="section-eyebrow text-primary mb-1">Work</p>
+                <h2 class="fs-5 fw-bold mb-2">Featured Projects</h2>
+                <div class="accent-bar mb-4"></div>
+
+                <div class="row g-3">
+                    @foreach($projects as $project)
+                    <div class="col-12 col-md-6">
+                        <div class="project-card card border-0 bg-light rounded-3 h-100 p-3 shadow-sm hover-lift">
+
+                            {{-- Project title row --}}
+                            <div class="d-flex align-items-start gap-2 mb-2">
+                                <span class="d-flex align-items-center justify-content-center rounded-2 bg-white shadow-sm flex-shrink-0"
+                                      style="width: 36px; height: 36px;">
+                                    <i class="ti ti-folder text-primary"></i>
+                                </span>
+                                <h5 class="fw-bold lh-sm mb-0" style="font-size: .95rem;">
+                                    {{ $project->title }}
+                                </h5>
+                            </div>
+
+                            {{-- Completion date --}}
+                            @if(!empty($project->end_date))
+                            <p class="text-muted d-flex align-items-center gap-1 mb-2" style="font-size: .72rem;">
+                                <i class="ti ti-calendar-check"></i>
+                                Completed {{ Carbon::parse($project->end_date)->format('M Y') }}
+                            </p>
+                            @endif
+
+                            {{-- Description --}}
+                            <p class="text-secondary lh-lg mb-0" style="font-size: .82rem;">
+                                {{ $project->description ?? 'No description available.' }}
+                            </p>
+
+                        </div>
                     </div>
                     @endforeach
                 </div>
             </div>
             @endif
-            
-            <!-- Certificates -->
+
+            {{-- ══════════════════════
+                 CERTIFICATES
+            ══════════════════════ --}}
             @if($certificates->count() > 0)
-            <div class="profile-bio">
-                <div class="section-title">
-                    <i class="ti ti-certificate"></i>
-                    <span>Certificates</span>
-                </div>
-                <div class="certificates-grid">
+            <div class="px-4 px-md-5 py-4">
+                <p class="section-eyebrow text-primary mb-1">Achievements</p>
+                <h2 class="fs-5 fw-bold mb-2">Certificates</h2>
+                <div class="accent-bar mb-4"></div>
+
+                <div class="row g-3">
                     @foreach($certificates as $certificate)
-                    <div class="certificate-card">
-                        <i class="ti ti-certificate"></i>
-                        <div class="certificate-title">{{ $certificate->title ?? 'Internship Certificate' }}</div>
-                        <div class="project-date">Issued: {{ Carbon::parse($certificate->created_at)->format('M Y') }}</div>
-                        @if(isset($certificate->file_path))
-                        <a href="{{ asset($certificate->file_path) }}" class="btn-download" download>
-                            <i class="ti ti-download"></i> Download
-                        </a>
-                        @endif
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <div class="card border-0 bg-light rounded-3 h-100 p-3 shadow-sm text-center hover-lift">
+
+                            {{-- Icon block --}}
+                            <div class="cert-icon d-flex align-items-center justify-content-center rounded-3 mx-auto mb-3"
+                                 style="width: 56px; height: 56px;">
+                                <i class="ti ti-certificate fs-3 text-primary"></i>
+                            </div>
+
+                            <h6 class="fw-bold mb-1" style="font-size: .88rem;">
+                                {{ $certificate->title ?? 'Internship Certificate' }}
+                            </h6>
+
+                            <p class="text-muted mb-3" style="font-size: .72rem;">
+                                <i class="ti ti-calendar me-1"></i>
+                                Issued {{ Carbon::parse($certificate->created_at)->format('M Y') }}
+                            </p>
+
+                            @if(!empty($certificate->file_path))
+                            <a href="{{ asset($certificate->file_path) }}"
+                               class="btn btn-sm btn-gradient rounded-pill px-3 text-white fw-semibold d-inline-flex align-items-center gap-1 mx-auto"
+                               download>
+                                <i class="ti ti-download"></i> Download
+                            </a>
+                            @endif
+
+                        </div>
                     </div>
                     @endforeach
                 </div>
             </div>
             @endif
-        </div>
-        
-        <!-- Footer -->
-        <div class="footer">
-            <p>© {{ date('Y') }} {{ $intern->name }} • Intern at Ezitech</p>
-            <p style="font-size: 0.75rem; margin-top: 0.5rem;">Powered by Ezitech Internship Program</p>
-        </div>
-    </div>
+
+        </div>{{-- /card-body --}}
+    </div>{{-- /profile card --}}
+
+    {{-- ── Footer ── --}}
+    <footer class="text-center text-white pb-4">
+        <p class="mb-1 small fw-semibold opacity-75">
+            &copy; {{ date('Y') }} {{ $intern->name }} &bull; Intern at Ezitech
+        </p>
+        <p class="mb-0 opacity-50" style="font-size: .7rem;">
+            Powered by Ezitech Internship Program
+        </p>
+    </footer>
+
+</div>{{-- /container --}}
+
+{{-- Bootstrap JS --}}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
