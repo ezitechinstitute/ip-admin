@@ -29,39 +29,7 @@
       "icon": "menu-icon icon-base ti tabler-users-group",
       "slug": "manager/my-interns",
       "url": "manager/my-interns",
-      "permission": "view_my_interns",
-      "submenu": [
-        {
-          "url": "manager/all-interns/active",
-          "name": "Active Interns",
-          "slug": "manager/all-interns/active",
-          "permission": "view_active_interns"
-        },
-        {
-          "url": "manager/all-interns/newInterns",
-          "name": "New Interns",
-          "slug": "manager/all-interns/newInterns",
-          "permission": "view_new_interns"
-        },
-        {
-          "url": "manager/all-interns/contact",
-          "name": "Contact With",
-          "slug": "manager/all-interns/contact",
-          "permission": "view_contact_with"
-        },
-        {
-          "url": "manager/all-interns/test",
-          "name": "Interview Test",
-          "slug": "manager/all-interns/test",
-          "permission": "view_interview_test"
-        },
-        {
-          "url": "manager/all-interns/completed",
-          "name": "Test Completed",
-          "slug": "manager/all-interns/completed",
-          "permission": "view_test_completed"
-        }
-      ]
+      "permission": "view_my_interns"
     },
     {
       "name": "International Interns",
@@ -70,6 +38,7 @@
       "url": "manager/international-interns",
       "permission": "view_manager_international_interns"
     },
+
     {
       "menuHeader": "Reports & Logs"
     },
@@ -115,6 +84,7 @@
       "url": "manager/remainingamount",
       "permission": "view_manager_remaining_amount"
     },
+
     {
       "name": "Revenue & Commission",
       "icon": "menu-icon icon-base ti tabler-chart-bar",
@@ -122,6 +92,15 @@
       "url": "manager/revenue",
       "permission": "view_manager_revenue"
     },
+
+    {
+      "name": "Performance Analytics",
+      "icon": "menu-icon icon-base ti tabler-chart-bar",
+      "slug": "manager/performance-analytics",
+      "url": "manager/performance-analytics",
+      "permission": "view_performance_analytics"
+    },
+
     {
       "url": "manager/offer-letter-request",
       "name": "Offer Letter Request",
@@ -129,7 +108,8 @@
       "slug": "manager/offer-letter-request",
       "permission": "view_manager_offer_letter_request"
     },
-    {      "url": "manager/certificate-requests",
+    {
+      "url": "manager/certificate-requests",
       "name": "Certificate Requests",
       "icon": "menu-icon icon-base ti tabler-certificate",
       "slug": "manager/certificate-requests",
@@ -142,7 +122,8 @@
       "slug": "manager/certificate-templates",
       "permission": "view_manager_certificate_templates"
     },
-    {      "url": "manager/offer-letter-template",
+    {
+      "url": "manager/offer-letter-template",
       "name": "Offer Letter Template",
       "icon": "menu-icon icon-base ti tabler-certificate",
       "slug": "manager/offer-letter-template",
@@ -155,6 +136,7 @@
       "slug": "manager/payment-receipt",
       "permission": "view_manager_payment_receipt"
     },
+
     {
       "menuHeader": "Manager Settings"
     },

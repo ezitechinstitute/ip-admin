@@ -258,7 +258,7 @@ if (Auth::guard('intern')->check()) {
       <ul class="dropdown-menu dropdown-menu-end">
         <li>
           <a class="dropdown-item mt-0"
-            href="{{ Route::has('profile.show') ? route('profile.show') : url('/admin/settings') }}">
+  href="{{ Auth::guard('intern')->check() ? route('intern.profile') : (Route::has('profile.show') ? route('profile.show') : url('/admin/settings')) }}">  
             <div class="d-flex align-items-center">
               <div class="flex-shrink-0 me-2">
                 <div class="avatar avatar-online">
@@ -275,11 +275,12 @@ if (Auth::guard('intern')->check()) {
         <li>
           <div class="dropdown-divider my-1 mx-n2"></div>
         </li>
-        <li>
-          <a class="dropdown-item"
-            href="{{ Route::has('profile.show') ? route('profile.show') : url('/admin/settings') }}">
-            <i class="icon-base ti tabler-user me-3 icon-md"></i><span class="align-middle">My Profile</span> </a>
-        </li>
+       <li>
+  <a class="dropdown-item"
+    href="{{ Auth::guard('intern')->check() ? route('intern.profile') : (Route::has('profile.show') ? route('profile.show') : url('/admin/settings')) }}">
+    <i class="icon-base ti tabler-user me-3 icon-md"></i><span class="align-middle">My Profile</span>
+  </a>
+</li>
 @if (Auth::check() && class_exists(\Laravel\Jetstream\Jetstream::class) && \Laravel\Jetstream\Jetstream::hasApiFeatures())        <li>
           <a class="dropdown-item" href="{{ route('api-tokens.index') }}">
             <i class="icon-base ti tabler-settings me-3 icon-md"></i><span class="align-middle">API Tokens</span> </a>

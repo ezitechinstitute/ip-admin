@@ -181,6 +181,7 @@ class InternPublicRegistrationController extends Controller
             'password' => Hash::make('default_password_' . $intern->id), // Default password
             'int_technology' => $step1Data['technology'],
             'int_status' => 'active',
+            'portal_status' => 'pending_activation', // Account pending manager activation
             'start_date' => now(),
         ]);
 

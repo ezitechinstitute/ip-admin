@@ -8,6 +8,7 @@ use App\Models\ManagersAccount;
 use App\Models\InternAccount;  
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
   
 
 class LoginCover extends Controller
@@ -25,63 +26,52 @@ class LoginCover extends Controller
         'password' => 'required'
     ]);
 
-    $credentials = ['email' => $request->email, 'password' => $request->password];
-
-
-
-
-// Check Intern (same pattern as admin and manager)
-$intern = InternAccount::where('email', $request->email)
-                       ->where('password', $request->password)
-                       ->first();
-
-if ($intern) {
-    Auth::guard('intern')->login($intern);
-    $request->session()->regenerate();
-    return redirect()->route('intern.dashboard');
-}
+    // Check Intern (same pattern as admin and manager)
+    $intern = InternAccount::where('email', $request->email)->first();
+    
+    if ($intern && Hash::check($request->password, $intern->password)) {
+        Auth::guard('intern')->login($intern);
+        $request->session()->regenerate();
+        return redirect()->route('intern.dashboard');
+    }
 
     // 1. Check in Admin Table using 'admin' guard
-    // Attempt to find user in AdminAccount table
-    $admin = AdminAccount::where('email', $request->email)
-                                     ->where('password', $request->password)->first();
+    $admin = AdminAccount::where('email', $request->email)->first();
 
-    if ($admin) {
+    if ($admin && Hash::check($request->password, $admin->password)) {
         Auth::guard('admin')->login($admin);
         $request->session()->regenerate();
         return redirect()->route('dashboard-admin');
     }
 
     // 2. Check in Managers/Supervisors Table using 'manager' guard
-$manager = ManagersAccount::where('email', $request->email)
-    ->where('password', $request->password)
-    ->first();
+    $manager = ManagersAccount::where('email', $request->email)->first();
 
-if ($manager) {
-    if ($manager->status != 1) {
-        return back()->withErrors([
-            'email' => 'Your account is deactivated. Please contact the Admin!'
-        ])->onlyInput('email');
+    if ($manager && Hash::check($request->password, $manager->password)) {
+        if ($manager->status != 1) {
+            return back()->withErrors([
+                'email' => 'Your account is deactivated. Please contact the Admin!'
+            ])->onlyInput('email');
+        }
+
+        Auth::guard('manager')->login($manager);
+        $request->session()->regenerate();
+
+        // Store custom session values for middleware
+        session([
+            'manager_id' => $manager->manager_id,
+            'loginas' => $manager->loginas,
+            'manager_email' => $manager->email,
+            'manager_name' => $manager->name,
+            'manager_department' => $manager->department ?? null,
+        ]);
+
+        if ($manager->loginas === 'Supervisor') {
+            return redirect()->route('supervisor.dashboard');
+        }
+
+        return redirect()->route('manager.dashboard');
     }
-
-    Auth::guard('manager')->login($manager);
-    $request->session()->regenerate();
-
-    // Store custom session values for middleware
-    session([
-        'manager_id' => $manager->manager_id,
-        'loginas' => $manager->loginas,
-        'manager_email' => $manager->email,
-        'manager_name' => $manager->name,
-        'manager_department' => $manager->department ?? null,
-    ]);
-
-    if ($manager->loginas === 'Supervisor') {
-        return redirect()->route('supervisor.dashboard');
-    }
-
-    return redirect()->route('manager.dashboard');
-}
 
  
 
