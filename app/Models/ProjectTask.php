@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\InternProject;
 use App\Models\InternAccount;
-/*
+
 class ProjectTask extends Model
 {
     protected $table = 'project_tasks';
@@ -54,6 +54,6 @@ class ProjectTask extends Model
         );
     }
 }
-*/
+
 
 // Model is commented out because table 'project_tasks' was deleted
