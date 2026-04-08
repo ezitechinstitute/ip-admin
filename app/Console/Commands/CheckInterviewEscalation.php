@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use App\Notifications\ManagerReminderNotification;
-use App\Notifications\AdminEscalationNotification;
+use Illuminate\Support\Facades\Log;
+use App\Services\EscalationService;
+use App\Models\EscalationTracking;
 
 class CheckInterviewEscalation extends Command
 {
@@ -24,159 +24,85 @@ class CheckInterviewEscalation extends Command
      */
     public function handle()
     {
-        $hours = $this->option('hours');
-        $escalationTime = now()->subHours($hours);
-
-        $this->info("🔍 Checking for escalations (last $hours hours)...");
-
-        // ==================== FAILED INTERVIEWS ====================
+        $hours = (int) $this->option('hours');
         
-        $failedInterviews = DB::table('intern_table')
-            ->where('status', 'Interview')
-            ->whereNull('interview_completed_at')
-            ->where('created_at', '<', $escalationTime)
-            ->get();
+        $this->info("🔍 Checking for escalations (> {$hours} hours without update)...");
 
-        foreach ($failedInterviews as $intern) {
-            $this->escalateInterview($intern, 'interview', $hours);
-        }
-
-        // ==================== FAILED TESTS ====================
-
-        $failedTests = DB::table('intern_table')
-            ->where('status', 'Test')
-            ->where(function($q) {
-                $q->where('test_status', '!=', 'completed')
-                  ->orWhereNull('test_status');
-            })
-            ->whereNull('test_completed_at')
-            ->where('created_at', '<', $escalationTime)
-            ->get();
-
-        foreach ($failedTests as $intern) {
-            $this->escalateTest($intern, 'test', $hours);
-        }
-
-        $this->info('✅ Escalation check completed!');
-    }
-
-    /**
-     * Escalate a pending interview
-     */
-    private function escalateInterview($intern, $type, $hours)
-    {
-        // Check if already escalated
-        $existing = DB::table('escalation_tracking')
-            ->where('intern_id', $intern->id)
-            ->where('escalation_type', $type)
-            ->whereNull('resolved_at')
-            ->first();
-
-        if ($existing) {
-            // Upgrade escalation level if needed
-            if ($existing->escalation_level === 'manager_reminder') {
-                $this->upgradeEscalation($existing->id);
-            }
-            return;
-        }
-
-        // Get manager info
-        $manager = DB::table('manager_accounts')
-            ->where('manager_id', $intern->manager_id)
-            ->first();
-
-        if (!$manager) {
-            $this->error("❌ Manager not found for intern: {$intern->id}");
-            return;
-        }
-
-        // Create escalation record
-        $escalation = DB::table('escalation_tracking')->insertGetId([
-            'intern_id' => $intern->id,
-            'manager_id' => $intern->manager_id,
-            'escalation_type' => $type,
-            'escalation_level' => 'manager_reminder',
-            'escalated_at' => now(),
-            'notes' => "Interview not updated for $hours hours. Intern: {$intern->name}",
-            'notified_admin' => false,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-
-        // Send notification to manager
         try {
-            // Note: You need to ensure User model or create ManagerUser model
-            // For now, we'll log the escalation
-            $this->info("📋 Interview Escalation Created - Intern: {$intern->name}, Manager ID: {$intern->manager_id}");
-        } catch (\Exception $e) {
-            $this->error("Failed to send manager notification: " . $e->getMessage());
-        }
-    }
+            $escalationService = new EscalationService();
 
-    /**
-     * Escalate a pending test
-     */
-    private function escalateTest($intern, $type, $hours)
-    {
-        // Check if already escalated
-        $existing = DB::table('escalation_tracking')
-            ->where('intern_id', $intern->id)
-            ->where('escalation_type', $type)
-            ->whereNull('resolved_at')
-            ->first();
+            // Check interview escalations
+            $this->info("📋 Checking interviews...");
+            $interviewEscalations = $escalationService->checkInterviewEscalations($hours);
+            $this->line("   • {$interviewEscalations} interview(s) escalated");
 
-        if ($existing) {
-            // Upgrade escalation level if needed
-            if ($existing->escalation_level === 'manager_reminder') {
-                $this->upgradeEscalation($existing->id);
-            }
-            return;
-        }
+            // Check test escalations
+            $this->info("📝 Checking tests...");
+            $testEscalations = $escalationService->checkTestEscalations($hours);
+            $this->line("   • {$testEscalations} test(s) escalated");
 
-        // Get manager info
-        $manager = DB::table('manager_accounts')
-            ->where('manager_id', $intern->manager_id)
-            ->first();
+            // Check for escalations that need upgrading to admin alert
+            $this->info("⬆️  Checking for escalation upgrades...");
+            $upgraded = $this->upgradeEscalations($hours);
+            $this->line("   • {$upgraded} escalation(s) upgraded to admin alert");
 
-        if (!$manager) {
-            $this->error("❌ Manager not found for intern: {$intern->id}");
-            return;
-        }
+            // Get summary
+            $summary = $escalationService->getEscalationSummary();
 
-        // Create escalation record
-        $escalation = DB::table('escalation_tracking')->insertGetId([
-            'intern_id' => $intern->id,
-            'manager_id' => $intern->manager_id,
-            'escalation_type' => $type,
-            'escalation_level' => 'manager_reminder',
-            'escalated_at' => now(),
-            'notes' => "Test not updated for $hours hours. Intern: {$intern->name}",
-            'notified_admin' => false,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+            $this->info("\n📊 Escalation Summary:");
+            $this->line("   • Total Pending: {$summary['total_pending']}");
+            $this->line("   • Manager Reminders: {$summary['manager_reminders']}");
+            $this->line("   • Admin Alerts: {$summary['admin_alerts']}");
+            $this->line("   • Interview Escalations: {$summary['interview_escalations']}");
+            $this->line("   • Test Escalations: {$summary['test_escalations']}");
+            $this->line("   • Unnotified Admin: {$summary['unnotified_admin']}");
 
-        $this->info("📝 Test Escalation Created - Intern: {$intern->name}, Manager ID: {$intern->manager_id}");
-    }
+            $this->info("\n✅ Escalation check completed!\n");
 
-    /**
-     * Upgrade escalation to admin alert level
-     */
-    private function upgradeEscalation($escalationId)
-    {
-        $escalation = DB::table('escalation_tracking')->find($escalationId);
-
-        if (!$escalation) return;
-
-        // Upgrade to admin alert
-        DB::table('escalation_tracking')
-            ->where('id', $escalationId)
-            ->update([
-                'escalation_level' => 'admin_alert',
-                'notified_admin' => true,
-                'updated_at' => now()
+            Log::info("Escalation check completed", [
+                'hours' => $hours,
+                'interviews' => $interviewEscalations,
+                'tests' => $testEscalations,
+                'upgraded' => $upgraded,
+                'summary' => $summary,
             ]);
 
-        $this->warn("⚠️ Escalation upgraded to ADMIN ALERT - Escalation ID: {$escalationId}");
+            return Command::SUCCESS;
+
+        } catch (\Exception $e) {
+            $this->error("❌ Error during escalation check: {$e->getMessage()}");
+            Log::error("Escalation check failed: {$e->getMessage()}", [
+                'exception' => $e,
+            ]);
+            return Command::FAILURE;
+        }
+    }
+
+    /**
+     * Upgrade escalations from manager_reminder to admin_alert
+     */
+    private function upgradeEscalations($hours): int
+    {
+        $escalationService = new EscalationService();
+        $upgraded = 0;
+
+        // Get all pending manager_reminder level escalations
+        $escalations = EscalationTracking::pending()
+            ->whereIn('escalation_level', ['manager_reminder'])
+            ->get();
+
+        foreach ($escalations as $escalation) {
+            // If escalation has been at manager_reminder level for 8+ hours, upgrade
+            $upgradeTime = $escalation->escalated_at->addHours($hours);
+            
+            if (now()->greaterThan($upgradeTime)) {
+                if ($escalationService->upgradeEscalation($escalation)) {
+                    $upgraded++;
+                    $this->line("   → Escalation #{$escalation->id} upgraded to admin alert");
+                }
+            }
+        }
+
+        return $upgraded;
     }
 }

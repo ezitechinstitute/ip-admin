@@ -632,7 +632,18 @@ Route::post('/knowledge/store', [KnowledgeBaseController::class, 'store'])
         // routes/web.php
 Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downloadKnowledgeBaseCSV'])->name('knowledge.base.export.admin');
 
+    // ==================== ESCALATION ROUTES ====================
+    Route::prefix('/escalations')->name('escalations.')->group(function() {
+        Route::get('/', [App\Http\Controllers\EscalationController::class, 'index'])->name('index');
+        Route::get('/statistics', [App\Http\Controllers\EscalationController::class, 'statistics'])->name('statistics');
+        Route::get('/{id}', [App\Http\Controllers\EscalationController::class, 'show'])->name('show');
+        Route::post('/{id}/resolve', [App\Http\Controllers\EscalationController::class, 'adminResolve'])->name('resolve');
+        Route::post('/{id}/mark-notified', [App\Http\Controllers\EscalationController::class, 'markAdminNotified'])->name('mark-notified');
+    });
+    Route::get('/api/escalations/unnotified', [App\Http\Controllers\EscalationController::class, 'unnotifiedAdminEscalations'])->name('api.escalations.unnotified');
+
 });
+// Admin routes - End
 // Admin routes - End
 
 
@@ -802,6 +813,11 @@ Route::get('/supervisors', [Supervisorcontroller::class, 'index'])->name('manage
 Route::get('/withdraw', [RevenueController::class, 'index'])->name('manager.withdraw.request');
 Route::post('/withdraw', [RevenueController::class, 'index'])->name('manager.withdraw.store');
 
+// Escalation Routes (Manager View)
+Route::get('/escalations', [EscalationController::class, 'managerEscalations'])->name('manager.escalations');
+Route::get('/escalations/{id}', [EscalationController::class, 'show'])->name('manager.escalations.show');
+Route::post('/escalations/{id}/resolve', [EscalationController::class, 'resolve'])->name('manager.escalations.resolve');
+
 });
 
 
@@ -865,6 +881,10 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
     Route::get('/evaluations/edit/{id}', [SupervisorEvaluationController::class, 'edit'])->name('supervisor.evaluations.edit');
     Route::post('/evaluations/update/{id}', [SupervisorEvaluationController::class, 'update'])->name('supervisor.evaluations.update');
     Route::delete('/evaluations/delete/{id}', [SupervisorEvaluationController::class, 'destroy'])->name('supervisor.evaluations.delete');
+
+    // Escalation Routes (Supervisor View)
+    Route::get('/escalations', [EscalationController::class, 'supervisorEscalations'])->name('supervisor.escalations');
+    Route::get('/escalations/{id}', [EscalationController::class, 'show'])->name('supervisor.escalations.show');
 });
 
 // ============================================

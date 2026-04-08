@@ -388,6 +388,21 @@ class InvoiceController extends Controller
 
             DB::commit();
 
+            // Attempt to unfreeze intern if payment is now complete
+            try {
+                $intern = \App\Models\InternAccount::where('email', $invoice->intern_email)
+                    ->orWhere('name', $invoice->name)
+                    ->first();
+                
+                if ($intern && $newRemaining <= 0) {
+                    // Invoice is paid, unfreeze if no other overdue invoices exist
+                    $freezeService = new \App\Services\PortalFreezeService();
+                    $freezeService->unfreezeOnPayment($intern->int_id);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Portal unfreeze after payment failed: ' . $e->getMessage());
+            }
+
             return redirect()->route('invoices.view', $id)
                 ->with('success', 'Payment of PKR ' . number_format($request->payment_amount, 2) . ' recorded successfully!');
 
