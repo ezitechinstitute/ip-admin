@@ -8,45 +8,63 @@ use Illuminate\Http\Request;
 class SupervisorProjectController extends Controller
 {
     public function index()
-    {
-        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
-        $supervisorTechnology = trim(session('manager_department'));
+{
+    $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
 
-        if (!$supervisorId) {
-            return redirect()->route('login')->with('error', 'Authentication error: Supervisor ID not found. Please re-login.');
-        }
-
-        $projects = \Illuminate\Support\Facades\DB::table('intern_projects')
-            ->join('manager_accounts', 'intern_projects.assigned_by', '=', 'manager_accounts.manager_id')
-            ->select(
-                'intern_projects.project_id',
-                'intern_projects.eti_id',
-                'intern_projects.email',
-                'intern_projects.title',
-                'intern_projects.start_date',
-                'intern_projects.end_date',
-                'intern_projects.assigned_by',
-                'intern_projects.pstatus',
-                'intern_projects.tech_stack',
-                'intern_projects.difficulty_level',
-                'manager_accounts.name as supervisor_name'
-            )
-            ->where('intern_projects.assigned_by', $supervisorId)
-            ->orderByDesc('intern_projects.project_id')
-            ->limit(20)
-            ->get();
-
-        // Fetch active interns for this supervisor to show in the "Create Project" dropdown
-        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-            ->select('eti_id', 'name', 'email')
-            ->whereRaw('LOWER(int_status) = ?', ['active'])
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
-            ->get();
-
-        return view('content.supervisor.projects', compact('projects', 'interns'));
+    if (!$supervisorId) {
+        return redirect()->route('login')->with('error', 'Authentication error: Supervisor ID not found. Please re-login.');
     }
+
+    // 1. Fetch Projects (Unchanged)
+    $projects = \Illuminate\Support\Facades\DB::table('intern_projects')
+        ->join('manager_accounts', 'intern_projects.assigned_by', '=', 'manager_accounts.manager_id')
+        ->select(
+            'intern_projects.project_id',
+            'intern_projects.eti_id',
+            'intern_projects.email',
+            'intern_projects.title',
+            'intern_projects.start_date',
+            'intern_projects.end_date',
+            'intern_projects.assigned_by',
+            'intern_projects.pstatus',
+            'intern_projects.tech_stack',
+            'intern_projects.difficulty_level',
+            'manager_accounts.name as supervisor_name'
+        )
+        ->where('intern_projects.assigned_by', $supervisorId)
+        ->orderByDesc('intern_projects.project_id')
+        ->limit(20)
+        ->get();
+
+    // ==========================================
+    // 🔥 THE FIX: Dynamic Intern Filtering
+    // ==========================================
+
+    // 1. Grab the specific Tech IDs the supervisor is allowed to see
+    $permissionTechIds = \App\Models\SupervisorPermission::where('manager_id', $supervisorId)
+        ->pluck('tech_id')
+        ->toArray();
+
+    // 2. Convert those IDs into the actual String Names from your technologies table
+    $allowedTechNames = \Illuminate\Support\Facades\DB::table('technologies')
+        ->whereIn('tech_id', $permissionTechIds)
+        ->pluck('technology') // e.g., ['Laravel', 'React', 'Python', 'Node']
+        ->toArray();
+
+    // 3. Prevent showing all interns if no permissions exist
+    if (empty($allowedTechNames)) {
+        $allowedTechNames = ['___NO_ACCESS___']; 
+    }
+
+    // 4. Fetch the interns dynamically based on the Admin checkboxes
+    $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
+        ->select('eti_id', 'name', 'email')
+        ->where('int_status', 'active')
+        ->whereIn('int_technology', $allowedTechNames)
+        ->get();
+
+    return view('content.supervisor.projects', compact('projects', 'interns'));
+}
 
 
 public function store(Request $request)
