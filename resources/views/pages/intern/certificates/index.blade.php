@@ -16,18 +16,11 @@
 
     <div class="row">
 
-        {{-- LEFT SIDE TABLE --}}
+        {{-- LEFT TABLE --}}
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-header d-flex justify-content-between">
+                <div class="card-header">
                     <h5>My Certificates</h5>
-
-                    <!-- REQUEST BUTTON -->
-                    <button class="btn btn-primary"
-                        data-bs-toggle="modal"
-                        data-bs-target="#certModal">
-                        <i class="ti ti-plus"></i> Request Certificate
-                    </button>
                 </div>
 
                 <div class="table-responsive">
@@ -37,8 +30,8 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Type</th>
-                                <th>Status</th>
                                 <th>Date</th>
+                                <th>Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -52,6 +45,8 @@
                                     {{ $c->certificate_type == 'internship' ? 'Internship' : 'Course' }}
                                 </td>
 
+                                <td>{{ \Carbon\Carbon::parse($c->created_at)->format('d M Y') }}</td>
+
                                 <td>
                                     @if($c->status == 'pending')
                                         <span class="badge bg-warning">Pending</span>
@@ -62,8 +57,6 @@
                                     @endif
                                 </td>
 
-                                <td>{{ \Carbon\Carbon::parse($c->created_at)->format('d M Y') }}</td>
-
                                 <td>
                                     @if($c->status == 'approved')
                                         <a href="{{ route('intern.certificates.download', $c->id) }}"
@@ -71,13 +64,13 @@
                                            Download
                                         </a>
                                     @else
-                                        <span class="text-muted">-</span>
+                                        -
                                     @endif
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center">No certificates yet</td>
+                                <td colspan="5" class="text-center">No records</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -91,13 +84,36 @@
             </div>
         </div>
 
-    </div>
+        {{-- RIGHT SIDE --}}
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Request Certificate</h5>
+                </div>
 
+                <div class="card-body text-center">
+
+                    @if($canRequest)
+                        <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#certModal">
+                            Request New Certificate
+                        </button>
+                    @else
+                        <div class="alert alert-warning">
+                            Complete internship first
+                        </div>
+                    @endif
+
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 
 {{-- MODAL --}}
-<div class="modal fade" id="certModal" tabindex="-1">
+@if($canRequest)
+<div class="modal fade" id="certModal">
     <div class="modal-dialog">
         <div class="modal-content">
 
@@ -105,41 +121,35 @@
                 @csrf
 
                 <div class="modal-header">
-                    <h5 class="modal-title">Request Certificate</h5>
+                    <h5>Request Certificate</h5>
                     <button class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
                 <div class="modal-body">
 
-                    <!-- TYPE -->
                     <div class="mb-3">
-                        <label class="form-label">Certificate Type</label>
+                        <label>Type</label>
                         <select name="certificate_type" class="form-select" required>
-                            <option value="">Select Type</option>
+                            <option value="">Select</option>
                             <option value="internship">Internship</option>
-                            <option value="course_completion">Course Completion</option>
+                            <option value="course_completion">Course</option>
                         </select>
                     </div>
 
-                    <!-- PURPOSE -->
                     <div class="mb-3">
-                        <label class="form-label">Purpose</label>
-                        <input type="text" name="purpose" class="form-control"
-                               placeholder="e.g. Job, University">
+                        <label>Purpose</label>
+                        <input type="text" name="purpose" class="form-control">
                     </div>
 
-                    <!-- NOTES -->
                     <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                        <label>Notes</label>
+                        <textarea name="notes" class="form-control"></textarea>
                     </div>
 
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-primary w-100">
-                        Submit Request
-                    </button>
+                    <button class="btn btn-primary w-100">Submit</button>
                 </div>
 
             </form>
@@ -147,5 +157,6 @@
         </div>
     </div>
 </div>
+@endif
 
 @endsection
