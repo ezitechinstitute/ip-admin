@@ -4,6 +4,7 @@ namespace App\Http\Controllers\supervisor_controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SupervisorProjectController extends Controller
 {
@@ -37,13 +38,33 @@ class SupervisorProjectController extends Controller
             ->get();
 
         // Fetch active interns for this supervisor to show in the "Create Project" dropdown
-        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-            ->select('eti_id', 'name', 'email')
-            ->whereRaw('LOWER(int_status) = ?', ['active'])
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
-            ->get();
+        // $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
+        //     ->select('eti_id', 'name', 'email')
+        //     ->whereRaw('LOWER(int_status) = ?', ['active'])
+        //     ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
+        //         $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
+        //     })
+        //     ->get();
+$department = strtolower(trim(session('manager_department')));
+
+$techMap = [
+    'web development' => ['laravel', 'reactjs'],
+    'mobile development' => ['flutter'],
+];
+
+$technologies = $techMap[$department] ?? [];
+
+$interns = DB::table('intern_accounts')
+    ->select('eti_id', 'name', 'email')
+    ->whereRaw('TRIM(LOWER(int_status)) = ?', ['active'])
+    ->whereIn(DB::raw('LOWER(int_technology)'), $technologies)
+    ->get();
+
+
+    //     $interns = DB::table('intern_accounts')
+    // ->select('eti_id', 'name', 'email')
+    // ->whereRaw('TRIM(LOWER(int_status)) = ?', ['active'])
+    // ->get();
 
         return view('content.supervisor.projects', compact('projects', 'interns'));
     }
