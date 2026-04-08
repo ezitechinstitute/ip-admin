@@ -328,27 +328,38 @@ if (Auth::guard('intern')->check()) {
         <li>
           <div class="dropdown-divider my-1 mx-n2"></div>
         </li>
-        @if (Auth::check())
-        <li>
-          <a class="dropdown-item" href="{{ route('logout') }}"
-            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-            <i class="icon-base bx bx-power-off icon-md me-3"></i><span>Logout</span>
-          </a>
-        </li>
-        <form method="POST" id="logout-form" action="{{ route('logout') }}">
-          @csrf
-        </form>
-        @else
-        <li>
-          <div class="d-grid px-2 pt-2 pb-1">
-            <a class="btn btn-sm btn-danger d-flex"
-              href="{{route('logout')}}">
-              <small class="align-middle">Logout</small>
-              <i class="icon-base ti tabler-login ms-2 icon-14px"></i>
-            </a>
-          </div>
-        </li>
-        @endif
+       @if (Auth::guard('intern')->check())
+<li>
+    <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form-navbar').submit();">
+        <i class="icon-base ti tabler-logout me-3 icon-md"></i>
+        <span>Logout</span>
+    </a>
+    <form id="logout-form-navbar" action="{{ route('intern.logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
+</li>
+@elseif (Auth::guard('manager')->check())
+<li>
+    <a class="dropdown-item" href="{{ route('manager.logout') }}">
+        <i class="icon-base ti tabler-logout me-3 icon-md"></i>
+        <span>Logout</span>
+    </a>
+</li>
+@elseif (Auth::guard('admin')->check())
+<li>
+    <a class="dropdown-item" href="{{ route('logout') }}">
+        <i class="icon-base ti tabler-logout me-3 icon-md"></i>
+        <span>Logout</span>
+    </a>
+</li>
+@else
+<li>
+    <a class="dropdown-item" href="{{ route('login') }}">
+        <i class="icon-base ti tabler-login me-3 icon-md"></i>
+        <span>Login</span>
+    </a>
+</li>
+@endif
       </ul>
     </li>
     <!--/ User -->
