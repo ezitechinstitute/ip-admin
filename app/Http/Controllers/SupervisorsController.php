@@ -70,53 +70,48 @@ class SupervisorsController extends Controller
 
     public function addSupervisor(Request $request)
 {
-    // dd($request->permissions);
     $request->validate([
-        'name'      => 'required|string|max:255',
-        'email'     => 'required|email|unique:manager_accounts,email',
-        'password'  => 'required|min:5',
-        'join_date' => 'required|date',
-        'image'     => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        'department'      => 'required|string|max:255',
+        'name'       => 'required|string|max:255',
+        'email'      => 'required|email|unique:manager_accounts,email',
+        'password'   => 'required|min:5',
+        'join_date'  => 'required|date',
+        'department' => 'required|string|max:255',
     ]);
 
-    //  Generate ETI ID
+    // Generate ETI ID
     do {
         $number = rand(100, 999);
         $etiId = 'ETI-SUPERVISOR-' . $number;
-    } while (ManagersAccount::where('eti_id', $etiId)->exists());
+    } while (\App\Models\ManagersAccount::where('eti_id', $etiId)->exists());
 
-    
-
-    ManagersAccount::create([
-        'eti_id'    => $etiId,
-        'image'     => '',
-        'name'      => $request->name,
-        'email'     => $request->email,
-        'password'  => $request->password,
-        'contact'   => $request->contact ?? '',
-        'join_date' => $request->join_date,
-        'loginas'   => $request->manager == 'on' ? 'Supervisor' : '',
-        'status'    => $request->status,
-        'department'=> $request->department ?? '',
-        'comission' => $request->comission,
+    // 🔥 FIX: We must save the created account to a variable ($newSupervisor) so we can get its ID
+    $newSupervisor = \App\Models\ManagersAccount::create([
+        'eti_id'     => $etiId,
+        'image'      => '',
+        'name'       => $request->name,
+        'email'      => $request->email,
+        'password'   => $request->password,
+        'contact'    => $request->contact ?? '',
+        'join_date'  => $request->join_date,
+        'loginas'    => $request->manager == 'on' ? 'Supervisor' : '',
+        'status'     => $request->status,
+        'department' => $request->department ?? '',
+        'comission'  => $request->comission,
         'emergency_contact'=> $request->emergency_contact ?? 0,
     ]);
-    // saving permission
+
+    // Save JSON Role Permissions (From the Add Modal)
     if ($request->has('permissions')) {
-
         $data = [];
-
         foreach ($request->permissions as $permission) {
             $data[] = [
-                'supervisor_id' => $supervisor->manager_id,
+                'supervisor_id'  => $newSupervisor->manager_id, // Fixed variable name
                 'permission_key' => $permission,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at'     => now(),
+                'updated_at'     => now(),
             ];
         }
-
-        SupervisorRole::insert($data);
+        \App\Models\SupervisorRole::insert($data);
     }
 
     return back()->with('success', 'Supervisor added successfully!');
@@ -124,7 +119,6 @@ class SupervisorsController extends Controller
 
 public function update(Request $request, $id)
 {
-    // Validation
     $request->validate([
         'name'      => 'required|string|max:255',
         'email'     => 'required|email|unique:manager_accounts,email,' . $id . ',manager_id',
@@ -135,10 +129,7 @@ public function update(Request $request, $id)
         'password'  => 'nullable|min:5',
     ]);
 
-    // Find Supervisor
-    $supervisor = ManagersAccount::where('manager_id', $id)->firstOrFail();
-
-    // Update Data
+    $supervisor = \App\Models\ManagersAccount::where('manager_id', $id)->firstOrFail();
     $supervisor->name      = $request->name;
     $supervisor->email     = $request->email;
     $supervisor->join_date = $request->join_date;
@@ -146,21 +137,14 @@ public function update(Request $request, $id)
     $supervisor->status    = $request->status;
     $supervisor->department = $request->department; 
     
-    // Password Update logic
     if ($request->filled('password')) {
         $supervisor->password = $request->password; 
     }
-
     $supervisor->save();
 
-    // ==========================================
-    // 🔥 STEP 2: THIS IS WHERE YOU ADD THE LOGIC
-    // ==========================================
-    
-    // 1. Delete old role privileges to avoid duplicates
+    // 🔥 FIX: ONLY handle SupervisorRole (JSON Privileges) here
     \App\Models\SupervisorRole::where('supervisor_id', $id)->delete();
 
-    // 2. Insert the newly checked boxes
     if ($request->has('permissions')) {
         $data = [];
         foreach ($request->permissions as $key) {
@@ -174,7 +158,7 @@ public function update(Request $request, $id)
         \App\Models\SupervisorRole::insert($data);
     }
 
-    return redirect()->back()->with('success', 'Supervisor updated successfully!');
+    return redirect()->back()->with('success', 'Supervisor profile & roles updated successfully!');
 }
 
 
@@ -221,41 +205,75 @@ public function update(Request $request, $id)
 // }
 public function storePermissions(Request $request)
 {
-    // dd($request->all());
     $request->validate([
-        'manager_id' => 'required|integer',
-        'permissions' => 'nullable|array',
+        'supervisor_id' => 'required|integer',
+        'permissions'   => 'nullable|array', // These are the Tech permissions from the modal
     ]);
 
-    $supervisorId = $request->manager_id;
-    
-    // dd($request->manager_id, $request->permissions);
-    // $supervisorId = $request->id;
-    // dd($supervisorId);
+    $supervisorId = $request->supervisor_id;
 
-    // DELETE OLD
-    // SupervisorRole::where('supervisor_id', $supervisorId)->delete();
-    SupervisorRole::where('supervisor_id', $supervisorId)->delete();
+    // 🔥 FIX: ONLY delete Tech permissions. DO NOT TOUCH SupervisorRole!
+    \App\Models\SupervisorPermission::where('manager_id', $supervisorId)->delete();
 
-    // INSERT NEW
-    if ($request->has('permissions')) {
+    // Insert new Tech permissions
+    if ($request->has('permissions') && is_array($request->permissions)) {
+        $techData = [];
 
-        $data = [];
+        foreach ($request->permissions as $techId => $types) {
+            if ($techId === 'undefined' || empty($techId) || !is_array($types)) continue;
 
-        foreach ($request->permissions as $permission) {
-            $data[] = [
-                'supervisor_id' => $supervisorId,
-                'permission_key' => $permission,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            foreach ($types as $type) {
+                if ($type === 'undefined') continue;
+                $techData[] = [
+                    'manager_id'      => $supervisorId,
+                    'tech_id'         => $techId,
+                    'internship_type' => $type,
+                ];
+            }
         }
 
-        SupervisorRole::insert($data);
+        if (!empty($techData)) {
+            \App\Models\SupervisorPermission::insert($techData);
+        }
     }
 
-    return redirect()->back()->with('success', 'Permissions updated successfully!');
+    return redirect()->back()->with('success', 'Technology access updated successfully!');
 }
+//     // dd($request->all());
+//     $request->validate([
+//         'manager_id' => 'required|integer',
+//         'permissions' => 'nullable|array',
+//     ]);
+
+//     $supervisorId = $request->manager_id;
+    
+//     // dd($request->manager_id, $request->permissions);
+//     // $supervisorId = $request->id;
+//     // dd($supervisorId);
+
+//     // DELETE OLD
+//     // SupervisorRole::where('supervisor_id', $supervisorId)->delete();
+//     SupervisorRole::where('supervisor_id', $supervisorId)->delete();
+
+//     // INSERT NEW
+//     if ($request->has('permissions')) {
+
+//         $data = [];
+
+//         foreach ($request->permissions as $permission) {
+//             $data[] = [
+//                 'supervisor_id' => $supervisorId,
+//                 'permission_key' => $permission,
+//                 'created_at' => now(),
+//                 'updated_at' => now(),
+//             ];
+//         }
+
+//         SupervisorRole::insert($data);
+//     }
+
+//     return redirect()->back()->with('success', 'Permissions updated successfully!');
+// }
 
 
 // public function getSupervisorPermissions($id)

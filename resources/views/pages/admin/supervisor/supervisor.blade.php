@@ -431,7 +431,7 @@
                     <p class="text-body-secondary">Set Supervisor Permissions</p>
                   </div>
 
-                  <form id="supervisorPermissionsForm" action="{{ route('supervisor.permissions.store') }}">
+                  <form id="supervisorPermissionsForm" action="{{ route('supervisor.permissions.store') }}" method="POST">
                   {{-- <form id="addSupervisorForm" action="{{ route('supervisor.permissions.store') }}" method="POST"> --}}
                     @csrf
                     <input type="hidden" name="supervisor_id" id="perm_supervisor_id">
@@ -1142,9 +1142,66 @@ document.querySelectorAll('.edit-select-all-group').forEach(group => {
 });
 </script>
 
+<script>
 
+  document.addEventListener('DOMContentLoaded', function () {
 
+    // 1. MAIN "SELECT ALL" CHECKBOX LOGIC
+    const editSelectAllBtn = document.getElementById('editSelectAll');
+    if (editSelectAllBtn) {
+        editSelectAllBtn.addEventListener('change', function () {
+            // Find all individual checkboxes in the edit modal and check/uncheck them
+            document.querySelectorAll('#editSupervisorModal .edit-group-item').forEach(cb => {
+                cb.checked = this.checked;
+            });
+            
+            // Also check/uncheck the group headers ("All")
+            document.querySelectorAll('#editSupervisorModal .edit-select-all-group').forEach(groupCb => {
+                groupCb.checked = this.checked;
+            });
+        });
+    }
 
+    // 2. GROUP "ALL" CHECKBOX LOGIC (For specific cards like "Tasks" or "My Interns")
+    document.querySelectorAll('#editSupervisorModal .edit-select-all-group').forEach(groupBtn => {
+        groupBtn.addEventListener('change', function () {
+            // Find only the checkboxes inside this specific card
+            const card = this.closest('.card');
+            card.querySelectorAll('.edit-group-item').forEach(cb => {
+                cb.checked = this.checked;
+            });
+            
+            checkIfAllAreSelected(); // Check if we should auto-check the main "Select All"
+        });
+    });
+
+    // 3. INDIVIDUAL CHECKBOX LOGIC 
+    // If a user unchecks one item, uncheck the "Select All" and "Group" boxes automatically
+    document.querySelectorAll('#editSupervisorModal .edit-group-item').forEach(item => {
+        item.addEventListener('change', function() {
+            const card = this.closest('.card');
+            const groupAllBtn = card.querySelector('.edit-select-all-group');
+            
+            // If all items in this group are checked, check the group header
+            const allItemsInGroup = card.querySelectorAll('.edit-group-item').length;
+            const checkedItemsInGroup = card.querySelectorAll('.edit-group-item:checked').length;
+            groupAllBtn.checked = (allItemsInGroup === checkedItemsInGroup);
+            
+            checkIfAllAreSelected();
+        });
+    });
+
+    // Helper function to check the Main "Select All" if every single box is checked manually
+    function checkIfAllAreSelected() {
+        const totalItems = document.querySelectorAll('#editSupervisorModal .edit-group-item').length;
+        const totalChecked = document.querySelectorAll('#editSupervisorModal .edit-group-item:checked').length;
+        if(editSelectAllBtn) {
+            editSelectAllBtn.checked = (totalItems > 0 && totalItems === totalChecked);
+        }
+    }
+});
+
+</script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -1213,40 +1270,77 @@ document.querySelectorAll('.edit-select-all-group').forEach(group => {
 permissionModal.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
   new bootstrap.Tooltip(el);
 });
-        techRes.data.forEach(tech => {
-          const checkedRemote =
-            savedPermissions[tech.tech_id]?.includes('Remote') ? 'checked' : '';
-          const checkedOnsite =
-            savedPermissions[tech.tech_id]?.includes('Onsite') ? 'checked' : '';
 
-          techTableBody.insertAdjacentHTML('beforeend', `
-            <tr>
-              <td class="fw-medium">${tech.technology}</td>
-              <td>
-                <div class="d-flex justify-content-end">
-                  <div class="form-check me-4">
-                    <input class="form-check-input tech-checkbox"
-                      type="checkbox"
-                      id="remote_${tech.tech_id}"
-                      name="permissions[${tech.tech_id}][]"
-                      value="Remote"
-                      ${checkedRemote}>
-                    <label class="form-check-label" for="remote_${tech.tech_id}">Remote</label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input tech-checkbox"
-                      type="checkbox"
-                      id="onsite_${tech.tech_id}"
-                      name="permissions[${tech.tech_id}][]"
-                      value="Onsite"
-                      ${checkedOnsite}>
-                    <label class="form-check-label" for="onsite_${tech.tech_id}">Onsite</label>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          `);
-        });
+techRes.data.forEach(tech => {
+  // 🔥 FIX: Check for both 'id' and 'tech_id' depending on what your API returns
+  const actualTechId = tech.id || tech.tech_id; 
+
+  const checkedRemote = savedPermissions[actualTechId]?.includes('Remote') ? 'checked' : '';
+  const checkedOnsite = savedPermissions[actualTechId]?.includes('Onsite') ? 'checked' : '';
+
+  techTableBody.insertAdjacentHTML('beforeend', `
+    <tr>
+      <td class="fw-medium">${tech.technology}</td>
+      <td>
+        <div class="d-flex justify-content-end">
+          <div class="form-check me-4">
+            <input class="form-check-input tech-checkbox"
+              type="checkbox"
+              id="remote_${actualTechId}"
+              name="permissions[${actualTechId}][]"
+              value="Remote"
+              ${checkedRemote}>
+            <label class="form-check-label" for="remote_${actualTechId}">Remote</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input tech-checkbox"
+              type="checkbox"
+              id="onsite_${actualTechId}"
+              name="permissions[${actualTechId}][]"
+              value="Onsite"
+              ${checkedOnsite}>
+            <label class="form-check-label" for="onsite_${actualTechId}">Onsite</label>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `);
+});
+        // techRes.data.forEach(tech => {
+        
+          // const checkedRemote =
+          //   savedPermissions[tech.tech_id]?.includes('Remote') ? 'checked' : '';
+          // const checkedOnsite =
+          //   savedPermissions[tech.tech_id]?.includes('Onsite') ? 'checked' : '';
+
+        //   techTableBody.insertAdjacentHTML('beforeend', `
+        //     <tr>
+        //       <td class="fw-medium">${tech.technology}</td>
+        //       <td>
+        //         <div class="d-flex justify-content-end">
+        //           <div class="form-check me-4">
+        //             <input class="form-check-input tech-checkbox"
+        //               type="checkbox"
+        //               id="remote_${tech.tech_id}"
+        //               name="permissions[${tech.tech_id}][]"
+        //               value="Remote"
+        //               ${checkedRemote}>
+        //             <label class="form-check-label" for="remote_${tech.tech_id}">Remote</label>
+        //           </div>
+        //           <div class="form-check">
+        //             <input class="form-check-input tech-checkbox"
+        //               type="checkbox"
+        //               id="onsite_${tech.tech_id}"
+        //               name="permissions[${tech.tech_id}][]"
+        //               value="Onsite"
+        //               ${checkedOnsite}>
+        //             <label class="form-check-label" for="onsite_${tech.tech_id}">Onsite</label>
+        //           </div>
+        //         </div>
+        //       </td>
+        //     </tr>
+        //   `);
+        // });
         // ✅ Auto-check Select All if all permissions are selected
 const allCheckboxes = document.querySelectorAll('.tech-checkbox');
 const selectAll = document.getElementById('selectAll');

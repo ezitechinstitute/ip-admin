@@ -4,28 +4,32 @@ namespace App\Http\Controllers\supervisor_controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SupervisorAttendanceController extends Controller
 {
-    public function index()
-{
-    $supervisorTechnology = session('manager_department');
+    
 
-    $attendance = \Illuminate\Support\Facades\DB::table('intern_attendance')
-        ->join('intern_accounts', 'intern_attendance.eti_id', '=', 'intern_accounts.eti_id')
-        ->select(
-            'intern_attendance.id',
-            'intern_attendance.eti_id',
-            'intern_attendance.start_shift',
-            'intern_attendance.end_shift',
-            'intern_attendance.duration',
-            'intern_attendance.status'
-        )
-        ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-            $query->where('intern_accounts.int_technology', $supervisorTechnology);
+public function index()
+{
+    $attendance = DB::table('intern_attendance as ia')
+        ->leftJoin('intern_accounts as acc', function ($join) {
+            $join->on(
+                DB::raw('TRIM(LOWER(ia.eti_id))'),
+                '=',
+                DB::raw('TRIM(LOWER(acc.eti_id))')
+            );
         })
-        ->orderByDesc('intern_attendance.id')
-        ->limit(20)
+        ->select(
+            'ia.id',
+            'ia.eti_id',
+            'acc.name as intern_name',
+            'ia.start_shift',
+            'ia.end_shift',
+            'ia.duration',
+            'ia.status'
+        )
+        ->orderByDesc('ia.id')
         ->get();
 
     return view('content.supervisor.attendance', compact('attendance'));
