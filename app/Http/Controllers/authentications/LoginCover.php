@@ -8,7 +8,7 @@ use App\Models\ManagersAccount;
 use App\Models\InternAccount;  
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
   
 
 class LoginCover extends Controller
@@ -26,10 +26,24 @@ class LoginCover extends Controller
         'password' => 'required'
     ]);
 
+    // DEBUG: Log password comparison
+    Log::info('LOGIN_ATTEMPT', [
+        'email' => $request->email,
+        'submitted_password' => $request->password,
+    ]);
+
     // Check Intern (same pattern as admin and manager)
     $intern = InternAccount::where('email', $request->email)->first();
     
-    if ($intern && Hash::check($request->password, $intern->password)) {
+    if ($intern) {
+        Log::info('INTERN_FOUND', [
+            'email' => $intern->email,
+            'db_password' => $intern->password,
+            'match' => ($intern->password === $request->password),
+        ]);
+    }
+    
+    if ($intern && $intern->password === $request->password) {
         Auth::guard('intern')->login($intern);
         $request->session()->regenerate();
         return redirect()->route('intern.dashboard');
@@ -38,7 +52,16 @@ class LoginCover extends Controller
     // 1. Check in Admin Table using 'admin' guard
     $admin = AdminAccount::where('email', $request->email)->first();
 
-    if ($admin && Hash::check($request->password, $admin->password)) {
+    if ($admin) {
+        Log::info('ADMIN_FOUND', [
+            'email' => $admin->email,
+            'db_password' => $admin->password,
+            'submitted_password' => $request->password,
+            'match' => ($admin->password === $request->password),
+        ]);
+    }
+
+    if ($admin && $admin->password === $request->password) {
         Auth::guard('admin')->login($admin);
         $request->session()->regenerate();
         return redirect()->route('dashboard-admin');
@@ -47,7 +70,17 @@ class LoginCover extends Controller
     // 2. Check in Managers/Supervisors Table using 'manager' guard
     $manager = ManagersAccount::where('email', $request->email)->first();
 
-    if ($manager && Hash::check($request->password, $manager->password)) {
+    if ($manager) {
+        Log::info('MANAGER_FOUND', [
+            'email' => $manager->email,
+            'db_password' => $manager->password,
+            'submitted_password' => $request->password,
+            'match' => ($manager->password === $request->password),
+            'status' => $manager->status,
+        ]);
+    }
+
+    if ($manager && $manager->password === $request->password) {
         if ($manager->status != 1) {
             return back()->withErrors([
                 'email' => 'Your account is deactivated. Please contact the Admin!'
@@ -76,6 +109,11 @@ class LoginCover extends Controller
  
 
     // 4. Fallback if all fail
+    Log::info('LOGIN_FAILED', [
+        'email' => $request->email,
+        'attempted_password' => $request->password,
+    ]);
+    
     return back()->withErrors([
         'email' => 'Invalid email or password. Please try again!',
     ])->onlyInput('email');

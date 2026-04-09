@@ -45,6 +45,14 @@ class InternAccount extends Authenticatable
 
     public $timestamps = false;
 
+    /**
+     * Automatically trim whitespace from password
+     */
+    public function getPasswordAttribute($value)
+    {
+        return trim($value);
+    }
+
     // Relationships
     public function supervisor()
     {

@@ -10,6 +10,7 @@ use App\Models\CurriculumProject;
 use App\Models\CurriculumSupervisorMapping;
 use App\Models\InternProjectProgress;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Supervisorcontroller extends Controller
 {
@@ -25,8 +26,12 @@ class Supervisorcontroller extends Controller
         $managerId = $manager->manager_id;
 
         // Only supervisors assigned to this manager
-        $supervisors = ManagersAccount::where('loginas', 'Supervisor')
-                        ->where('assigned_manager', $managerId)
+        $supervisorIds = DB::table('manager_supervisor_assignments')
+                        ->where('manager_id', $managerId)
+                        ->pluck('supervisor_id');
+        
+        $supervisors = ManagersAccount::whereIn('manager_id', $supervisorIds)
+                        ->where('loginas', 'Supervisor')
                         ->latest('manager_id')
                         ->paginate();
 

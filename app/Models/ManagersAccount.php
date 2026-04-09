@@ -35,4 +35,12 @@ class ManagersAccount extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    /**
+     * Automatically trim whitespace from password
+     */
+    public function getPasswordAttribute($value)
+    {
+        return trim($value);
+    }
 }

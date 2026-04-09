@@ -43,9 +43,23 @@ class RevenueController extends Controller
             ->count();
 
         // 3) Revenue generated (all time for this manager)
+        // Get supervisors assigned to this manager
+        $supervisorIds = DB::table('manager_supervisor_assignments')
+            ->where('manager_id', $manager->manager_id)
+            ->pluck('supervisor_id')
+            ->toArray();
+        
+        // Get interns supervised by those supervisors
+        $internIds = DB::table('intern_table')
+            ->whereIn('supervisor_id', $supervisorIds)
+            ->pluck('id')
+            ->toArray();
+        
+        // Get transactions for invoices related to those interns
         $totalRevenue = (float) DB::table('transactions')
-            ->where('manager_email', $manager->email)
-            ->sum('amount');
+            ->join('invoices', 'transactions.invoice_id', '=', 'invoices.id')
+            ->whereIn('invoices.intern_id', $internIds)
+            ->sum('transactions.amount');
 
         // 4) Commission info
         // Note: some setups store commission in basis points (e.g. 1000 = 10%).
