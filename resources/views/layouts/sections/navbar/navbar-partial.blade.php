@@ -1,7 +1,10 @@
 @php
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-    $account = Auth::guard('manager')->user();
+    // Check all guards to get the logged-in user
+    $account = Auth::guard('admin')->user() ?? 
+               Auth::guard('manager')->user() ?? 
+               Auth::guard('intern')->user();
 @endphp
 
 <!--  Brand demo (display only for navbar-full and hide on below xl) -->
