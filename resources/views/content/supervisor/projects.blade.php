@@ -2,12 +2,21 @@
 
 @section('title', 'Projects')
 
+{{-- 1. Load the Select2 CSS --}}
+@section('vendor-style')
+@vite(['resources/assets/vendor/libs/select2/select2.scss'])
+@endsection
+
+{{-- 2. Load the Select2 JS --}}
+@section('vendor-script')
+@vite(['resources/assets/vendor/libs/select2/select2.js'])
+@endsection
+
 @section('content')
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="mb-4">Projects</h4>
 
-    <!-- Alerts Section -->
     @if(session('success'))
         <div class="alert alert-success alert-dismissible" role="alert">
             {{ session('success') }}
@@ -48,8 +57,9 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Select Intern</label>
-          <select name="eti_id" id="internSelect" class="form-select" required>
+          <label class="form-label">Select Intern (Search by Name or ID)</label>
+          {{-- Added 'select2' class here --}}
+          <select name="eti_id" id="internSelect" class="form-select select2" required>
             <option value="">-- Choose Intern --</option>
             @foreach($interns as $intern)
               <option value="{{ $intern->eti_id }}" data-email="{{ $intern->email }}">{{ $intern->name }} ({{ $intern->eti_id }})</option>
@@ -188,19 +198,29 @@
         </div>
     </div>
 </div>
+
 @section('page-script')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const internSelect = document.getElementById('internSelect');
-    const internEmail = document.getElementById('internEmail');
+    
+    // 1. Initialize Select2
+    $('#internSelect').select2({
+        placeholder: "-- Choose Intern --",
+        allowClear: true,
+        width: '100%',
+        dropdownParent: $('#internSelect').parent()
+    });
 
-    if (internSelect && internEmail) {
-        internSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const email = selectedOption.getAttribute('data-email');
-            internEmail.value = email || '';
-        });
-    }
+    // 2. Updated Logic for Auto-filling Email
+    // Note: When using Select2, we must use jQuery's .on('change') instead of vanilla JS addEventListener
+    $('#internSelect').on('change', function() {
+        // Find the selected option and grab its 'data-email' attribute
+        var email = $(this).find(':selected').data('email');
+        
+        // Put that email into the input field
+        $('#internEmail').val(email || '');
+    });
+    
 });
 </script>
 @endsection
