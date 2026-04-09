@@ -81,9 +81,9 @@ class ManagerLeaveController extends Controller
         $managerId = $manager->manager_id;
 
         // 1️⃣ Get all supervisors assigned to this manager
-        $assignedSupervisors = DB::table('manager_accounts')
-            ->where('assigned_manager', $managerId)
-            ->pluck('manager_id'); // Only get the supervisor IDs
+        $assignedSupervisors = DB::table('manager_supervisor_assignments')
+            ->where('manager_id', $managerId)
+            ->pluck('supervisor_id'); // Only get the supervisor IDs
 
         // 2️⃣ Get leaves of these supervisors
         $leaves = DB::table('supervisor_leaves')

@@ -31,9 +31,9 @@ public function attendanceCalendar(Request $request)
         ->toArray();
 
     // Get supervisors assigned to this manager
-    $assignedSupervisors = DB::table('manager_accounts')
-        ->where('assigned_manager', $managerId)
-        ->pluck('manager_id');
+    $assignedSupervisors = DB::table('manager_supervisor_assignments')
+        ->where('manager_id', $managerId)
+        ->pluck('supervisor_id');
 
     // Get supervisors list
     $supervisors = DB::table('manager_accounts')
@@ -278,9 +278,9 @@ public function attendanceManagement(Request $request)
         ->toArray();
 
     // Get supervisors assigned to this manager
-    $assignedSupervisors = DB::table('manager_accounts')
-        ->where('assigned_manager', $managerId)
-        ->pluck('manager_id');
+    $assignedSupervisors = DB::table('manager_supervisor_assignments')
+        ->where('manager_id', $managerId)
+        ->pluck('supervisor_id');
 
     // Get pagination limit from settings
     $pageLimitSet = AdminSetting::first();
