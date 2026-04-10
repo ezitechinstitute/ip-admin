@@ -34,6 +34,8 @@ $progressPercent = $totalDays > 0 ? round(($elapsedDays / $totalDays) * 100) : 0
 ])
 @endsection
 
+
+
 @section('page-style')
 @vite('resources/assets/vendor/scss/pages/cards-advance.scss')
 <style>
@@ -303,6 +305,21 @@ h1, h2, h3, h4, h5 {
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 @endif
+
+{{-- Portal Freeze Warning --}}
+@if(isset($freezeWarning) && $freezeWarning)
+<div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+    <div class="d-flex align-items-center">
+        <i class="ti ti-alert-triangle fs-2 me-3"></i>
+        <div>
+            <strong class="d-block">⚠️ Portal Frozen</strong>
+            <span>{{ $freezeWarning }}</span>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
+
 
 {{-- Auto-hide script --}}
 <script>

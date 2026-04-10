@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\intern;
-
+use App\Helpers\PortalFreezeHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -38,7 +38,11 @@ class InternCertificateController extends Controller
             return redirect()->route('login');
         }
 
-  
+            $freezeStatus = PortalFreezeHelper::getStatus($intern->email);
+            if ($freezeStatus['frozen']) {
+            return back()->with('error', $freezeStatus['message']);
+            }
+
 
         $validated = $request->validate([
             'certificate_type' => 'required|in:internship,course_completion',
@@ -79,6 +83,8 @@ class InternCertificateController extends Controller
         return redirect()->route('intern.certificates')
             ->with('success', 'Certificate request submitted!');
     }
+
+
 
     public function downloadCertificate($id)
     {

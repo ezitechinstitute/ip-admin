@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\intern;
-
+use App\Helpers\PortalFreezeHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +21,12 @@ class InternResourceController extends Controller
             if (!$intern) {
                 return redirect()->route('login');
             }
+
+            // ✅ THIS PORTAL FREEZE CHECK
+        $freezeStatus = PortalFreezeHelper::getStatus($intern->email);
+        if ($freezeStatus['frozen']) {
+            return redirect()->route('intern.dashboard')->with('error', $freezeStatus['message']);
+        }
             
             $query = DB::table('knowledge_bases')
                 ->where('status', 'active')
@@ -151,6 +157,12 @@ class InternResourceController extends Controller
             if (!$intern) {
                 return redirect()->route('login');
             }
+
+                 $freezeStatus = PortalFreezeHelper::getStatus($intern->email);
+if ($freezeStatus['frozen']) {
+    return redirect()->route('intern.dashboard')->with('error', $freezeStatus['message']);
+}
+    
             
             $resource = DB::table('knowledge_bases')
                 ->where('id', $id)
@@ -210,13 +222,13 @@ class InternResourceController extends Controller
                 $related->categoryColor = $this->getCategoryColor($related->category);
             }
             
-            return view('pages.intern.resources.show', compact('resource', 'progress', 'relatedResources'));
+          return view('pages.intern.resources.show', compact('resource', 'progress', 'relatedResources'));
             
         } catch (\Exception $e) {
             abort(404, 'Resource not found');
         }
-    }
-    
+
+         }
     /**
      * Mark resource as completed
      */

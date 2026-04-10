@@ -5,6 +5,34 @@
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
 
+    {{-- ✅ PORTAL FREEZE ERROR MESSAGE --}}
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="ti ti-alert-triangle fs-3 me-3"></i>
+            <div>
+                <strong class="d-block">⚠️ Portal Frozen</strong>
+                <span>{{ session('error') }}</span>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    {{-- ✅ SUCCESS MESSAGE --}}
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="ti ti-check-circle fs-3 me-3"></i>
+            <div>
+                <strong class="d-block">Success!</strong>
+                <span>{{ session('success') }}</span>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <div class="row g-4">
         {{-- Task Details Card --}}
         <div class="col-lg-8">
