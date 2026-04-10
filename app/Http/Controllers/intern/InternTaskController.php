@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\intern;
-
+use App\Helpers\PortalFreezeHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,6 +69,12 @@ $canResubmit = in_array($task->task_status, ['Rejected', 'Assigned', 'pending'])
         
         if (!$intern) {
             return redirect()->route('login');
+        }
+
+        // ✅ Portal Freeze Check 
+        $freezeStatus = PortalFreezeHelper::getStatus($intern->email);
+        if ($freezeStatus['frozen']) {
+            return back()->with('error', $freezeStatus['message']);
         }
         
         $task = DB::table('intern_tasks')
@@ -140,4 +146,5 @@ $canResubmit = in_array($task->task_status, ['Rejected', 'Assigned', 'pending'])
             'updated_at' => now(),
         ]);
     }
+  
 }
