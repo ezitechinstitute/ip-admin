@@ -4,19 +4,21 @@ namespace App\Http\Controllers\supervisor_controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class SupervisorProjectController extends Controller
 {
     public function index()
     {
-        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
-        $supervisorTechnology = trim(session('manager_department'));
+        $supervisorId = Auth::guard('manager')->id() ?? session('manager_id');
 
         if (!$supervisorId) {
             return redirect()->route('login')->with('error', 'Authentication error: Supervisor ID not found. Please re-login.');
         }
 
-        $projects = \Illuminate\Support\Facades\DB::table('intern_projects')
+        // 1. Fetch Projects
+        $projects = DB::table('intern_projects')
             ->join('manager_accounts', 'intern_projects.assigned_by', '=', 'manager_accounts.manager_id')
             ->select(
                 'intern_projects.project_id',
@@ -36,76 +38,164 @@ class SupervisorProjectController extends Controller
             ->limit(20)
             ->get();
 
-        // Fetch active interns for this supervisor to show in the "Create Project" dropdown
-        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
+        // 2. Dynamic Intern Filtering (Based on Supervisor Technology Permissions)
+        $permissionTechIds = \App\Models\SupervisorPermission::where('manager_id', $supervisorId)
+            ->pluck('tech_id')
+            ->toArray();
+
+        $allowedTechNames = DB::table('technologies')
+            ->whereIn('tech_id', $permissionTechIds)
+            ->pluck('technology')
+            ->toArray();
+
+        if (empty($allowedTechNames)) {
+            $allowedTechNames = ['___NO_ACCESS___']; 
+        }
+
+        $interns = DB::table('intern_accounts')
             ->select('eti_id', 'name', 'email')
-            ->whereRaw('LOWER(int_status) = ?', ['active'])
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
+            ->where('int_status', 'active')
+            ->whereIn('int_technology', $allowedTechNames)
             ->get();
 
         return view('content.supervisor.projects', compact('projects', 'interns'));
     }
 
+    public function store(Request $request)
+    {
+        // Removed duration, days, project_marks, and obt_marks
+        $request->validate([
+            'eti_id' => 'required',
+            'email' => 'required|email',
+            'title' => 'required|string|max:255',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'description' => 'required|string',
+            'tech_stack' => 'nullable|string|max:255',
+            'difficulty_level' => 'required|string|in:Beginner,Intermediate,Advanced',
+            'pstatus' => 'required|string|in:Ongoing,Submitted,Approved,Rejected,Expired,Completed,Pending',
+        ]);
 
-public function store(Request $request)
-{
-    $request->validate([
-        'eti_id' => 'required',
-        'email' => 'required|email',
-        'title' => 'required|string|max:255',
-        'start_date' => 'required',
-        'end_date' => 'required',
-        'duration' => 'required|numeric',
-        'days' => 'required|numeric',
-        'project_marks' => 'required',
-        'obt_marks' => 'nullable|numeric',
-        'description' => 'required|string',
-        'tech_stack' => 'nullable|string|max:255',
-        'difficulty_level' => 'required|string|in:Beginner,Intermediate,Advanced',
-        'pstatus' => 'required|string|in:Ongoing,Submitted,Approved,Rejected,Expired,Completed,Pending',
-    ]);
+        DB::table('intern_projects')->insert([
+            'eti_id' => $request->eti_id,
+            'email' => $request->email,
+            'title' => $request->title,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'description' => $request->description,
+            'tech_stack' => $request->tech_stack,
+            'difficulty_level' => $request->difficulty_level,
+            'assigned_by' => Auth::guard('manager')->id() ?? session('manager_id'),
+            'pstatus' => $request->pstatus,
+            'createdat' => now(),
+            'updatedat' => now(),
+        ]);
 
-    \Illuminate\Support\Facades\DB::table('intern_projects')->insert([
-        'eti_id' => $request->eti_id,
-        'email' => $request->email,
-        'title' => $request->title,
-        'start_date' => $request->start_date,
-        'end_date' => $request->end_date,
-        'duration' => $request->duration,
-        'days' => $request->days,
-        'project_marks' => $request->project_marks,
-        'obt_marks' => $request->obt_marks ?? 0,
-        'description' => $request->description,
-        'tech_stack' => $request->tech_stack,
-        'difficulty_level' => $request->difficulty_level,
-        'assigned_by' => \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id'),
-        'pstatus' => $request->pstatus,
-        'createdat' => now(),
-        'updatedat' => now(),
-    ]);
-
-        $this->logActivity('Created Project', 'Project title: ' . $request->title . ' for Intern: ' . $request->eti_id);
-        $this->notifyIntern($request->eti_id, 'New Project', 'You have been assigned a new project: ' . $request->title);
+        // Wrap in method_exists just in case these are defined in a trait or base controller
+        if(method_exists($this, 'logActivity')) {
+            $this->logActivity('Created Project', 'Project title: ' . $request->title . ' for Intern: ' . $request->eti_id);
+        }
+        if(method_exists($this, 'notifyIntern')) {
+            $this->notifyIntern($request->eti_id, 'New Project', 'You have been assigned a new project: ' . $request->title);
+        }
 
         return redirect()->back()->with('success', 'Project created successfully');
-}
+    }
 
-public function tasks($project_id)
-{
-    $project = \Illuminate\Support\Facades\DB::table('intern_projects')
-        ->where('project_id', $project_id)
-        ->first();
+    public function edit($id)
+    {
+        $supervisorId = Auth::guard('manager')->id() ?? session('manager_id');
+        
+        $project = DB::table('intern_projects')
+            ->where('project_id', $id)
+            ->where('assigned_by', $supervisorId)
+            ->first();
 
-    $tasks = \Illuminate\Support\Facades\DB::table('project_tasks')
-        ->where('project_id', $project_id)
-        ->orderByDesc('task_id')
-        ->get();
+        if (!$project) {
+            return redirect()->route('supervisor.projects')->with('error', 'Project not found.');
+        }
 
-    return view('content.supervisor.project-tasks', compact('project', 'tasks'));
-}
+        return view('content.supervisor.projects.edit', compact('project'));
+    }
 
+    public function update(Request $request, $id)
+    {
+        // Removed duration, days, project_marks, and obt_marks
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'description' => 'required|string',
+            'tech_stack' => 'nullable|string|max:255',
+            'difficulty_level' => 'required|string|in:Beginner,Intermediate,Advanced',
+            'pstatus' => 'required|string|in:Ongoing,Submitted,Approved,Rejected,Expired,Completed,Pending',
+        ]);
+
+        $supervisorId = Auth::guard('manager')->id() ?? session('manager_id');
+
+        DB::table('intern_projects')
+            ->where('project_id', $id)
+            ->where('assigned_by', $supervisorId)
+            ->update([
+                'title' => $request->title,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'description' => $request->description,
+                'tech_stack' => $request->tech_stack,
+                'difficulty_level' => $request->difficulty_level,
+                'pstatus' => $request->pstatus,
+                'updatedat' => now(),
+            ]);
+
+        if(method_exists($this, 'logActivity')) {
+            $this->logActivity('Updated Project', "Modified Project ID: {$id}");
+        }
+
+        return redirect()->route('supervisor.projects')->with('success', 'Project updated successfully.');
+    }
+
+    public function destroy($id)
+    {
+        $supervisorId = Auth::guard('manager')->id() ?? session('manager_id');
+        
+        $project = DB::table('intern_projects')
+            ->where('project_id', $id)
+            ->where('assigned_by', $supervisorId)
+            ->first();
+
+        if ($project) {
+            // Delete associated tasks first
+            DB::table('project_tasks')->where('project_id', $id)->delete();
+            // Delete project
+            DB::table('intern_projects')->where('project_id', $id)->delete();
+            
+            if(method_exists($this, 'logActivity')) {
+                $this->logActivity('Deleted Project', "Removed Project: '{$project->title}'");
+            }
+            
+            return redirect()->route('supervisor.projects')->with('success', 'Project and its tasks deleted successfully.');
+        }
+
+        return redirect()->route('supervisor.projects')->with('error', 'Project not found.');
+    }
+
+    // ==========================================
+    // TASK MANAGEMENT METHODS
+    // ==========================================
+
+    public function tasks($project_id)
+    {
+        $project = DB::table('intern_projects')
+            ->where('project_id', $project_id)
+            ->first();
+
+        $tasks = DB::table('project_tasks')
+            ->where('project_id', $project_id)
+            ->orderByDesc('task_id')
+            ->get();
+
+        return view('content.supervisor.project-tasks', compact('project', 'tasks'));
+    }
 
     public function storeTask(Request $request, $project_id)
     {
@@ -122,7 +212,7 @@ public function tasks($project_id)
             'description' => 'required|string',
         ]);
 
-        $project = \Illuminate\Support\Facades\DB::table('intern_projects')
+        $project = DB::table('intern_projects')
             ->where('project_id', $project_id)
             ->first();
 
@@ -130,7 +220,7 @@ public function tasks($project_id)
             return back()->with('error', 'Project not found.');
         }
 
-        \Illuminate\Support\Facades\DB::table('project_tasks')->insert([
+        DB::table('project_tasks')->insert([
             'project_id' => $project_id,
             'eti_id' => $project->eti_id,
             'task_title' => $request->task_title,
@@ -141,7 +231,7 @@ public function tasks($project_id)
             'task_duration' => $request->task_duration,
             'task_obt_mark' => $request->task_obt_mark ?? 0,
             'task_mark' => $request->task_mark,
-            'assigned_by' => \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id'),
+            'assigned_by' => Auth::guard('manager')->id() ?? session('manager_id'),
             'task_status' => $request->task_status,
             'approved' => null,
             'review' => '',
@@ -159,8 +249,8 @@ public function tasks($project_id)
 
     public function editTask($project_id, $task_id)
     {
-        $project = \Illuminate\Support\Facades\DB::table('intern_projects')->where('project_id', $project_id)->first();
-        $task = \Illuminate\Support\Facades\DB::table('project_tasks')->where('task_id', $task_id)->first();
+        $project = DB::table('intern_projects')->where('project_id', $project_id)->first();
+        $task = DB::table('project_tasks')->where('task_id', $task_id)->first();
 
         if (!$project || !$task) {
             return back()->with('error', 'Task or Project not found.');
@@ -184,7 +274,7 @@ public function tasks($project_id)
             'description' => 'required|string',
         ]);
 
-        \Illuminate\Support\Facades\DB::table('project_tasks')
+        DB::table('project_tasks')
             ->where('task_id', $task_id)
             ->where('project_id', $project_id)
             ->update([
@@ -207,89 +297,12 @@ public function tasks($project_id)
 
     public function deleteTask($project_id, $task_id)
     {
-        \Illuminate\Support\Facades\DB::table('project_tasks')
+        DB::table('project_tasks')
             ->where('project_id', $project_id)
             ->where('task_id', $task_id)
             ->delete();
 
         return redirect()->route('supervisor.projects.tasks', $project_id)
             ->with('success', 'Task deleted successfully.');
-    }
-    public function edit($id)
-    {
-        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
-        $project = \Illuminate\Support\Facades\DB::table('intern_projects')
-            ->where('project_id', $id)
-            ->where('assigned_by', $supervisorId)
-            ->first();
-
-        if (!$project) {
-            return redirect()->route('supervisor.projects')->with('error', 'Project not found.');
-        }
-
-        return view('content.supervisor.projects.edit', compact('project'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'duration' => 'required|numeric',
-            'days' => 'required|numeric',
-            'project_marks' => 'required',
-            'obt_marks' => 'nullable|numeric',
-            'description' => 'required|string',
-            'tech_stack' => 'nullable|string|max:255',
-            'difficulty_level' => 'required|string|in:Beginner,Intermediate,Advanced',
-            'pstatus' => 'required|string|in:Ongoing,Submitted,Approved,Rejected,Expired,Completed,Pending',
-        ]);
-
-        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
-
-        \Illuminate\Support\Facades\DB::table('intern_projects')
-            ->where('project_id', $id)
-            ->where('assigned_by', $supervisorId)
-            ->update([
-                'title' => $request->title,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'duration' => $request->duration,
-                'days' => $request->days,
-                'project_marks' => $request->project_marks,
-                'obt_marks' => $request->obt_marks ?? 0,
-                'description' => $request->description,
-                'tech_stack' => $request->tech_stack,
-                'difficulty_level' => $request->difficulty_level,
-                'pstatus' => $request->pstatus,
-                'updatedat' => now(),
-            ]);
-
-        $this->logActivity('Updated Project', "Modified Project ID: {$id}");
-
-        return redirect()->route('supervisor.projects')->with('success', 'Project updated successfully.');
-    }
-
-    public function destroy($id)
-    {
-        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
-        $project = \Illuminate\Support\Facades\DB::table('intern_projects')
-            ->where('project_id', $id)
-            ->where('assigned_by', $supervisorId)
-            ->first();
-
-        if ($project) {
-            // Delete associated tasks first
-            \Illuminate\Support\Facades\DB::table('project_tasks')->where('project_id', $id)->delete();
-            // Delete project
-            \Illuminate\Support\Facades\DB::table('intern_projects')->where('project_id', $id)->delete();
-            
-            $this->logActivity('Deleted Project', "Removed Project: '{$project->title}'");
-            
-            return redirect()->route('supervisor.projects')->with('success', 'Project and its tasks deleted successfully.');
-        }
-
-        return redirect()->route('supervisor.projects')->with('error', 'Project not found.');
     }
 }

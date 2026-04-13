@@ -1,7 +1,9 @@
 @extends('layouts/layoutMaster')
 
 @section('title', 'Project Tasks')
-
+@php
+use Illuminate\Support\Str;
+@endphp
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -185,4 +187,4 @@
     </div>
   </div>
 </div>
-@endsection
+@endsection

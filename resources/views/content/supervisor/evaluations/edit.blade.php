@@ -16,10 +16,11 @@
                         <input type="month" name="month" class="form-control" value="{{ $evaluation->month }}" required>
                     </div>
 
-                    <div class="col-md-6">
+                    {{-- <div class="col-md-6">
                         <label class="form-label">Overall Score (0-10)</label>
                         <input type="number" name="overall_score" class="form-control" min="0" max="10" value="{{ $evaluation->overall_score }}" required>
-                    </div>
+                    </div> --}}
+
 
                     <div class="col-md-3">
                         <label class="form-label">Technical Skills (0-10)</label>
@@ -35,11 +36,20 @@
                         <label class="form-label">Communication (0-10)</label>
                         <input type="number" name="communication" class="form-control" min="0" max="10" value="{{ $evaluation->communication }}" required>
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Task Completion</label>
+                        <input type="text" class="form-control" value="{{ $evaluation->task_completion }}/10" readonly>
+                    </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Overall Score</label>
+                        <input type="text" class="form-control" value="{{ $evaluation->overall_score }}/10" readonly>
+                    </div>
+
+                    {{-- <div class="col-md-3">
                         <label class="form-label">Professionalism (0-10)</label>
                         <input type="number" name="professionalism" class="form-control" min="0" max="10" value="{{ $evaluation->professionalism }}" required>
-                    </div>
+                    </div> --}}
 
                     <div class="col-12">
                         <label class="form-label">Remarks</label>

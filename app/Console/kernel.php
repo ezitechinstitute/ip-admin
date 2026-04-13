@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
         // yahan apna custom command add karein
         \App\Console\Commands\SendInvoiceReminders::class,
         \App\Console\Commands\CheckInterviewEscalation::class,
+        \App\Console\Commands\EnforcePortalFreeze::class,
     ];
 
     /**
@@ -26,6 +27,10 @@ class Kernel extends ConsoleKernel
 
         // Check for interview/test escalations every hour (8-hour threshold)
         $schedule->command('interview:check-escalation --hours=8')->hourly();
+
+        // Check and enforce portal freeze for overdue invoices - 2x daily at 9 AM and 3 PM
+        $schedule->command('portal:freeze-overdue')->dailyAt('09:00');
+        $schedule->command('portal:freeze-overdue')->dailyAt('15:00');
     }
 
     /**

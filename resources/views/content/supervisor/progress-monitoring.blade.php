@@ -89,60 +89,84 @@
             <div class="table-responsive">
                 <table class="table table-hover border-top">
                     <thead>
-                        <tr>
-                            <th>Intern</th>
-                            <th>Total Tasks</th>
-                            <th>Completed</th>
-                            <th>Pending/Overdue</th>
-                            <th>Progress</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
+        <tr>
+            <th>Intern</th>
+            <th>Task Progress</th> {{-- Renamed for clarity --}}
+            <th>Project Completion</th> {{-- 🔥 NEW COLUMN --}}
+            <th>Code Quality</th> {{-- 🔥 NEW COLUMN --}}
+            <th>Pending/Overdue</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
                     <tbody>
-                        @foreach($interns as $intern)
-                            <tr>
-                                <td>
-                                    <div class="d-flex justify-content-start align-items-center">
-                                        <div class="avatar-wrapper">
-                                            <div class="avatar avatar-sm me-3">
-                                                <span class="avatar-initial rounded-circle bg-label-{{ ['primary', 'success', 'info', 'warning', 'danger'][rand(0, 4)] }}">{{ strtoupper(substr($intern->name, 0, 1)) }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex flex-column">
-                                            <a href="{{ route('supervisor.viewIntern', $intern->int_id) }}" class="text-body text-truncate fw-bold">{{ $intern->name }}</a>
-                                            <small class="text-muted text-nowrap">{{ $intern->int_technology }}</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>{{ $intern->total_tasks }}</td>
-                                <td class="text-success">{{ $intern->completed_tasks }}</td>
-                                <td>
-                                    <span class="text-warning">{{ $intern->total_tasks - $intern->completed_tasks }}</span> 
-                                    @if($intern->overdue_tasks > 0)
-                                        <span class="badge bg-label-danger ms-1">{{ $intern->overdue_tasks }} Overdue</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="progress w-100 me-3" style="height: 6px;">
-                                            <div class="progress-bar bg-primary" style="width:{{ $intern->progress }}%" role="progressbar"></div>
-                                        </div>
-                                        <span>{{ $intern->progress }}%</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('supervisor.viewIntern', $intern->int_id) }}" class="btn btn-sm btn-icon btn-label-primary">
-                                            <i class="ti tabler-eye"></i>
-                                        </a>
-                                        <a href="{{ route('supervisor.evaluations.create', $intern->eti_id) }}" class="btn btn-sm btn-icon btn-label-success" title="Evaluate">
-                                            <i class="ti tabler-star"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
+        @foreach($interns as $intern)
+            <tr>
+                <td>
+                    <div class="d-flex justify-content-start align-items-center">
+                        <div class="avatar-wrapper">
+                            <div class="avatar avatar-sm me-3">
+                                <span class="avatar-initial rounded-circle bg-label-{{ ['primary', 'success', 'info', 'warning', 'danger'][rand(0, 4)] }}">{{ strtoupper(substr($intern->name, 0, 1)) }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column">
+                            <a href="{{ route('supervisor.viewIntern', $intern->int_id) }}" class="text-body text-truncate fw-bold">{{ $intern->name }}</a>
+                            <small class="text-muted text-nowrap">{{ $intern->int_technology }}</small>
+                        </div>
+                    </div>
+                </td>
+                
+                {{-- Task Completion Rate --}}
+                <td>
+                    <div class="d-flex align-items-center mb-1">
+                        <div class="progress w-100 me-2" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width:{{ $intern->progress }}%" role="progressbar"></div>
+                        </div>
+                        <span>{{ $intern->progress }}%</span>
+                    </div>
+                    <small class="text-muted">{{ $intern->completed_tasks }}/{{ $intern->total_tasks }} Tasks</small>
+                </td>
+
+                {{-- 🔥 NEW: Project Completion Percentage --}}
+                <td>
+                    <div class="d-flex align-items-center mb-1">
+                        <div class="progress w-100 me-2" style="height: 6px;">
+                            <div class="progress-bar bg-info" style="width:{{ $intern->project_completion }}%" role="progressbar"></div>
+                        </div>
+                        <span>{{ $intern->project_completion }}%</span>
+                    </div>
+                    <small class="text-muted">{{ $intern->total_projects }} Assigned</small>
+                </td>
+
+                {{-- 🔥 NEW: Code Quality Score --}}
+                <td>
+                    {{-- Color changes dynamically based on score (Green > 80, Yellow > 50, Red < 50) --}}
+                    <span class="badge bg-label-{{ $intern->code_quality >= 80 ? 'success' : ($intern->code_quality >= 50 ? 'warning' : 'danger') }}">
+                        {{ $intern->code_quality }} / 100
+                    </span>
+                </td>
+
+                {{-- Pending / Overdue (Unchanged) --}}
+                <td>
+                    <span class="text-warning">{{ $intern->total_tasks - $intern->completed_tasks }}</span> 
+                    @if($intern->overdue_tasks > 0)
+                        <span class="badge bg-label-danger ms-1">{{ $intern->overdue_tasks }} Overdue</span>
+                    @endif
+                </td>
+
+                {{-- Actions (Unchanged) --}}
+                <td>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('supervisor.viewIntern', $intern->int_id) }}" class="btn btn-sm btn-icon btn-label-primary">
+                            <i class="ti tabler-eye"></i>
+                        </a>
+                        <a href="{{ route('supervisor.evaluations.create', $intern->eti_id) }}" class="btn btn-sm btn-icon btn-label-success" title="Evaluate">
+                            <i class="ti tabler-star"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
                 </table>
             </div>
         </div>

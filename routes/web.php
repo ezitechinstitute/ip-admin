@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AdminLeaveController;
+
+// use Illuminate\Support\Facades\Auth;
+
+
 use App\Http\Controllers\AllInternsController;
 use App\Http\Controllers\apps\AcademyCourse;
 use App\Http\Controllers\apps\AcademyCourseDetails;
@@ -81,6 +85,7 @@ use App\Http\Controllers\extended_ui\TimelineBasic;
 use App\Http\Controllers\extended_ui\TimelineFullscreen;
 use App\Http\Controllers\extended_ui\Tour;
 use App\Http\Controllers\extended_ui\Treeview;
+use App\Http\Controllers\EscalationController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\form_elements\BasicInput;
 use App\Http\Controllers\form_elements\CustomOptions;
@@ -120,31 +125,30 @@ use App\Http\Controllers\layouts\ContentNavbar;
 use App\Http\Controllers\layouts\ContentNavSidebar;
 use App\Http\Controllers\layouts\Fluid;
 use App\Http\Controllers\layouts\Horizontal;
-// use App\Http\Controllers\layouts\NavbarFull;
-// use App\Http\Controllers\layouts\NavbarFullSidebar;
 use App\Http\Controllers\layouts\Vertical;
 use App\Http\Controllers\layouts\WithoutMenu;
 use App\Http\Controllers\layouts\WithoutNavbar;
 use App\Http\Controllers\leavecontroller;
 use App\Http\Controllers\manager_controllers\AllManagerInternController;
+use App\Http\Controllers\manager_controllers\CertificateController;
+use App\Http\Controllers\manager_controllers\CommunicationController;
 use App\Http\Controllers\manager_controllers\DashboardManagerController;
 use App\Http\Controllers\manager_controllers\InternationalInternsManagerController;
+use App\Http\Controllers\manager_controllers\InternPerformanceController;
+use App\Http\Controllers\manager_controllers\InvoiceController as ManagerInvoiceController;
+use App\Http\Controllers\manager_controllers\ManagerAttendanceController;
+use App\Http\Controllers\manager_controllers\ManagerCurriculumController;
+use App\Http\Controllers\manager_controllers\ManagerCurriculumProjectController;
 use App\Http\Controllers\manager_controllers\ManagerKnowledgeBaseController;
+use App\Http\Controllers\manager_controllers\ManagerLeaveController;
 use App\Http\Controllers\manager_controllers\OfferLetterRequestController;
 use App\Http\Controllers\manager_controllers\OfferLetterTemplateController;
 use App\Http\Controllers\manager_controllers\PaymentReceiptController;
 use App\Http\Controllers\manager_controllers\ProfileSettingsController;
 use App\Http\Controllers\manager_controllers\RemainingAmountController;
 use App\Http\Controllers\manager_controllers\RevenueController;
-use App\Http\Controllers\manager_controllers\CertificateController;
-use App\Http\Controllers\manager_controllers\ManagerCurriculumController;
-use App\Http\Controllers\manager_controllers\ManagerCurriculumProjectController;
-use App\Http\Controllers\manager_controllers\TaskViewController;
-use App\Http\Controllers\manager_controllers\InvoiceController as ManagerInvoiceController;
-use App\Http\Controllers\manager_controllers\CommunicationController;
-use App\Http\Controllers\manager_controllers\ManagerAttendanceController;
-use App\Http\Controllers\manager_controllers\ManagerLeaveController;
 use App\Http\Controllers\manager_controllers\Supervisorcontroller;
+use App\Http\Controllers\manager_controllers\TaskViewController;
 use App\Http\Controllers\ManagersController;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\modal\ModalExample;
@@ -166,17 +170,17 @@ use App\Http\Controllers\pages\UserProjects;
 use App\Http\Controllers\pages\UserTeams;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\SupervisorsController;
 use App\Http\Controllers\supervisor_controllers\DashboardSupervisorController;
-use App\Http\Controllers\supervisor_controllers\SupervisorInternController;
-use App\Http\Controllers\supervisor_controllers\SupervisorProjectController;
 use App\Http\Controllers\supervisor_controllers\SupervisorAttendanceController;
-use App\Http\Controllers\supervisor_controllers\SupervisorLeaveController;
-use App\Http\Controllers\supervisor_controllers\SupervisorFeedbackController;
-use App\Http\Controllers\supervisor_controllers\SupervisorProfileController;
-use App\Http\Controllers\supervisor_controllers\SupervisorKnowledgeBaseController;
-use App\Http\Controllers\supervisor_controllers\SupervisorTaskController;
 use App\Http\Controllers\supervisor_controllers\SupervisorEvaluationController;
+use App\Http\Controllers\supervisor_controllers\SupervisorFeedbackController;
+use App\Http\Controllers\supervisor_controllers\SupervisorInternController;
+use App\Http\Controllers\supervisor_controllers\SupervisorKnowledgeBaseController;
+use App\Http\Controllers\supervisor_controllers\SupervisorLeaveController;
+use App\Http\Controllers\supervisor_controllers\SupervisorProfileController;
+use App\Http\Controllers\supervisor_controllers\SupervisorProjectController;
+use App\Http\Controllers\supervisor_controllers\SupervisorTaskController;
+use App\Http\Controllers\SupervisorsController;
 use App\Http\Controllers\tables\Basic as TablesBasic;
 use App\Http\Controllers\tables\DatatableAdvanced;
 use App\Http\Controllers\tables\DatatableBasic;
@@ -210,6 +214,7 @@ use App\Http\Middleware\validManager;
 use App\Http\Middleware\ValidUser;
 use App\Http\Controllers\InternPublicRegistrationController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 
 
@@ -632,7 +637,18 @@ Route::post('/knowledge/store', [KnowledgeBaseController::class, 'store'])
         // routes/web.php
 Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downloadKnowledgeBaseCSV'])->name('knowledge.base.export.admin');
 
+    // ==================== ESCALATION ROUTES ====================
+    Route::prefix('/escalations')->name('escalations.')->group(function() {
+        Route::get('/', [App\Http\Controllers\EscalationController::class, 'index'])->name('index');
+        Route::get('/statistics', [App\Http\Controllers\EscalationController::class, 'statistics'])->name('statistics');
+        Route::get('/{id}', [App\Http\Controllers\EscalationController::class, 'show'])->name('show');
+        Route::post('/{id}/resolve', [App\Http\Controllers\EscalationController::class, 'adminResolve'])->name('resolve');
+        Route::post('/{id}/mark-notified', [App\Http\Controllers\EscalationController::class, 'markAdminNotified'])->name('mark-notified');
+    });
+    Route::get('/api/escalations/unnotified', [App\Http\Controllers\EscalationController::class, 'unnotifiedAdminEscalations'])->name('api.escalations.unnotified');
+
 });
+// Admin routes - End
 // Admin routes - End
 
 
@@ -801,6 +817,20 @@ Route::get('/supervisors', [Supervisorcontroller::class, 'index'])->name('manage
 // Withdraw Routes
 Route::get('/withdraw', [RevenueController::class, 'index'])->name('manager.withdraw.request');
 Route::post('/withdraw', [RevenueController::class, 'index'])->name('manager.withdraw.store');
+// LIST PAGE
+Route::get('/performance-analytics', 
+    [InternPerformanceController::class, 'index']
+)->name('performance.analytics');
+
+// DETAIL PAGE
+Route::get('/performance-analytics/{id}', 
+    [InternPerformanceController::class, 'show']
+)->name('performance.detail');
+
+// Escalation Routes (Manager View)
+Route::get('/escalations', [EscalationController::class, 'managerEscalations'])->name('manager.escalations');
+Route::get('/escalations/{id}', [EscalationController::class, 'show'])->name('manager.escalations.show');
+Route::post('/escalations/{id}/resolve', [EscalationController::class, 'resolve'])->name('manager.escalations.resolve');
 
 });
 
@@ -839,6 +869,8 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
     Route::get('/attendance', [SupervisorAttendanceController::class, 'index'])->name('supervisor.attendance');
     Route::get('/leaves', [SupervisorLeaveController::class, 'index'])->name('supervisor.leaves');
     Route::get('/feedback', [SupervisorFeedbackController::class, 'index'])->name('supervisor.feedback');
+    Route::post('/feedback/store', [SupervisorFeedbackController::class, 'store'])
+    ->name('supervisor.feedback.store');
 
     Route::get('/profile-settings', [SupervisorProfileController::class, 'index'])->name('supervisor.profile.settings');
     Route::get('/knowledge-base', [SupervisorKnowledgeBaseController::class, 'index'])->name('supervisor.knowledge.base');
@@ -865,6 +897,10 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
     Route::get('/evaluations/edit/{id}', [SupervisorEvaluationController::class, 'edit'])->name('supervisor.evaluations.edit');
     Route::post('/evaluations/update/{id}', [SupervisorEvaluationController::class, 'update'])->name('supervisor.evaluations.update');
     Route::delete('/evaluations/delete/{id}', [SupervisorEvaluationController::class, 'destroy'])->name('supervisor.evaluations.delete');
+
+    // Escalation Routes (Supervisor View)
+    Route::get('/escalations', [EscalationController::class, 'supervisorEscalations'])->name('supervisor.escalations');
+    Route::get('/escalations/{id}', [EscalationController::class, 'show'])->name('supervisor.escalations.show');
 });
 
 // ============================================
@@ -916,9 +952,11 @@ Route::prefix('intern')->name('intern.')->middleware(['auth:intern'])->group(fun
     Route::get('/offer-letter', [App\Http\Controllers\intern\InternOfferLetterController::class, 'index'])->name('offer-letter');
     Route::get('/offer-letter/download', [App\Http\Controllers\intern\InternOfferLetterController::class, 'download'])->name('offer-letter.download');
     
-    // Attendance
+     
+    // Attendance Routes
     Route::get('/attendance', [App\Http\Controllers\intern\InternAttendanceController::class, 'index'])->name('attendance');
-    
+    Route::post('/attendance/checkin', [App\Http\Controllers\intern\InternAttendanceController::class, 'checkIn'])->name('attendance.checkin');
+    Route::post('/attendance/checkout', [App\Http\Controllers\intern\InternAttendanceController::class, 'checkOut'])->name('attendance.checkout');
     // Leave
     Route::get('/leave', [App\Http\Controllers\intern\InternLeaveController::class, 'index'])->name('leave');
     Route::post('/leave/request', [App\Http\Controllers\intern\InternLeaveController::class, 'requestLeave'])->name('leave.request');
@@ -927,22 +965,28 @@ Route::prefix('intern')->name('intern.')->middleware(['auth:intern'])->group(fun
     Route::get('/feedback', [App\Http\Controllers\intern\InternFeedbackController::class, 'index'])->name('feedback');
     Route::post('/feedback/submit', [App\Http\Controllers\intern\InternFeedbackController::class, 'submitFeedback'])->name('feedback.submit');
     
-    // Resources
+     // Resources (Learning Resources) - CORRECT ✅
     Route::get('/resources', [App\Http\Controllers\intern\InternResourceController::class, 'index'])->name('resources');
-    Route::get('/resources/search', [App\Http\Controllers\intern\InternResourceController::class, 'search'])->name('resources.search');
     Route::get('/resources/{id}', [App\Http\Controllers\intern\InternResourceController::class, 'show'])->name('resources.show');
+    Route::post('/resources/{id}/complete', [App\Http\Controllers\intern\InternResourceController::class, 'markComplete'])->name('resources.complete');
+    Route::get('/resources/{id}/download', [App\Http\Controllers\intern\InternResourceController::class, 'download'])->name('resources.download');
     
     // Settings
     Route::get('/settings', [App\Http\Controllers\intern\InternSettingsController::class, 'index'])->name('settings');
     Route::post('/settings/update', [App\Http\Controllers\intern\InternSettingsController::class, 'updateSettings'])->name('settings.update');
     Route::post('/settings/update-password', [App\Http\Controllers\intern\InternSettingsController::class, 'updatePassword'])->name('settings.update-password');
     
-    // Logout
-    Route::post('/logout', function() {
-        Auth::guard('intern')->logout();
-        return redirect()->route('login');
-    })->name('logout');
-});
+   
+    
+});  // <-- This closes the intern group
+
+
+Route::post('/intern/logout', function() {
+    Auth::guard('intern')->logout();
+    session()->invalidate();
+    session()->regenerateToken();
+    return redirect()->route('login');
+})->name('intern.logout');
 
 Route::fallback(function (){
     return view('pages.pageNotFound');

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\intern;
-
+use App\Helpers\PortalFreezeHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +17,16 @@ class InternDashboardController extends Controller
         if (!$intern) {
             return redirect()->route('login');
         }
+
+
+        // ✅  PORTAL FREEZE CHECK HERE
+        $freezeStatus = PortalFreezeHelper::getStatus($intern->email);
+        $freezeWarning = null;
+        
+        if ($freezeStatus['frozen']) {
+            $freezeWarning = $freezeStatus['message'];
+        }
+
 
         $internEtiId = $intern->eti_id;
         $internEmail = $intern->email;
@@ -124,11 +134,12 @@ class InternDashboardController extends Controller
             'payment_percentage' => $paymentPercentage,
         ];
 
+        // ✅ freezeWarning to compact
         return view('pages.intern.dashboard', compact(
             'intern', 'stats', 'progress', 'recentTasks', 'upcomingDeadlines',
-            'timeline', 'notifications', 'performance'
+            'timeline', 'notifications', 'performance', 'freezeWarning'
         ));
-    }
+        }
 
     /**
      * Get internship timeline

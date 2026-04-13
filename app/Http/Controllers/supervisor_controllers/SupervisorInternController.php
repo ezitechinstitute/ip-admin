@@ -8,11 +8,40 @@ use Illuminate\Support\Facades\DB;
 
 class SupervisorInternController extends Controller
 {
+    /**
+     * Get supervisor technology safely
+     */
+    private function getSupervisorTechnology()
+    {
+        return strtolower(trim(session('manager_department')));
+    }
+
+    /**
+     * Apply common filters
+     */
+    private function applyTechnologyFilter($query, $technology)
+    {
+         if ($technology === 'web development') {
+            $query->whereIn('int_technology', ['Laravel', 'ReactJS', 'Flutter']);
+        } else {
+            $query->where('int_technology', 'LIKE', '%' . $technology . '%');
+        }
+
+        return $query;
+        // if (!empty($technology)) {
+        //     $query->where('int_technology', 'LIKE', '%' . $technology . '%');
+        // }
+        // return $query;
+    }
+
+    /**
+     * My Interns (ALL)
+     */
     public function myInterns(Request $request)
     {
-        $supervisorTechnology = trim(session('manager_department'));
+        $technology = $this->getSupervisorTechnology();
 
-        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
+        $query = DB::table('intern_accounts')
             ->select(
                 'int_id',
                 'eti_id',
@@ -22,183 +51,193 @@ class SupervisorInternController extends Controller
                 'int_technology',
                 'internship_type',
                 'start_date',
+                'end_date', 
+                'image',   
                 'int_status'
-            )
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
-            ->limit(20)
-            ->get();
+            );
 
-        return view('content.supervisor.my-interns', compact('interns', 'supervisorTechnology'));
-    }
+        // 1. Always apply the Supervisor's base technology filter first
+        $query = $this->applyTechnologyFilter($query, $technology);
 
-    public function active()
-    {
-        $supervisorTechnology = trim(session('manager_department'));
+        // ==========================================
+        // 🔥 NEW: DYNAMIC FORM FILTERS
+        // ==========================================
+        
+        // Filter by typed Technology
+        if ($request->filled('tech')) {
+            $query->where('int_technology', 'LIKE', '%' . $request->tech . '%');
+        }
 
-        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-            ->select(
-                'intern_accounts.int_id',
-                'intern_accounts.eti_id',
-                'intern_accounts.name',
-                'intern_accounts.email',
-                'intern_accounts.int_technology',
-                'intern_accounts.internship_type',
-                'intern_accounts.start_date',
-                'intern_accounts.int_status'
-            )
-            ->whereRaw('LOWER(int_status) = ?', ['active'])
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
-            ->limit(20)
-            ->get();
+        // Filter by Internship Type (Remote/Onsite/Hybrid)
+        if ($request->filled('type')) {
+            $query->where('internship_type', $request->type);
+        }
 
+        // Filter by Status (Active/Pending)
+        if ($request->filled('status')) {
+            $query->where('int_status', $request->status);
+        }
+
+        // 🔥 ADDED: Filter by Join Date (Maps to start_date in DB)
+        if ($request->filled('join_date')) {
+            // Using LIKE in case your start_date contains times as well
+            $query->where('start_date', 'LIKE', '%' . $request->join_date . '%');
+        }
+
+        // Execute the query
+        $interns = $query->limit(20)->get();
+
+        // Calculate Project Progress
         foreach ($interns as $intern) {
-            $totalTasks = \Illuminate\Support\Facades\DB::table('intern_tasks')
+            $totalTasks = DB::table('intern_tasks')
                 ->where('eti_id', $intern->eti_id)
                 ->count();
 
-            $completedTasks = \Illuminate\Support\Facades\DB::table('intern_tasks')
+            $completedTasks = DB::table('intern_tasks')
                 ->where('eti_id', $intern->eti_id)
-                ->whereRaw('LOWER(task_status) = ?', ['completed'])
+                ->where('task_status', 'completed')
                 ->count();
 
             $intern->progress = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
+        }
+
+        return view('content.supervisor.my-interns', compact('interns', 'technology'));
+    }
+
+    /**
+     * Active Interns
+     */
+    public function active()
+    {
+        $technology = $this->getSupervisorTechnology();
+
+        $query = DB::table('intern_accounts')
+            ->where('int_status', 'Active');
+
+        $query = $this->applyTechnologyFilter($query, $technology);
+
+        $interns = $query->get();
+
+        foreach ($interns as $intern) {
+            $totalTasks = DB::table('intern_tasks')
+                ->where('eti_id', $intern->eti_id)
+                ->count();
+
+            $completedTasks = DB::table('intern_tasks')
+                ->where('eti_id', $intern->eti_id)
+                ->where('task_status', 'completed')
+                ->count();
+
+            $intern->progress = $totalTasks > 0
+                ? round(($completedTasks / $totalTasks) * 100)
+                : 0;
+
             $intern->total_tasks = $totalTasks;
             $intern->completed_tasks = $completedTasks;
         }
 
-        return view('content.supervisor.active-interns', compact('interns', 'supervisorTechnology'));
+        return view('content.supervisor.active-interns', compact('interns', 'technology'));
     }
 
+    /**
+     * Contact Phase Interns
+     */
     public function contactWith()
     {
-        $supervisorTechnology = trim(session('manager_department'));
+        $technology = $this->getSupervisorTechnology();
 
-        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-            ->select(
-                'int_id',
-                'name',
-                'email',
-                'phone',
-                'int_technology',
-                'internship_type',
-                'start_date',
-                'int_status'
-            )
-            ->whereRaw('LOWER(int_status) = ?', ['contact'])
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
-            ->limit(20)
-            ->get();
+        $query = DB::table('intern_accounts')
+            ->where('int_status', 'contact');
 
-        return view('content.supervisor.contact-interns', compact('interns', 'supervisorTechnology'));
+        $query = $this->applyTechnologyFilter($query, $technology);
+
+        $interns = $query->limit(20)->get();
+
+        return view('content.supervisor.contact-interns', compact('interns', 'technology'));
     }
 
+    /**
+     * Test Phase Interns
+     */
     public function test()
     {
-        $supervisorTechnology = trim(session('manager_department'));
+        $technology = $this->getSupervisorTechnology();
 
-        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-            ->select(
-                'int_id',
-                'name',
-                'email',
-                'phone',
-                'int_technology',
-                'internship_type',
-                'start_date',
-                'int_status'
-            )
-            ->whereRaw('LOWER(int_status) = ?', ['test'])
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
-            ->limit(20)
-            ->get();
+        $query = DB::table('intern_accounts')
+            ->where('int_status', 'test');
 
-        return view('content.supervisor.test-interns', compact('interns', 'supervisorTechnology'));
+        $query = $this->applyTechnologyFilter($query, $technology);
+
+        $interns = $query->limit(20)->get();
+
+        return view('content.supervisor.test-interns', compact('interns', 'technology'));
     }
 
+    /**
+     * Completed Interns
+     */
     public function completed()
     {
-        $supervisorTechnology = trim(session('manager_department'));
+        $technology = $this->getSupervisorTechnology();
 
-        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-            ->select(
-                'int_id',
-                'name',
-                'email',
-                'phone',
-                'int_technology',
-                'internship_type',
-                'start_date',
-                'int_status'
-            )
-            ->whereRaw('LOWER(int_status) = ?', ['completed'])
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
-            ->limit(20)
-            ->get();
+        $query = DB::table('intern_accounts')
+            ->where('int_status', 'completed');
 
-        return view('content.supervisor.completed-interns', compact('interns', 'supervisorTechnology'));
+        $query = $this->applyTechnologyFilter($query, $technology);
+
+        $interns = $query->limit(20)->get();
+
+        return view('content.supervisor.completed-interns', compact('interns', 'technology'));
     }
 
+    /**
+     * New Interns
+     */
     public function newInterns()
     {
-        $supervisorTechnology = trim(session('manager_department'));
+        $technology = $this->getSupervisorTechnology();
 
-        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-            ->select(
-                'int_id',
-                'name',
-                'email',
-                'phone',
-                'int_technology',
-                'internship_type',
-                'start_date',
-                'int_status'
-            )
-            ->whereRaw('LOWER(int_status) = ?', ['new'])
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
-            ->limit(20)
-            ->get();
+        $query = DB::table('intern_accounts')
+            ->where('int_status', 'new');
 
-        return view('content.supervisor.new-interns', compact('interns', 'supervisorTechnology'));
+        $query = $this->applyTechnologyFilter($query, $technology);
+
+        $interns = $query->limit(20)->get();
+
+        return view('content.supervisor.new-interns', compact('interns', 'technology'));
     }
 
+    /**
+     * View Single Intern
+     */
     public function show($id)
     {
-        $supervisorTechnology = trim(session('manager_department'));
+        $technology = $this->getSupervisorTechnology();
 
-        $intern = \Illuminate\Support\Facades\DB::table('intern_accounts')
-            ->where('int_id', $id)
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
-            ->first();
+        $query = DB::table('intern_accounts')
+            ->where('int_id', $id);
+
+        $query = $this->applyTechnologyFilter($query, $technology);
+
+        $intern = $query->first();
 
         if (!$intern) {
-            return redirect()->route('supervisor.myInterns')->with('error', 'Intern not found or not assigned to your technology.');
+            return redirect()
+                ->route('supervisor.myInterns')
+                ->with('error', 'Intern not found or not assigned to your technology.');
         }
 
-        $tasks = \Illuminate\Support\Facades\DB::table('intern_tasks')
+        $tasks = DB::table('intern_tasks')
             ->where('eti_id', $intern->eti_id)
             ->orderByDesc('updated_at')
             ->get();
 
-        $projects = \Illuminate\Support\Facades\DB::table('intern_projects')
+        $projects = DB::table('intern_projects')
             ->where('eti_id', $intern->eti_id)
             ->orderByDesc('updatedat')
             ->get();
 
-        $evaluations = \Illuminate\Support\Facades\DB::table('intern_evaluations')
+        $evaluations = DB::table('intern_evaluations')
             ->where('eti_id', $intern->eti_id)
             ->orderByDesc('month')
             ->get();
@@ -206,32 +245,31 @@ class SupervisorInternController extends Controller
         return view('content.supervisor.view-intern', compact('intern', 'tasks', 'projects', 'evaluations'));
     }
 
+    /**
+     * Progress Monitoring
+     */
     public function progressMonitoring()
     {
-        $supervisorTechnology = trim(session('manager_department'));
+        $technology = $this->getSupervisorTechnology();
 
-        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
-            ->whereRaw('LOWER(int_status) = ?', ['active'])
-            ->when($supervisorTechnology, function ($query, $supervisorTechnology) {
-                $query->whereRaw('LOWER(int_technology) = ?', [strtolower($supervisorTechnology)]);
-            })
-            ->get();
+        $query = DB::table('intern_accounts')
+            ->where('int_status', 'active');
+
+        $query = $this->applyTechnologyFilter($query, $technology);
+
+        $interns = $query->get();
 
         foreach ($interns as $intern) {
-            $tasks = \Illuminate\Support\Facades\DB::table('intern_tasks')
+            // ==========================================
+            // 1. TASKS LOGIC (Task Completion & Compliance)
+            // ==========================================
+            $tasks = DB::table('intern_tasks')
                 ->where('eti_id', $intern->eti_id)
                 ->get();
 
             $total = $tasks->count();
-            $completed = $tasks->where('task_status', 'Completed')->count();
-            if ($completed == 0) {
-                $completed = $tasks->where('task_status', 'completed')->count();
-            }
-            
-            $expired = $tasks->where('task_status', 'Expired')->count();
-            if ($expired == 0) {
-                $expired = $tasks->where('task_status', 'expired')->count();
-            }
+            $completed = $tasks->where('task_status', 'completed')->count();
+            $expired = $tasks->where('task_status', 'expired')->count();
 
             $overdue = $tasks->where('task_status', 'Assigned')
                 ->where('task_end', '<', now()->toDateString())
@@ -242,11 +280,34 @@ class SupervisorInternController extends Controller
             $intern->expired_tasks = $expired;
             $intern->overdue_tasks = $overdue;
             $intern->progress = $total > 0 ? round(($completed / $total) * 100) : 0;
-
-            // Deadline compliance
             $intern->compliance = $total > 0 ? round(($completed / $total) * 100) : 100;
+
+            // ==========================================
+            // 🔥 2. NEW: PROJECT COMPLETION LOGIC
+            // ==========================================
+            $projects = DB::table('intern_projects')
+                ->where('eti_id', $intern->eti_id)
+                ->get();
+
+            $totalProjects = $projects->count();
+            // Assuming your projects table uses 'Completed' for finished projects
+            $completedProjects = $projects->where('pstatus', 'Completed')->count(); 
+            
+            $intern->project_completion = $totalProjects > 0 ? round(($completedProjects / $totalProjects) * 100) : 0;
+            $intern->total_projects = $totalProjects;
+
+            // ==========================================
+            // 🔥 3. CODE QUALITY SCORE LOGIC
+            // ==========================================
+            // Fetching the overall score from the intern_evaluations table
+            $avgQualityScore = DB::table('intern_evaluations')
+                ->where('eti_id', $intern->eti_id)
+                ->avg('overall_score'); 
+
+            // Default to 0 if they haven't been evaluated yet
+            $intern->code_quality = $avgQualityScore ? round($avgQualityScore, 1) : 0;
         }
 
-        return view('content.supervisor.progress-monitoring', compact('interns', 'supervisorTechnology'));
+        return view('content.supervisor.progress-monitoring', compact('interns', 'technology'));
     }
 }
