@@ -26,61 +26,28 @@ class LoginCover extends Controller
         'password' => 'required'
     ]);
 
-    // DEBUG: Log password comparison
-    Log::info('LOGIN_ATTEMPT', [
-        'email' => $request->email,
-        'submitted_password' => $request->password,
-    ]);
-
-    // Check Intern (same pattern as admin and manager)
+    // Check Intern (Plain text password check)
     $intern = InternAccount::where('email', $request->email)->first();
     
-    if ($intern) {
-        Log::info('INTERN_FOUND', [
-            'email' => $intern->email,
-            'db_password' => $intern->password,
-            'match' => ($intern->password === $request->password),
-        ]);
-    }
-    
-    if ($intern && $intern->password === $request->password) {
+    if ($intern && $request->password == $intern->password) {  // ✅ Changed to plain text
         Auth::guard('intern')->login($intern);
         $request->session()->regenerate();
         return redirect()->route('intern.dashboard');
     }
 
-    // 1. Check in Admin Table using 'admin' guard
+    // 1. Check in Admin Table using 'admin' guard (Plain text)
     $admin = AdminAccount::where('email', $request->email)->first();
 
-    if ($admin) {
-        Log::info('ADMIN_FOUND', [
-            'email' => $admin->email,
-            'db_password' => $admin->password,
-            'submitted_password' => $request->password,
-            'match' => ($admin->password === $request->password),
-        ]);
-    }
-
-    if ($admin && $admin->password === $request->password) {
+    if ($admin && $request->password == $admin->password) {  // ✅ Changed to plain text
         Auth::guard('admin')->login($admin);
         $request->session()->regenerate();
         return redirect()->route('dashboard-admin');
     }
 
-    // 2. Check in Managers/Supervisors Table using 'manager' guard
+    // 2. Check in Managers/Supervisors Table using 'manager' guard (Plain text)
     $manager = ManagersAccount::where('email', $request->email)->first();
 
-    if ($manager) {
-        Log::info('MANAGER_FOUND', [
-            'email' => $manager->email,
-            'db_password' => $manager->password,
-            'submitted_password' => $request->password,
-            'match' => ($manager->password === $request->password),
-            'status' => $manager->status,
-        ]);
-    }
-
-    if ($manager && $manager->password === $request->password) {
+    if ($manager && $request->password == $manager->password) {  // ✅ Changed to plain text
         if ($manager->status != 1) {
             return back()->withErrors([
                 'email' => 'Your account is deactivated. Please contact the Admin!'
@@ -106,8 +73,6 @@ class LoginCover extends Controller
         return redirect()->route('manager.dashboard');
     }
 
- 
-
     // 4. Fallback if all fail
     Log::info('LOGIN_FAILED', [
         'email' => $request->email,
@@ -122,9 +87,9 @@ class LoginCover extends Controller
   public function logoutAuth(Request $request)
 {
     Auth::guard('admin')->logout();
-    Auth::guard('intern')->logout();  // ← intern logout
+    Auth::guard('intern')->logout();
 
-    $request->session()->forget('admin'); // optional
+    $request->session()->forget('admin');
     $request->session()->regenerate();
 
     return redirect()->route('login');
@@ -134,7 +99,7 @@ class LoginCover extends Controller
 {
     Auth::guard('manager')->logout();
 
-    $request->session()->forget('manager'); // optional
+    $request->session()->forget('manager');
     $request->session()->regenerate();
 
     return redirect()->route('login'); 

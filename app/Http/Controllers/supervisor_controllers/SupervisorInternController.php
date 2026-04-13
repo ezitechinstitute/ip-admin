@@ -39,7 +39,6 @@ class SupervisorInternController extends Controller
      */
     public function myInterns(Request $request)
     {
-        // dd(session()->all());
         $technology = $this->getSupervisorTechnology();
 
         $query = DB::table('intern_accounts')
@@ -52,12 +51,55 @@ class SupervisorInternController extends Controller
                 'int_technology',
                 'internship_type',
                 'start_date',
+                'end_date', 
+                'image',   
                 'int_status'
             );
 
+        // 1. Always apply the Supervisor's base technology filter first
         $query = $this->applyTechnologyFilter($query, $technology);
 
+        // ==========================================
+        // 🔥 NEW: DYNAMIC FORM FILTERS
+        // ==========================================
+        
+        // Filter by typed Technology
+        if ($request->filled('tech')) {
+            $query->where('int_technology', 'LIKE', '%' . $request->tech . '%');
+        }
+
+        // Filter by Internship Type (Remote/Onsite/Hybrid)
+        if ($request->filled('type')) {
+            $query->where('internship_type', $request->type);
+        }
+
+        // Filter by Status (Active/Pending)
+        if ($request->filled('status')) {
+            $query->where('int_status', $request->status);
+        }
+
+        // 🔥 ADDED: Filter by Join Date (Maps to start_date in DB)
+        if ($request->filled('join_date')) {
+            // Using LIKE in case your start_date contains times as well
+            $query->where('start_date', 'LIKE', '%' . $request->join_date . '%');
+        }
+
+        // Execute the query
         $interns = $query->limit(20)->get();
+
+        // Calculate Project Progress
+        foreach ($interns as $intern) {
+            $totalTasks = DB::table('intern_tasks')
+                ->where('eti_id', $intern->eti_id)
+                ->count();
+
+            $completedTasks = DB::table('intern_tasks')
+                ->where('eti_id', $intern->eti_id)
+                ->where('task_status', 'completed')
+                ->count();
+
+            $intern->progress = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
+        }
 
         return view('content.supervisor.my-interns', compact('interns', 'technology'));
     }
@@ -218,6 +260,9 @@ class SupervisorInternController extends Controller
         $interns = $query->get();
 
         foreach ($interns as $intern) {
+            // ==========================================
+            // 1. TASKS LOGIC (Task Completion & Compliance)
+            // ==========================================
             $tasks = DB::table('intern_tasks')
                 ->where('eti_id', $intern->eti_id)
                 ->get();
@@ -236,6 +281,31 @@ class SupervisorInternController extends Controller
             $intern->overdue_tasks = $overdue;
             $intern->progress = $total > 0 ? round(($completed / $total) * 100) : 0;
             $intern->compliance = $total > 0 ? round(($completed / $total) * 100) : 100;
+
+            // ==========================================
+            // 🔥 2. NEW: PROJECT COMPLETION LOGIC
+            // ==========================================
+            $projects = DB::table('intern_projects')
+                ->where('eti_id', $intern->eti_id)
+                ->get();
+
+            $totalProjects = $projects->count();
+            // Assuming your projects table uses 'Completed' for finished projects
+            $completedProjects = $projects->where('pstatus', 'Completed')->count(); 
+            
+            $intern->project_completion = $totalProjects > 0 ? round(($completedProjects / $totalProjects) * 100) : 0;
+            $intern->total_projects = $totalProjects;
+
+            // ==========================================
+            // 🔥 3. CODE QUALITY SCORE LOGIC
+            // ==========================================
+            // Fetching the overall score from the intern_evaluations table
+            $avgQualityScore = DB::table('intern_evaluations')
+                ->where('eti_id', $intern->eti_id)
+                ->avg('overall_score'); 
+
+            // Default to 0 if they haven't been evaluated yet
+            $intern->code_quality = $avgQualityScore ? round($avgQualityScore, 1) : 0;
         }
 
         return view('content.supervisor.progress-monitoring', compact('interns', 'technology'));
