@@ -2,6 +2,16 @@
 
 @section('title', 'Create Task')
 
+{{-- 1. Load the Select2 CSS --}}
+@section('vendor-style')
+@vite(['resources/assets/vendor/libs/select2/select2.scss'])
+@endsection
+
+{{-- 2. Load the Select2 JS --}}
+@section('vendor-script')
+@vite(['resources/assets/vendor/libs/select2/select2.js'])
+@endsection
+
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="mb-4">Create New Task</h4>
@@ -12,8 +22,9 @@
                 @csrf
                 <div class="row mb-3">
                     <div class="col-md-12">
-                        <label class="form-label">Assign To Interns (Multi-select)</label>
-                        <select name="eti_ids[]" class="form-select select2" multiple required>
+                        <label class="form-label">Assign To Interns (Search by Name or ID)</label>
+                        {{-- Added an ID to easily target this specific select --}}
+                        <select name="eti_ids[]" id="intern-search" class="form-select select2" multiple required>
                             @foreach($interns as $intern)
                                 <option value="{{ $intern->eti_id }}">{{ $intern->name }} ({{ $intern->eti_id }})</option>
                             @endforeach
@@ -55,3 +66,20 @@
     </div>
 </div>
 @endsection
+
+{{-- 3. Initialize the Searchable Dropdown --}}
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Select2 on our intern-search dropdown
+        $('#intern-search').select2({
+            placeholder: "Type to search interns...",
+            allowClear: true,
+            width: '100%', // Ensures the search box spans the full width
+            
+            // This ensures the dropdown works nicely inside Bootstrap layouts
+            dropdownParent: $('#intern-search').parent() 
+        });
+    });
+</script>
+@endpush
