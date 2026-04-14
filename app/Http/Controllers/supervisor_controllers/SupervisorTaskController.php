@@ -235,14 +235,52 @@ class SupervisorTaskController extends Controller
     public function kanban()
     {
         $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
-        $tasks = DB::table('intern_tasks')
+        
+        // 1. Fetch Standalone Tasks (intern_tasks)
+        $standaloneTasks = DB::table('intern_tasks')
             ->join('intern_accounts', 'intern_tasks.eti_id', '=', 'intern_accounts.eti_id')
-            ->select('intern_tasks.*', 'intern_accounts.name as intern_name')
-            ->where('assigned_by', $supervisorId)
-            ->get();
+            ->select(
+                'intern_tasks.task_id as id',
+                'intern_tasks.task_title as title',
+                'intern_tasks.task_end as end_date',
+                'intern_tasks.task_status as status',
+                'intern_accounts.name as intern_name',
+                DB::raw("'standalone' as type"),
+                DB::raw("NULL as project_id") // Standalone tasks don't have a project_id
+            )
+            ->where('intern_tasks.assigned_by', $supervisorId);
+
+        // 2. Fetch Project Tasks (project_tasks)
+        $projectTasks = DB::table('project_tasks')
+            ->join('intern_accounts', 'project_tasks.eti_id', '=', 'intern_accounts.eti_id')
+            ->select(
+                'project_tasks.task_id as id',
+                'project_tasks.task_title as title',
+                'project_tasks.t_end_date as end_date',
+                'project_tasks.task_status as status',
+                'intern_accounts.name as intern_name',
+                DB::raw("'project' as type"),
+                'project_tasks.project_id' // Keep the project_id so we can generate the edit route
+            )
+            ->where('project_tasks.assigned_by', $supervisorId);
+
+        // 3. Merge them together using UNION
+        $tasks = $standaloneTasks->union($projectTasks)->get();
 
         return view('content.supervisor.tasks.kanban', compact('tasks'));
     }
+
+    // public function kanban()
+    // {
+    //     $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+    //     $tasks = DB::table('intern_tasks')
+    //         ->join('intern_accounts', 'intern_tasks.eti_id', '=', 'intern_accounts.eti_id')
+    //         ->select('intern_tasks.*', 'intern_accounts.name as intern_name')
+    //         ->where('assigned_by', $supervisorId)
+    //         ->get();
+
+    //     return view('content.supervisor.tasks.kanban', compact('tasks'));
+    // }
 
     public function edit($id)
     {
@@ -310,5 +348,39 @@ class SupervisorTaskController extends Controller
         }
 
         return redirect()->route('supervisor.tasks.index')->with('error', 'Task not found.');
+    }
+
+    
+    
+
+
+    //  AJAX endpoint to update task status from Kanban board
+    public function updateStatusAjax(Request $request)
+    {
+        $request->validate([
+            'task_id' => 'required|integer',
+            'type' => 'required|string|in:project,standalone',
+            'status' => 'required|string'
+        ]);
+
+        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+
+        try {
+            if ($request->type === 'project') {
+                DB::table('project_tasks')
+                    ->where('task_id', $request->task_id)
+                    ->where('assigned_by', $supervisorId)
+                    ->update(['task_status' => $request->status, 'updated_at' => now()]);
+            } else {
+                DB::table('intern_tasks')
+                    ->where('task_id', $request->task_id)
+                    ->where('assigned_by', $supervisorId)
+                    ->update(['task_status' => $request->status, 'updated_at' => now()]);
+            }
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

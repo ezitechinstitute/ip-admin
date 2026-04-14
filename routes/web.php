@@ -878,6 +878,8 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
     // General Tasks
     Route::get('/tasks', [SupervisorTaskController::class, 'index'])->name('supervisor.tasks.index');
     Route::get('/tasks/kanban', [SupervisorTaskController::class, 'kanban'])->name('supervisor.tasks.kanban');
+    // Ajax route for updating task status from Kanban view
+    Route::post('/tasks/update-status-ajax', [SupervisorTaskController::class, 'updateStatusAjax'])->name('supervisor.tasks.updateStatusAjax');
     Route::get('/tasks/create', [SupervisorTaskController::class, 'create'])->name('supervisor.tasks.create');
     Route::post('/tasks/store', [SupervisorTaskController::class, 'store'])->name('supervisor.tasks.store');
     Route::get('/tasks/review/{id}', [SupervisorTaskController::class, 'review'])->name('supervisor.tasks.review');
