@@ -248,30 +248,64 @@ class SupervisorInternController extends Controller
     /**
      * Progress Monitoring
      */
+    /**
+     * Progress Monitoring (Optimized for Speed - N+1 Fixed)
+     */
     public function progressMonitoring()
     {
         $technology = $this->getSupervisorTechnology();
 
+        // 1. Fetch the Interns
         $query = DB::table('intern_accounts')
             ->where('int_status', 'active');
-
         $query = $this->applyTechnologyFilter($query, $technology);
-
         $interns = $query->get();
 
+        // If there are no interns, just return the empty view
+        if ($interns->isEmpty()) {
+            return view('content.supervisor.progress-monitoring', compact('interns', 'technology'));
+        }
+
+        // ==========================================
+        // 🔥 THE FIX: Get ALL IDs and fetch data in just 3 queries total
+        // ==========================================
+        $etiIds = $interns->pluck('eti_id')->toArray();
+
+        // Query 1: Get ALL tasks for these specific interns, grouped by eti_id
+        $allTasks = DB::table('intern_tasks')
+            ->whereIn('eti_id', $etiIds)
+            ->get()
+            ->groupBy('eti_id');
+
+        // Query 2: Get ALL projects for these specific interns, grouped by eti_id
+        $allProjects = DB::table('intern_projects')
+            ->whereIn('eti_id', $etiIds)
+            ->get()
+            ->groupBy('eti_id');
+
+        // Query 3: Get ALL evaluations for these specific interns, grouped by eti_id
+        $allEvaluations = DB::table('intern_evaluations')
+            ->whereIn('eti_id', $etiIds)
+            ->get()
+            ->groupBy('eti_id');
+
+        // ==========================================
+        // Now, we loop through interns and do the math purely in PHP memory!
+        // ==========================================
         foreach ($interns as $intern) {
-            // ==========================================
-            // 1. TASKS LOGIC (Task Completion & Compliance)
-            // ==========================================
-            $tasks = DB::table('intern_tasks')
-                ->where('eti_id', $intern->eti_id)
-                ->get();
+            
+            // Grab the specific data for this intern from our pre-loaded Collections
+            // If they have no tasks/projects, it defaults to an empty collection (collect())
+            $tasks = $allTasks->get($intern->eti_id, collect());
+            $projects = $allProjects->get($intern->eti_id, collect());
+            $evaluations = $allEvaluations->get($intern->eti_id, collect());
 
+            // 1. TASKS LOGIC (Completion & Compliance)
             $total = $tasks->count();
-            $completed = $tasks->where('task_status', 'completed')->count();
-            $expired = $tasks->where('task_status', 'expired')->count();
+            $completed = $tasks->where('task_status', 'Completed')->count();
+            $expired = $tasks->where('task_status', 'Expired')->count();
 
-            $overdue = $tasks->where('task_status', 'Assigned')
+            $overdue = $tasks->whereIn('task_status', ['Assigned', 'Ongoing', 'In Progress', 'Pending'])
                 ->where('task_end', '<', now()->toDateString())
                 ->count();
 
@@ -279,32 +313,21 @@ class SupervisorInternController extends Controller
             $intern->completed_tasks = $completed;
             $intern->expired_tasks = $expired;
             $intern->overdue_tasks = $overdue;
+            
             $intern->progress = $total > 0 ? round(($completed / $total) * 100) : 0;
-            $intern->compliance = $total > 0 ? round(($completed / $total) * 100) : 100;
+            
+            $compliantTasks = $total - ($expired + $overdue);
+            $intern->compliance = $total > 0 ? round(($compliantTasks / $total) * 100) : 100;
 
-            // ==========================================
-            // 🔥 2. NEW: PROJECT COMPLETION LOGIC
-            // ==========================================
-            $projects = DB::table('intern_projects')
-                ->where('eti_id', $intern->eti_id)
-                ->get();
-
+            // 2. PROJECT COMPLETION LOGIC
             $totalProjects = $projects->count();
-            // Assuming your projects table uses 'Completed' for finished projects
             $completedProjects = $projects->where('pstatus', 'Completed')->count(); 
             
             $intern->project_completion = $totalProjects > 0 ? round(($completedProjects / $totalProjects) * 100) : 0;
             $intern->total_projects = $totalProjects;
 
-            // ==========================================
-            // 🔥 3. CODE QUALITY SCORE LOGIC
-            // ==========================================
-            // Fetching the overall score from the intern_evaluations table
-            $avgQualityScore = DB::table('intern_evaluations')
-                ->where('eti_id', $intern->eti_id)
-                ->avg('overall_score'); 
-
-            // Default to 0 if they haven't been evaluated yet
+            // 3. CODE QUALITY SCORE LOGIC
+            $avgQualityScore = $evaluations->avg('overall_score'); 
             $intern->code_quality = $avgQualityScore ? round($avgQualityScore, 1) : 0;
         }
 

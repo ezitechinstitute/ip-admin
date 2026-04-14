@@ -89,15 +89,16 @@
             <div class="table-responsive">
                 <table class="table table-hover border-top">
                     <thead>
-        <tr>
-            <th>Intern</th>
-            <th>Task Progress</th> {{-- Renamed for clarity --}}
-            <th>Project Completion</th> {{-- 🔥 NEW COLUMN --}}
-            <th>Code Quality</th> {{-- 🔥 NEW COLUMN --}}
-            <th>Pending/Overdue</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
+                        <tr>
+                            <th>Intern</th>
+                            <th>Task Progress</th>
+                            <th>Project Completion</th>
+                            <th>Deadline Compliance</th> {{-- 🔥 ADDED THIS --}}
+                            <th>Code Quality</th>
+                            <th>Pending/Overdue</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
                     <tbody>
         @foreach($interns as $intern)
             <tr>
@@ -126,7 +127,7 @@
                     <small class="text-muted">{{ $intern->completed_tasks }}/{{ $intern->total_tasks }} Tasks</small>
                 </td>
 
-                {{-- 🔥 NEW: Project Completion Percentage --}}
+                {{-- Project Completion Percentage --}}
                 <td>
                     <div class="d-flex align-items-center mb-1">
                         <div class="progress w-100 me-2" style="height: 6px;">
@@ -137,23 +138,35 @@
                     <small class="text-muted">{{ $intern->total_projects }} Assigned</small>
                 </td>
 
-                {{-- 🔥 NEW: Code Quality Score --}}
+                {{-- 🔥 NEW: Deadline Compliance --}}
                 <td>
-                    {{-- Color changes dynamically based on score (Green > 80, Yellow > 50, Red < 50) --}}
+                    <div class="d-flex align-items-center mb-1">
+                        <div class="progress w-100 me-2" style="height: 6px;">
+                            {{-- Color logic: Green > 80, Yellow > 50, Red < 50 --}}
+                            @php $compColor = $intern->compliance >= 80 ? 'success' : ($intern->compliance >= 50 ? 'warning' : 'danger'); @endphp
+                            <div class="progress-bar bg-{{ $compColor }}" style="width:{{ $intern->compliance }}%" role="progressbar"></div>
+                        </div>
+                        <span>{{ $intern->compliance }}%</span>
+                    </div>
+                    <small class="text-muted">On-time rate</small>
+                </td>
+
+                {{-- Code Quality Score --}}
+                <td>
                     <span class="badge bg-label-{{ $intern->code_quality >= 80 ? 'success' : ($intern->code_quality >= 50 ? 'warning' : 'danger') }}">
                         {{ $intern->code_quality }} / 100
                     </span>
                 </td>
 
-                {{-- Pending / Overdue (Unchanged) --}}
+                {{-- Pending / Overdue --}}
                 <td>
-                    <span class="text-warning">{{ $intern->total_tasks - $intern->completed_tasks }}</span> 
+                    <span class="text-warning fw-bold">{{ $intern->total_tasks - $intern->completed_tasks }}</span> 
                     @if($intern->overdue_tasks > 0)
                         <span class="badge bg-label-danger ms-1">{{ $intern->overdue_tasks }} Overdue</span>
                     @endif
                 </td>
 
-                {{-- Actions (Unchanged) --}}
+                {{-- Actions --}}
                 <td>
                     <div class="d-flex gap-2">
                         <a href="{{ route('supervisor.viewIntern', $intern->int_id) }}" class="btn btn-sm btn-icon btn-label-primary">
