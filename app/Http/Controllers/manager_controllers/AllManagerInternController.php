@@ -179,22 +179,6 @@ public function exportMyInternsCSV(Request $request)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 public function newInterns(Request $request)
 {
     $manager = auth()->guard('manager')->user();
@@ -1215,6 +1199,22 @@ public function updateStatus(Request $request)
     try {
         // English comments: Use the Model directly
         $intern = \App\Models\Intern::findOrFail($request->id);
+        
+        // ✅ VALIDATION - Check if changing from Test to Active
+        if ($intern->status == 'Test' && $request->status == 'Active') {
+            // Check if invoice exists and is approved
+            $invoice = \App\Models\invoice::where('intern_email', $intern->email)
+                ->where('approval_status', 'approved')
+                ->first();
+            
+            if (!$invoice) {
+                return redirect()->back()->withErrors([
+                    'error' => 'Cannot activate intern. Please create and approve invoice first.'
+                ]);
+            }
+        }
+        
+        // Existing code - Update status
         $intern->status = $request->status;
         $intern->save();
 

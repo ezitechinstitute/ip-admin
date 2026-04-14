@@ -647,6 +647,13 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
     });
     Route::get('/api/escalations/unnotified', [App\Http\Controllers\EscalationController::class, 'unnotifiedAdminEscalations'])->name('api.escalations.unnotified');
 
+    
+
+    // ==================== INVOICE APPROVAL ROUTES ====================
+Route::get('/invoices/approval-queue', [App\Http\Controllers\InvoiceController::class, 'approvalQueue'])->name('admin.invoices.approval-queue');
+Route::post('/invoices/approve/{id}', [App\Http\Controllers\InvoiceController::class, 'approveInvoice'])->name('admin.invoices.approve');
+Route::post('/invoices/reject/{id}', [App\Http\Controllers\InvoiceController::class, 'rejectInvoice'])->name('admin.invoices.reject');
+
 });
 // Admin routes - End
 // Admin routes - End
