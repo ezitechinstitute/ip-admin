@@ -247,6 +247,104 @@ class SupervisorProjectController extends Controller
             ->with('success', 'Task created successfully.');
     }
 
+    public function loadCurriculum(Request $request, $project_id)
+    {
+        $request->validate([
+            'technology' => 'required|string',
+            'base_start_date' => 'required|date'
+        ]);
+
+        $project = \Illuminate\Support\Facades\DB::table('intern_projects')->where('project_id', $project_id)->first();
+        
+        if (!$project) {
+            return back()->with('error', 'Project not found.');
+        }
+
+        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+        $baseDate = \Carbon\Carbon::parse($request->base_start_date);
+        
+        $curriculumTasks = [];
+
+        // Define standard curriculums matching your modal options
+        if ($request->technology === 'Laravel') {
+            $curriculumTasks = [
+                ['title' => 'Setup Laravel & Environment', 'milestone' => 'Week 1: Basics', 'days' => 2, 'marks' => 10, 'desc' => 'Install Laravel, configure .env, set up database connection.'],
+                ['title' => 'Database Migrations & Models', 'milestone' => 'Week 1: Basics', 'days' => 3, 'marks' => 15, 'desc' => 'Create necessary migrations and Eloquent models with relationships.'],
+                ['title' => 'Authentication & Routing', 'milestone' => 'Week 2: Core Features', 'days' => 2, 'marks' => 15, 'desc' => 'Implement user authentication and middleware.'],
+                ['title' => 'CRUD Operations & Controllers', 'milestone' => 'Week 2: Core Features', 'days' => 4, 'marks' => 20, 'desc' => 'Build controllers for core features with form validation.'],
+                ['title' => 'API Development & Testing', 'milestone' => 'Week 3: Advanced', 'days' => 4, 'marks' => 20, 'desc' => 'Create RESTful APIs and test them.'],
+                ['title' => 'Deployment & Final Review', 'milestone' => 'Week 4: Deployment', 'days' => 3, 'marks' => 20, 'desc' => 'Deploy the application to a live server and optimize performance.']
+            ];
+        } elseif ($request->technology === 'React') {
+            $curriculumTasks = [
+                ['title' => 'React App Setup & UI Structure', 'milestone' => 'Week 1: Fundamentals', 'days' => 2, 'marks' => 10, 'desc' => 'Initialize React app, setup Tailwind/Bootstrap.'],
+                ['title' => 'Components & Props', 'milestone' => 'Week 1: Fundamentals', 'days' => 3, 'marks' => 15, 'desc' => 'Build reusable UI components and pass data using props.'],
+                ['title' => 'State Management (Hooks)', 'milestone' => 'Week 2: State & Routing', 'days' => 3, 'marks' => 20, 'desc' => 'Implement useState and useEffect hooks for dynamic data.'],
+                ['title' => 'React Router Setup', 'milestone' => 'Week 2: State & Routing', 'days' => 2, 'marks' => 15, 'desc' => 'Set up multi-page navigation using react-router-dom.'],
+                ['title' => 'API Integration (Axios/Fetch)', 'milestone' => 'Week 3: Data Fetching', 'days' => 4, 'marks' => 20, 'desc' => 'Fetch data from external APIs and display it in the UI.'],
+                ['title' => 'Build & Hosting', 'milestone' => 'Week 4: Deployment', 'days' => 2, 'marks' => 20, 'desc' => 'Create production build and host on Vercel/Netlify.']
+            ];
+        } elseif ($request->technology === 'UI/UX') {
+            $curriculumTasks = [
+                ['title' => 'User Research & Personas', 'milestone' => 'Week 1: Research', 'days' => 4, 'marks' => 20, 'desc' => 'Conduct user research and create detailed buyer personas.'],
+                ['title' => 'Wireframing (Low Fidelity)', 'milestone' => 'Week 2: Wireframes', 'days' => 4, 'marks' => 20, 'desc' => 'Create basic structural wireframes in Figma.'],
+                ['title' => 'High Fidelity Prototyping', 'milestone' => 'Week 3: UI Design', 'days' => 5, 'marks' => 30, 'desc' => 'Design the final UI with color theory, typography, and assets.'],
+                ['title' => 'Interactive Prototype & Handoff', 'milestone' => 'Week 4: Prototyping', 'days' => 3, 'marks' => 30, 'desc' => 'Link screens for interactivity and prepare dev handoff files.']
+            ];
+        } elseif ($request->technology === 'WordPress') {
+            $curriculumTasks = [
+                ['title' => 'Localhost Setup & WP Install', 'milestone' => 'Week 1: Setup', 'days' => 2, 'marks' => 15, 'desc' => 'Install XAMPP/LocalWP and set up a fresh WordPress instance.'],
+                ['title' => 'Theme Customization', 'milestone' => 'Week 2: Design', 'days' => 4, 'marks' => 25, 'desc' => 'Install a theme and customize it using Elementor.'],
+                ['title' => 'Plugins & Functionality', 'milestone' => 'Week 3: Functionality', 'days' => 5, 'marks' => 30, 'desc' => 'Setup essential plugins (security, SEO) and configure basic settings.'],
+                ['title' => 'On-Page SEO & Migration', 'milestone' => 'Week 4: Launch', 'days' => 4, 'marks' => 30, 'desc' => 'Optimize pages with SEO plugins and migrate to live server.']
+            ];
+        } else {
+            return back()->with('error', 'Invalid technology selected.');
+        }
+
+        $currentStartDate = $baseDate->copy();
+
+        foreach ($curriculumTasks as $task) {
+            $endDate = $currentStartDate->copy()->addDays($task['days'] - 1); 
+
+            \Illuminate\Support\Facades\DB::table('project_tasks')->insert([
+                'project_id' => $project_id,
+                'eti_id' => $project->eti_id,
+                'task_title' => $task['title'],
+                'milestone_title' => $task['milestone'],
+                't_start_date' => $currentStartDate->toDateString(),
+                't_end_date' => $endDate->toDateString(),
+                'task_days' => $task['days'],
+                'task_duration' => $task['days'],
+                'task_obt_mark' => 0,
+                'task_mark' => $task['marks'],
+                'assigned_by' => $supervisorId,
+                'task_status' => 'Ongoing',
+                'description' => $task['desc'],
+                
+                // 🔥 ADD THESE MISSING DEFAULT VALUES:
+                'approved' => null,
+                'review' => '',
+                'task_screenshot' => '',
+                'task_live_url' => '',
+                'task_git_url' => '',
+                
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $currentStartDate = $endDate->copy()->addDay();
+        
+        }
+
+        if(method_exists($this, 'logActivity')) {
+            $this->logActivity('Loaded Curriculum', "Loaded {$request->technology} curriculum for Project ID: {$project_id}");
+        }
+
+        return redirect()->route('supervisor.projects.tasks', $project_id)
+            ->with('success', count($curriculumTasks) . " {$request->technology} tasks loaded successfully!");
+    }
+
     public function editTask($project_id, $task_id)
     {
         $project = DB::table('intern_projects')->where('project_id', $project_id)->first();

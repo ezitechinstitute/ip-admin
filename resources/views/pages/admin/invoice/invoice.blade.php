@@ -49,6 +49,9 @@
     </div>
   </div>
   
+
+
+  
   <div class="col-sm-6 col-xl-4">
     <div class="card">
       <div class="card-body">
@@ -94,6 +97,35 @@
       </div>
     </div>
   </div>
+</div>
+
+
+
+{{-- THE 3 STATS CARDS --}}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">Invoice Approval Management</h5>
+                        <p class="text-muted mb-0">Review and approve invoices created by managers</p>
+                    </div>
+                    <div>
+                        <a href="{{ route('admin.invoices.approval-queue') }}" class="btn btn-warning">
+                            <i class="ti ti-clock me-1"></i>Pending Approvals
+                            @php
+                                $pendingCount = \App\Models\invoice::where('approval_status', 'pending')->count();
+                            @endphp
+                            @if($pendingCount > 0)
+                            <span class="badge bg-danger ms-1">{{ $pendingCount }}</span>
+                            @endif
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Users List Table -->

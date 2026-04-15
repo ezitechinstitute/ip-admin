@@ -191,4 +191,60 @@ public function addPayment(Request $request, $id)
 
     return back()->with('success','Payment Added Successfully');
 }
+
+
+
+
+
+
+
+// =============================================
+    // ✅ NEW METHODS HERE  )
+    // =============================================
+
+    /**
+     * Show pending invoice approvals
+     */
+    public function approvalQueue()
+    {
+        $pendingInvoices = invoice::where('approval_status', 'pending')
+            ->orderBy('created_at', 'asc')
+            ->paginate(15);
+        
+        return view('pages.admin.invoice.approval-queue', compact('pendingInvoices'));
+    }
+
+    /**
+     * Approve invoice
+     */
+    public function approveInvoice($id)
+    {
+        try {
+            $invoice = invoice::findOrFail($id);
+            $invoice->approval_status = 'approved';
+            $invoice->save();
+            
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Reject invoice
+     */
+    public function rejectInvoice($id)
+    {
+        try {
+            $invoice = invoice::findOrFail($id);
+            $invoice->approval_status = 'rejected';
+            $invoice->save();
+            
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
 }

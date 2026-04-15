@@ -647,6 +647,13 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
     });
     Route::get('/api/escalations/unnotified', [App\Http\Controllers\EscalationController::class, 'unnotifiedAdminEscalations'])->name('api.escalations.unnotified');
 
+    
+
+    // ==================== INVOICE APPROVAL ROUTES ====================
+Route::get('/invoices/approval-queue', [App\Http\Controllers\InvoiceController::class, 'approvalQueue'])->name('admin.invoices.approval-queue');
+Route::post('/invoices/approve/{id}', [App\Http\Controllers\InvoiceController::class, 'approveInvoice'])->name('admin.invoices.approve');
+Route::post('/invoices/reject/{id}', [App\Http\Controllers\InvoiceController::class, 'rejectInvoice'])->name('admin.invoices.reject');
+
 });
 // Admin routes - End
 // Admin routes - End
@@ -877,7 +884,32 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
 
     // General Tasks
     Route::get('/tasks', [SupervisorTaskController::class, 'index'])->name('supervisor.tasks.index');
-    Route::get('/tasks/kanban', [SupervisorTaskController::class, 'kanban'])->name('supervisor.tasks.kanban');
+    // Route::get('/tasks/kanban', [SupervisorTaskController::class, 'kanban'])->name('supervisor.tasks.kanban');
+    Route::get('/tasks/kanban', function () {
+        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+        $today = now()->toDateString();
+
+        // 1. Sweep Standalone Tasks
+        \Illuminate\Support\Facades\DB::table('intern_tasks')
+            ->where('assigned_by', $supervisorId)
+            ->whereIn('task_status', ['Assigned', 'Ongoing', 'In Progress', 'Pending'])
+            ->whereDate('task_end', '<', $today)
+            ->update(['task_status' => 'Expired', 'updated_at' => now()]);
+
+        // 2. Sweep Project Tasks
+        \Illuminate\Support\Facades\DB::table('project_tasks')
+            ->where('assigned_by', $supervisorId)
+            ->whereIn('task_status', ['Assigned', 'Ongoing', 'In Progress', 'Pending'])
+            ->whereDate('t_end_date', '<', $today)
+            ->update(['task_status' => 'Expired', 'updated_at' => now()]);
+
+        // 3. Hand off to the original controller method untouched!
+        return app(\App\Http\Controllers\supervisor_controllers\SupervisorTaskController::class)->kanban();
+        
+    })->name('supervisor.tasks.kanban');
+    // Ajax route for updating task status from Kanban view
+    Route::post('/tasks/update-status-ajax', [SupervisorTaskController::class, 'updateStatusAjax'])->name('supervisor.tasks.updateStatusAjax');
+    Route::get('/tasks/fetch-kanban-tasks', [App\Http\Controllers\supervisor_controllers\SupervisorTaskController::class, 'fetchKanbanTasksAjax'])->name('supervisor.tasks.fetchKanbanAjax');
     Route::get('/tasks/create', [SupervisorTaskController::class, 'create'])->name('supervisor.tasks.create');
     Route::post('/tasks/store', [SupervisorTaskController::class, 'store'])->name('supervisor.tasks.store');
     Route::get('/tasks/review/{id}', [SupervisorTaskController::class, 'review'])->name('supervisor.tasks.review');

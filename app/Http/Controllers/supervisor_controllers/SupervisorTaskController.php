@@ -235,14 +235,104 @@ class SupervisorTaskController extends Controller
     public function kanban()
     {
         $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
-        $tasks = DB::table('intern_tasks')
-            ->join('intern_accounts', 'intern_tasks.eti_id', '=', 'intern_accounts.eti_id')
-            ->select('intern_tasks.*', 'intern_accounts.name as intern_name')
+        $today = now()->toDateString();
+
+        // 1. Auto-Expire Sweep
+        \Illuminate\Support\Facades\DB::table('intern_tasks')
             ->where('assigned_by', $supervisorId)
+            ->whereIn('task_status', ['Assigned', 'Ongoing', 'In Progress', 'Pending'])
+            ->whereDate('task_end', '<', $today)
+            ->update(['task_status' => 'Expired', 'updated_at' => now()]);
+
+        \Illuminate\Support\Facades\DB::table('project_tasks')
+            ->where('assigned_by', $supervisorId)
+            ->whereIn('task_status', ['Assigned', 'Ongoing', 'In Progress', 'Pending'])
+            ->whereDate('t_end_date', '<', $today)
+            ->update(['task_status' => 'Expired', 'updated_at' => now()]);
+
+        // 2. 🔥 THIS IS WHAT BUILDS THE DROPDOWN 🔥
+        // We fetch the interns so the dropdown has names to display
+        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
+            ->where('int_status', 'active') 
+            ->select('eti_id', 'name')
             ->get();
 
-        return view('content.supervisor.tasks.kanban', compact('tasks'));
+        // 3. Return the view (Make sure this matches your folder path from earlier!)
+        return view('content.supervisor.tasks.kanban', compact('interns'));
     }
+
+    public function fetchKanbanTasksAjax(Request $request)
+    {
+        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+        $etiId = $request->eti_id;
+
+        // 1. Setup Base Queries
+        $standardQuery = DB::table('intern_tasks')
+            ->join('intern_accounts', 'intern_tasks.eti_id', '=', 'intern_accounts.eti_id')
+            ->where('intern_tasks.assigned_by', $supervisorId);
+
+        $projectQuery = DB::table('project_tasks')
+            ->join('intern_accounts', 'project_tasks.eti_id', '=', 'intern_accounts.eti_id')
+            ->where('project_tasks.assigned_by', $supervisorId);
+
+        // 2. If a specific intern is selected, filter by them!
+        if ($etiId && $etiId !== 'all') {
+            $standardQuery->where('intern_tasks.eti_id', $etiId);
+            $projectQuery->where('project_tasks.eti_id', $etiId);
+        }
+
+        // 3. Fetch and Map Standard Tasks
+        $standardTasks = $standardQuery
+            ->select('intern_tasks.*', 'intern_accounts.name as intern_name')
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->task_id,
+                    'type' => 'standard',
+                    'title' => $task->task_title,
+                    'status' => $task->task_status,
+                    'end_date' => \Carbon\Carbon::parse($task->task_end)->format('d M'),
+                    'intern_name' => $task->intern_name,
+                    'is_overdue' => \Carbon\Carbon::parse($task->task_end)->isBefore(now()->startOfDay()) && in_array($task->task_status, ['Assigned', 'Ongoing', 'In Progress', 'Pending']),
+                    'edit_url' => route('supervisor.tasks.edit', $task->task_id),
+                    'review_url' => route('supervisor.tasks.review', $task->task_id),
+                ];
+            });
+
+        // 4. Fetch and Map Project Tasks
+        $projectTasks = $projectQuery
+            ->select('project_tasks.*', 'intern_accounts.name as intern_name')
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->task_id,
+                    'type' => 'project',
+                    'title' => $task->task_title,
+                    'status' => $task->task_status,
+                    'end_date' => \Carbon\Carbon::parse($task->t_end_date)->format('d M'),
+                    'intern_name' => $task->intern_name,
+                    'is_overdue' => \Carbon\Carbon::parse($task->t_end_date)->isBefore(now()->startOfDay()) && in_array($task->task_status, ['Assigned', 'Ongoing', 'In Progress', 'Pending']),
+                    'edit_url' => route('supervisor.projects.tasks.edit', [$task->project_id, $task->task_id]),
+                    'review_url' => '', 
+                ];
+            });
+
+        $allTasks = $standardTasks->merge($projectTasks);
+
+        return response()->json(['tasks' => $allTasks]);
+    }
+
+    // public function kanban()
+    // {
+    //     $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+    //     $tasks = DB::table('intern_tasks')
+    //         ->join('intern_accounts', 'intern_tasks.eti_id', '=', 'intern_accounts.eti_id')
+    //         ->select('intern_tasks.*', 'intern_accounts.name as intern_name')
+    //         ->where('assigned_by', $supervisorId)
+    //         ->get();
+
+    //     return view('content.supervisor.tasks.kanban', compact('tasks'));
+    // }
 
     public function edit($id)
     {
@@ -310,5 +400,39 @@ class SupervisorTaskController extends Controller
         }
 
         return redirect()->route('supervisor.tasks.index')->with('error', 'Task not found.');
+    }
+
+    
+    
+
+
+    //  AJAX endpoint to update task status from Kanban board
+    public function updateStatusAjax(Request $request)
+    {
+        $request->validate([
+            'task_id' => 'required|integer',
+            'type' => 'required|string|in:project,standalone',
+            'status' => 'required|string'
+        ]);
+
+        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+
+        try {
+            if ($request->type === 'project') {
+                DB::table('project_tasks')
+                    ->where('task_id', $request->task_id)
+                    ->where('assigned_by', $supervisorId)
+                    ->update(['task_status' => $request->status, 'updated_at' => now()]);
+            } else {
+                DB::table('intern_tasks')
+                    ->where('task_id', $request->task_id)
+                    ->where('assigned_by', $supervisorId)
+                    ->update(['task_status' => $request->status, 'updated_at' => now()]);
+            }
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }
