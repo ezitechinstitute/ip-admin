@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class SupervisorAttendanceController extends Controller
 {
-    public function index()
+    public function index(Request $request) 
     {
         $supervisorId = Auth::guard('manager')->id() ?? session('manager_id');
 
@@ -30,51 +30,55 @@ class SupervisorAttendanceController extends Controller
         }
 
         // ==========================================
-        // 2. DAILY ATTENDANCE LIST (Filtered securely)
+        // 🔥 2. THE BULLETPROOF DATE FILTER 🔥
+        // trim() removes hidden spaces like "?date=all "
         // ==========================================
-        $attendance = DB::table('intern_attendance as ia')
-            ->leftJoin('intern_accounts as acc', function ($join) {
-                $join->on(
-                    DB::raw('TRIM(LOWER(ia.eti_id))'),
-                    '=',
-                    DB::raw('TRIM(LOWER(acc.eti_id))')
-                );
-            })
-            ->select(
-                'ia.id',
-                'ia.eti_id',
-                'acc.name as intern_name',
-                'acc.int_technology', // Added so you can show tech in the table
-                'ia.start_shift',
-                'ia.end_shift',
-                'ia.duration',
-                'ia.status'
-            )
-            ->whereIn('acc.int_technology', $allowedTechNames)
-            ->orderByDesc('ia.id')
-            ->limit(50) // Good practice to limit so the page doesn't crash on huge data
-            ->get();
+        $rawDate = trim($request->input('date'));
 
-        // ==========================================
-        // 3. ABSENCE TRACKING (Today's stats)
-        // ==========================================
-        $today = now()->toDateString();
-        
-        $absentCount = DB::table('intern_attendance as ia')
+        // Base Query for Attendance List
+        $attendanceQuery = DB::table('intern_attendance as ia')
+            ->leftJoin('intern_accounts as acc', function ($join) {
+                $join->on(DB::raw('TRIM(LOWER(ia.eti_id))'), '=', DB::raw('TRIM(LOWER(acc.eti_id))'));
+            })
+            ->select('ia.id', 'ia.eti_id', 'acc.name as intern_name', 'acc.int_technology', 'ia.start_shift', 'ia.end_shift', 'ia.duration', 'ia.status')
+            ->whereIn('acc.int_technology', $allowedTechNames);
+
+        // Base Query for Absence KPI
+        $absentQuery = DB::table('intern_attendance as ia')
             ->join('intern_accounts as acc', 'ia.eti_id', '=', 'acc.eti_id')
             ->whereIn('acc.int_technology', $allowedTechNames)
-            ->whereDate('ia.start_shift', $today)
-            ->where('ia.status', 'Absent')
-            ->count();
+            ->where('ia.status', 'Absent');
 
         // ==========================================
-        // 4. LEAVE NOTIFICATIONS (Read-Only)
+        // 3. APPLY FILTER LOGIC
+        // ==========================================
+        if ($rawDate === 'all') {
+            // SCENARIO A: "View All" clicked! Just limit to 150 so we don't crash.
+            $attendanceQuery->limit(150);
+            
+        } elseif (empty($rawDate)) {
+            // SCENARIO B: Nothing selected, or cleared. Default to Today.
+            $defaultDate = now()->toDateString();
+            $attendanceQuery->whereDate('ia.start_shift', $defaultDate);
+            $absentQuery->whereDate('ia.start_shift', $defaultDate);
+            
+        } else {
+            // SCENARIO C: A specific calendar date was picked.
+            $attendanceQuery->whereDate('ia.start_shift', $rawDate);
+            $absentQuery->whereDate('ia.start_shift', $rawDate);
+        }
+
+        // Execute the math!
+        $attendance = $attendanceQuery->orderByDesc('ia.id')->get();
+        $absentCount = $absentQuery->count();
+
+        // ==========================================
+        // 4. LEAVE NOTIFICATIONS (Always show all pending)
         // ==========================================
         $recentLeaves = DB::table('intern_leaves as l') 
             ->join('intern_accounts as acc', 'l.eti_id', '=', 'acc.eti_id')
             ->select('l.*', 'acc.name as intern_name')
             ->whereIn('acc.int_technology', $allowedTechNames)
-            // Checking for NULL or 0 because leave_status is a tinyint(1)
             ->where(function($query) {
                 $query->whereNull('l.leave_status')
                       ->orWhere('l.leave_status', 0);

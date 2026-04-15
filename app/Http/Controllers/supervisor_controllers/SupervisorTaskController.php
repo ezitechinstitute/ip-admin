@@ -235,39 +235,91 @@ class SupervisorTaskController extends Controller
     public function kanban()
     {
         $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
-        
-        // 1. Fetch Standalone Tasks (intern_tasks)
-        $standaloneTasks = DB::table('intern_tasks')
+        $today = now()->toDateString();
+
+        // 1. Auto-Expire Sweep
+        \Illuminate\Support\Facades\DB::table('intern_tasks')
+            ->where('assigned_by', $supervisorId)
+            ->whereIn('task_status', ['Assigned', 'Ongoing', 'In Progress', 'Pending'])
+            ->whereDate('task_end', '<', $today)
+            ->update(['task_status' => 'Expired', 'updated_at' => now()]);
+
+        \Illuminate\Support\Facades\DB::table('project_tasks')
+            ->where('assigned_by', $supervisorId)
+            ->whereIn('task_status', ['Assigned', 'Ongoing', 'In Progress', 'Pending'])
+            ->whereDate('t_end_date', '<', $today)
+            ->update(['task_status' => 'Expired', 'updated_at' => now()]);
+
+        // 2. 🔥 THIS IS WHAT BUILDS THE DROPDOWN 🔥
+        // We fetch the interns so the dropdown has names to display
+        $interns = \Illuminate\Support\Facades\DB::table('intern_accounts')
+            ->where('int_status', 'active') 
+            ->select('eti_id', 'name')
+            ->get();
+
+        // 3. Return the view (Make sure this matches your folder path from earlier!)
+        return view('content.supervisor.tasks.kanban', compact('interns'));
+    }
+
+    public function fetchKanbanTasksAjax(Request $request)
+    {
+        $supervisorId = \Illuminate\Support\Facades\Auth::guard('manager')->id() ?? session('manager_id');
+        $etiId = $request->eti_id;
+
+        // 1. Setup Base Queries
+        $standardQuery = DB::table('intern_tasks')
             ->join('intern_accounts', 'intern_tasks.eti_id', '=', 'intern_accounts.eti_id')
-            ->select(
-                'intern_tasks.task_id as id',
-                'intern_tasks.task_title as title',
-                'intern_tasks.task_end as end_date',
-                'intern_tasks.task_status as status',
-                'intern_accounts.name as intern_name',
-                DB::raw("'standalone' as type"),
-                DB::raw("NULL as project_id") // Standalone tasks don't have a project_id
-            )
             ->where('intern_tasks.assigned_by', $supervisorId);
 
-        // 2. Fetch Project Tasks (project_tasks)
-        $projectTasks = DB::table('project_tasks')
+        $projectQuery = DB::table('project_tasks')
             ->join('intern_accounts', 'project_tasks.eti_id', '=', 'intern_accounts.eti_id')
-            ->select(
-                'project_tasks.task_id as id',
-                'project_tasks.task_title as title',
-                'project_tasks.t_end_date as end_date',
-                'project_tasks.task_status as status',
-                'intern_accounts.name as intern_name',
-                DB::raw("'project' as type"),
-                'project_tasks.project_id' // Keep the project_id so we can generate the edit route
-            )
             ->where('project_tasks.assigned_by', $supervisorId);
 
-        // 3. Merge them together using UNION
-        $tasks = $standaloneTasks->union($projectTasks)->get();
+        // 2. If a specific intern is selected, filter by them!
+        if ($etiId && $etiId !== 'all') {
+            $standardQuery->where('intern_tasks.eti_id', $etiId);
+            $projectQuery->where('project_tasks.eti_id', $etiId);
+        }
 
-        return view('content.supervisor.tasks.kanban', compact('tasks'));
+        // 3. Fetch and Map Standard Tasks
+        $standardTasks = $standardQuery
+            ->select('intern_tasks.*', 'intern_accounts.name as intern_name')
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->task_id,
+                    'type' => 'standard',
+                    'title' => $task->task_title,
+                    'status' => $task->task_status,
+                    'end_date' => \Carbon\Carbon::parse($task->task_end)->format('d M'),
+                    'intern_name' => $task->intern_name,
+                    'is_overdue' => \Carbon\Carbon::parse($task->task_end)->isBefore(now()->startOfDay()) && in_array($task->task_status, ['Assigned', 'Ongoing', 'In Progress', 'Pending']),
+                    'edit_url' => route('supervisor.tasks.edit', $task->task_id),
+                    'review_url' => route('supervisor.tasks.review', $task->task_id),
+                ];
+            });
+
+        // 4. Fetch and Map Project Tasks
+        $projectTasks = $projectQuery
+            ->select('project_tasks.*', 'intern_accounts.name as intern_name')
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->task_id,
+                    'type' => 'project',
+                    'title' => $task->task_title,
+                    'status' => $task->task_status,
+                    'end_date' => \Carbon\Carbon::parse($task->t_end_date)->format('d M'),
+                    'intern_name' => $task->intern_name,
+                    'is_overdue' => \Carbon\Carbon::parse($task->t_end_date)->isBefore(now()->startOfDay()) && in_array($task->task_status, ['Assigned', 'Ongoing', 'In Progress', 'Pending']),
+                    'edit_url' => route('supervisor.projects.tasks.edit', [$task->project_id, $task->task_id]),
+                    'review_url' => '', 
+                ];
+            });
+
+        $allTasks = $standardTasks->merge($projectTasks);
+
+        return response()->json(['tasks' => $allTasks]);
     }
 
     // public function kanban()
