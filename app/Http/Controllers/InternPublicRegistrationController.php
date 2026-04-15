@@ -6,7 +6,6 @@ use App\Models\Intern;
 use App\Models\InternAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Hash;
 
 class InternPublicRegistrationController extends Controller
 {
@@ -178,7 +177,7 @@ class InternPublicRegistrationController extends Controller
             'name' => $step1Data['full_name'],
             'email' => $step1Data['email'],
             'phone' => $step1Data['whatsapp'], // Phone from step 1
-            'password' => Hash::make('default_password_' . $intern->id), // Default password
+            'password' => 'default_password_' . $intern->id, // Default password (plain text)
             'int_technology' => $step1Data['technology'],
             'int_status' => 'active',
             'portal_status' => 'pending_activation', // Account pending manager activation

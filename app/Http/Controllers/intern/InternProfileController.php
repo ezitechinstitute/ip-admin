@@ -7,7 +7,6 @@ use App\Helpers\Helpers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
@@ -207,14 +206,14 @@ class InternProfileController extends Controller
             'new_password' => 'required|min:8|confirmed',
         ]);
         
-        // Verify current password
-        if (!Hash::check($validated['current_password'], $intern->password)) {
+        // Verify current password (plain text comparison)
+        if ($validated['current_password'] != $intern->password) {
             return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect']);
         }
         
-        // Update password
+        // Update password (store as plain text)
         $updateData = [
-            'password' => Hash::make($validated['new_password']),
+            'password' => $validated['new_password'],
         ];
         
         if (Schema::hasColumn('intern_accounts', 'updated_at')) {

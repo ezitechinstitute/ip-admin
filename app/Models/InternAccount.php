@@ -53,6 +53,14 @@ class InternAccount extends Authenticatable
         return trim($value);
     }
 
+    /**
+     * Store password as plain text (no hashing)
+     */
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = $value;
+    }
+
     // Relationships
     public function supervisor()
     {
