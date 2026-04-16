@@ -857,6 +857,7 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
     Route::get('/attendance', [SupervisorAttendanceController::class, 'index'])->name('supervisor.attendance');
     Route::get('/leaves', [SupervisorLeaveController::class, 'index'])->name('supervisor.leaves');
     Route::get('/feedback', [SupervisorFeedbackController::class, 'index'])->name('supervisor.feedback');
+    Route::post('/feedback/store', [SupervisorFeedbackController::class, 'store'])->name('supervisor.feedback.store');
 
     Route::get('/profile-settings', [SupervisorProfileController::class, 'index'])->name('supervisor.profile.settings');
     Route::get('/knowledge-base', [SupervisorKnowledgeBaseController::class, 'index'])->name('supervisor.knowledge.base');
@@ -864,6 +865,7 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
     // General Tasks
     Route::get('/tasks', [SupervisorTaskController::class, 'index'])->name('supervisor.tasks.index');
     Route::get('/tasks/kanban', [SupervisorTaskController::class, 'kanban'])->name('supervisor.tasks.kanban');
+    Route::get('/tasks/fetch-kanban-ajax', [SupervisorTaskController::class, 'fetchKanbanTasksAjax'])->name('supervisor.tasks.fetchKanbanAjax');
     Route::get('/tasks/create', [SupervisorTaskController::class, 'create'])->name('supervisor.tasks.create');
     Route::post('/tasks/store', [SupervisorTaskController::class, 'store'])->name('supervisor.tasks.store');
     Route::get('/tasks/review/{id}', [SupervisorTaskController::class, 'review'])->name('supervisor.tasks.review');
