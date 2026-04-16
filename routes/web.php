@@ -820,10 +820,11 @@ Route::post('/supervisor-leave/reject/{id}', [ManagerLeaveController::class, 'su
 
 // Supervisor Routes
 Route::get('/supervisors', [Supervisorcontroller::class, 'index'])->name('manager.supervisors');
+Route::get('/withdraw', [WithdrawManagerController::class, 'index'])
+    ->name('manager.withdraw');
 
-// Withdraw Routes
-Route::get('/withdraw', [RevenueController::class, 'index'])->name('manager.withdraw.request');
-Route::post('/withdraw', [RevenueController::class, 'index'])->name('manager.withdraw.store');
+Route::post('/withdraw/store', [WithdrawManagerController::class, 'store'])
+    ->name('manager.withdraw.store');
 // LIST PAGE
 Route::get('/performance-analytics', 
     [InternPerformanceController::class, 'index']
