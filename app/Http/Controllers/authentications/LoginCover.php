@@ -104,4 +104,14 @@ class LoginCover extends Controller
 
     return redirect()->route('login'); 
 }
+
+  public function internLogout(Request $request)
+{
+    Auth::guard('intern')->logout();
+
+    $request->session()->forget('intern');
+    $request->session()->regenerate();
+
+    return redirect()->route('login');
+}
 }
