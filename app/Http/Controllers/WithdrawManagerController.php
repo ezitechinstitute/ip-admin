@@ -28,8 +28,8 @@ class WithdrawManagerController extends Controller
     }
 
     // 📄 Efficient Pagination
-    // English: latest() can be slow on 300k+ rows; adding 'id' ensures stable and fast sorting
-    $withdraws = $query->latest('id')->paginate($perPage)->withQueryString();
+    // English: latest() can be slow on 300k+ rows; adding 'req_id' ensures stable and fast sorting
+    $withdraws = $query->latest('req_id')->paginate($perPage)->withQueryString();
 
     return view('pages.admin.withdraw.withdraw', compact('withdraws', 'perPage'));
 }
