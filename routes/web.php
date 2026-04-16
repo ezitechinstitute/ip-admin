@@ -215,6 +215,7 @@ use App\Http\Controllers\user_interface\Toasts;
 use App\Http\Controllers\user_interface\TooltipsPopovers;
 use App\Http\Controllers\user_interface\Typography;
 use App\Http\Controllers\WithdrawManagerController;
+use App\Http\Controllers\WithdrawAdminController;
 use App\Http\Controllers\wizard_example\Checkout as WizardCheckout;
 use App\Http\Controllers\wizard_example\CreateDeal;
 use App\Http\Controllers\wizard_example\PropertyListing;
@@ -606,8 +607,8 @@ Route::put('/transactions/update/{id}', [AccountsController::class, 'updateTrans
 
 
 //withdrw routes
-Route::get('withdraw',[WithdrawManagerController::class,'index'])->name('admin.withdraw');
-Route::get('withdraw/export-csv', [WithdrawManagerController::class, 'exportWithdrawCSV'])->name('admin.withdraw.export');
+Route::get('withdraw',[WithdrawAdminController::class,'index'])->name('admin.withdraw');
+Route::get('withdraw/export-csv', [WithdrawAdminController::class, 'exportWithdrawCSV'])->name('admin.withdraw.export');
 
 // Feeback & complaint
 Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.admin');
