@@ -897,7 +897,7 @@ Route::prefix('/intern')->middleware(['validIntern'])->group(function () {
     Route::post('/profile/update', [InternProfileController::class, 'update'])->name('intern.profile.update');
     Route::post('/update-profile-image', [InternProfileController::class, 'updateProfileImage'])->name('intern.update-profile-image');
     Route::get('/profile/public/{identifier?}', [InternProfileController::class, 'publicProfile'])->name('intern.profile.public');
-    Route::get('/profile/portfolio', [InternProfileController::class, 'portfolio'])->name('intern.profile.portfolio');
+    Route::get('/portfolio', [InternProfileController::class, 'portfolio'])->name('intern.portfolio');
 
     // Settings Routes
     Route::get('/settings', [InternSettingsController::class, 'index'])->name('intern.settings');
@@ -920,7 +920,7 @@ Route::prefix('/intern')->middleware(['validIntern'])->group(function () {
     Route::post('/tasks/{id}/submit', [InternPortalTaskController::class, 'submit'])->name('intern.tasks.submit');
 
     // Leave Routes
-    Route::get('/leaves', [InternLeaveController::class, 'index'])->name('intern.leave');
+    Route::get('/leave', [InternLeaveController::class, 'index'])->name('intern.leave');
     Route::post('/leave/request', [InternLeaveController::class, 'requestLeave'])->name('intern.leave.request');
 
     // Invoices Routes
