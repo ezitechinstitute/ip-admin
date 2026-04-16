@@ -48,4 +48,3 @@ class WithdrawManagerController extends Controller
         return back()->with('success', 'Request Submitted!');
     }
 }
-}
