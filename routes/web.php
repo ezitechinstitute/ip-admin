@@ -166,6 +166,7 @@ use App\Http\Controllers\pages\UserTeams;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupervisorsController;
+use App\Http\Controllers\InternPublicRegistrationController;
 use App\Http\Controllers\supervisor_controllers\DashboardSupervisorController;
 use App\Http\Controllers\supervisor_controllers\SupervisorInternController;
 use App\Http\Controllers\supervisor_controllers\SupervisorProjectController;
@@ -481,11 +482,7 @@ Route::post('update-intern-account', [InternAccountsController::class, 'updateIn
 Route::get('/intern-view-profile-account/{id}', [InternAccountsController::class, 'InternViewProfileAccount'])->name('view.profile.interne.account.admin');
 Route::get('/intern-accounts/export-csv', [InternAccountsController::class, 'exportInternAccountsCSV'])->name('export.intern.csv.admin');
 
- Route::get('/internship-registration', 
- [App\Http\Controllers\InternshipRegistrationController::class, 'step1'])->name('internship.step1');
- Route::post('/internship-registration/step2', 
- [App\Http\Controllers\InternshipRegistrationController::class, 'step2'])->name('internship.step2');
- Route::post('/internship-registration/step3', [App\Http\Controllers\InternshipRegistrationController::class, 'step3'])->name('internship.step3');
+
 
 // Intern Projects
 Route::get('intern-projects', [InternProjectsController::class, 'interProjects'])->name('intern-projects');
@@ -623,7 +620,38 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 });
 // Admin routes - End
 
+Route::prefix('/intern-register')->group(function () {
 
+    // Step 1 page
+    Route::get('/step1', [InternPublicRegistrationController::class, 'step1'])
+        ->name('intern.register.step1');
+
+    // Step 1 submit → process + redirect step2
+    Route::post('/step1', [InternPublicRegistrationController::class, 'step1Submit'])
+        ->name('intern.register.step1.submit');
+
+    // Step 2 page (ONLY VIEW)
+    Route::get('/step2', [InternPublicRegistrationController::class, 'step2'])
+        ->name('intern.register.step2');
+
+    // Step 2 submit → process + redirect step3
+    Route::post('/step2', [InternPublicRegistrationController::class, 'step2Submit'])
+        ->name('intern.register.step2.submit');
+
+    // Step 3 page (optional view)
+    Route::get('/step3', function () {
+        return view('pages.internship-registration.step3');
+    });
+
+    Route::post('/step3', [InternPublicRegistrationController::class, 'step3'])
+        ->name('intern.register.step3');
+
+    Route::post('/complete', [InternPublicRegistrationController::class, 'complete'])
+        ->name('intern.register.complete');
+
+    Route::get('/success', [InternPublicRegistrationController::class, 'success'])
+        ->name('intern.register.success');
+});
 
 Route::prefix('/manager')->middleware(['validManager'])->group(function(){
     // Dashboard Route

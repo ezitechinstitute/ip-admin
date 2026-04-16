@@ -11,16 +11,14 @@
                 <div class="card mt-4">
                     <div class="card-body">
 
-                        <!-- Logo -->
                         <div class="text-center mb-3">
                             <img src="{{ asset('assets/img/branding/logo.png') }}"
                                  class="img-fluid"
                                  style="max-width: 160px;">
                         </div>
 
-                        <h4 class="text-center">Welcome to Internship Registration Form</h4>
+                        <h4 class="text-center">Internship Registration Form</h4>
 
-                        <!-- Progress -->
                         <div class="mb-4">
                             <div class="progress" style="height: 20px;">
                                 <div id="progressBar"
@@ -42,80 +40,99 @@
                             </div>
                         </div>
 
-                        <!-- FORM -->
                         <form id="registerForm" action="{{ route('intern.register.step2') }}" method="GET">
 
                             <div class="row mt-3">
                                 <div class="col-md-6">
-                                    <label>Full Name</label>
-                                    <input type="text" class="form-control" required>
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" class="form-control form-control-lg" required>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label>Email</label>
-                                    <input type="email" class="form-control" required>
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control form-control-lg" required>
                                 </div>
                             </div>
 
                             <div class="row mt-3">
                                 <div class="col-md-6">
-                                    <label>Country</label>
-                                    <select class="form-control" required>
-                                        <option value="">--Select Country--</option>
-                                        <option>Pakistan</option>
-                                        <option>India</option>
-                                        <option>United States</option>
+                                    <label class="form-label">Country</label>
+                                    <select class="form-control form-control-lg" required>
+                                        <option value="">Select Country</option>
+                                        <option value="AF">Afghanistan</option>
+                                        <option value="PK">Pakistan</option>
+                                        <option value="IN">India</option>
+                                        <option value="US">United States</option>
+                                        <option value="UK">United Kingdom</option>
+                                        <option value="CA">Canada</option>
+                                        <option value="AU">Australia</option>
+                                        <option value="DE">Germany</option>
+                                        <option value="FR">France</option>
+                                        <option value="AE">UAE</option>
+                                        <option value="SA">Saudi Arabia</option>
+                                        <option value="CN">China</option>
+                                        <option value="JP">Japan</option>
+                                        <option value="TR">Turkey</option>
+                                        <option value="BD">Bangladesh</option>
+                                        <option value="MY">Malaysia</option>
+                                        <option value="ID">Indonesia</option>
+                                        <option value="IT">Italy</option>
+                                        <option value="ES">Spain</option>
                                     </select>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label>City</label>
-                                    <input type="text" class="form-control" required>
+                                    <label class="form-label">City</label>
+                                    <input type="text" class="form-control form-control-lg" required>
                                 </div>
                             </div>
 
                             <div class="row mt-3">
-                               <div class="col-md-6">
-    <label>WhatsApp Number</label>
-    <input type="tel" id="whatsapp" class="form-control" required>
-
-    <small id="whatsappError" class="text-danger d-none">
-        Enter a valid WhatsApp number
-    </small>
-</div>
 
                                 <div class="col-md-6">
-                                    <label>Gender</label>
-                                    <select class="form-control" required>
-                                        <option value="">--Select--</option>
+                                    <label class="form-label">WhatsApp Number</label>
+                                    <input type="tel" id="whatsapp" class="form-control form-control-lg" required>
+                                    <small id="whatsappError" class="text-danger d-none">
+                                        Invalid WhatsApp number
+                                    </small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Gender</label>
+                                    <select class="form-control form-control-lg" required>
+                                        <option value="">Select Gender</option>
                                         <option>Male</option>
                                         <option>Female</option>
                                     </select>
                                 </div>
+
                             </div>
 
                             <div class="row mt-3">
                                 <div class="col-md-6">
-                                    <label>Profile Image (Optional)</label>
-                                    <input type="file" class="form-control">
+                                    <label class="form-label">Profile Image (Optional)</label>
+                                    <input type="file" class="form-control form-control-lg">
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label>Join Date</label>
-                                    <input type="date" class="form-control" required>
+                                    <label class="form-label">Join Date</label>
+                                    <input type="date" class="form-control form-control-lg" required>
                                 </div>
                             </div>
 
                             <div class="row mt-3">
                                 <div class="col-md-6">
-                                    <label>Date of Birth</label>
-                                    <input type="date" class="form-control" required>
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="date" id="dob" class="form-control form-control-lg" required>
+                                    <small id="ageError" class="text-danger d-none">
+                                        Minimum age is 15 years
+                                    </small>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label>University</label>
-                                    <select class="form-control" required>
-                                        <option value="">--Select--</option>
+                                    <label class="form-label">University</label>
+                                    <select class="form-control form-control-lg" required>
+                                        <option value="">Select University</option>
                                         <option>COMSATS University Islamabad</option>
                                         <option>NUST</option>
                                         <option>FAST-NUCES</option>
@@ -132,18 +149,18 @@
 
                             <div class="row mt-3">
                                 <div class="col-md-6">
-                                    <label>Interview Type</label>
-                                    <select class="form-control" required>
-                                        <option value="">--Select--</option>
+                                    <label class="form-label">Interview Type</label>
+                                    <select class="form-control form-control-lg" required>
+                                        <option value="">Select Type</option>
                                         <option>Onsite</option>
                                         <option>Remote</option>
                                     </select>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label>Technology</label>
-                                    <select id="techSelect" class="form-control" required>
-                                        <option value="">--Select--</option>
+                                    <label class="form-label">Technology</label>
+                                    <select id="techSelect" class="form-control form-control-lg" required>
+                                        <option value="">Select Technology</option>
                                         <option>MERN Stack</option>
                                         <option>Front-End Development</option>
                                         <option>Backend (Laravel/PHP)</option>
@@ -156,7 +173,7 @@
                                     </select>
 
                                     <input type="text" id="customTech"
-                                           class="form-control mt-2"
+                                           class="form-control form-control-lg mt-2"
                                            placeholder="Enter Technology"
                                            style="display:none;">
                                 </div>
@@ -164,9 +181,9 @@
 
                             <div class="row mt-3">
                                 <div class="col-md-6">
-                                    <label>Duration</label>
-                                    <select class="form-control" required>
-                                        <option value="">--Select--</option>
+                                    <label class="form-label">Duration</label>
+                                    <select class="form-control form-control-lg" required>
+                                        <option value="">Select Duration</option>
                                         <option>1 Month</option>
                                         <option>2 Month</option>
                                         <option>3 Month</option>
@@ -175,9 +192,9 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label>Internship Type</label>
-                                    <select class="form-control" required>
-                                        <option value="">--Select--</option>
+                                    <label class="form-label">Internship Type</label>
+                                    <select class="form-control form-control-lg" required>
+                                        <option value="">Select Type</option>
                                         <option>Onsite</option>
                                         <option>Remote</option>
                                     </select>
@@ -185,7 +202,7 @@
                             </div>
 
                             <div class="mt-4 mb-3">
-                                <button type="submit" class="btn btn-primary w-100">
+                                <button type="submit" class="btn btn-primary w-100 btn-lg">
                                     Register
                                 </button>
                             </div>
@@ -201,45 +218,62 @@
     </div>
 </div>
 
-<!-- STYLES -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
 
 <style>
+  /* Dropdown background */
+/* select.form-control {
+    background-color: #000 !important;
+    color: #fff !important;
+} */
 
+/* Dropdown options (limited browser support but works in most modern ones) */
+select.form-control option {
+    background-color: #000;
+    color: #fff;
+}
 .iti {
     width: 100%;
 }
-
-.iti--allow-dropdown input,
-.iti--separate-dial-code input {
-    padding-left: 88px !important;
-    padding-right: 52px !important;
-}
-
-.iti__country {
-    color: #000;
+.iti input {
+    width: 100% !important;
+    padding-left: 82px !important;
 }
 </style>
 
-<!-- SCRIPT -->
 <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
 
 <script>
+const form = document.getElementById('registerForm');
+const inputs = form.querySelectorAll('input, select');
+const progressBar = document.getElementById('progressBar');
 
-const whatsappInput = document.querySelector("#whatsapp");
+const whatsappInput = document.getElementById("whatsapp");
+const dob = document.getElementById("dob");
+
+const ageError = document.getElementById("ageError");
+const whatsappError = document.getElementById("whatsappError");
 
 const iti = window.intlTelInput(whatsappInput, {
     initialCountry: "pk",
     separateDialCode: true,
     utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"
 });
-const form = document.getElementById('registerForm');
-const inputs = form.querySelectorAll('input, select');
-const progressBar = document.getElementById('progressBar');
-const techSelect = document.getElementById('techSelect');
-const customTech = document.getElementById('customTech');
 
-// PROGRESS
+function getAge(dobValue) {
+    let birthDate = new Date(dobValue);
+    let today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    let m = today.getMonth() - birthDate.getMonth();
+
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
+    return age;
+}
+
 function updateProgress() {
     let filled = 0;
 
@@ -257,38 +291,30 @@ function updateProgress() {
     progressBar.style.width = progress + "%";
 }
 
-// VALIDATION
 form.addEventListener('submit', function(e) {
     e.preventDefault();
 
-    let firstInvalid = null;
-
-    inputs.forEach(input => {
-        if (input.type === "file") return;
-
-        if (input === customTech && customTech.style.display === "none") return;
-
-        if (!input.value || input.value.trim() === "") {
-            if (!firstInvalid) firstInvalid = input;
-        }
-    });
-
-    if (firstInvalid) {
-        firstInvalid.focus();
-        firstInvalid.classList.add('border-danger');
-
-        setTimeout(() => {
-            firstInvalid.classList.remove('border-danger');
-        }, 2000);
-
+    let age = getAge(dob.value);
+    if (age < 15) {
+        dob.focus();
+        ageError.classList.remove("d-none");
         return;
+    } else {
+        ageError.classList.add("d-none");
+    }
+
+    if (!iti.isValidNumber()) {
+        whatsappInput.focus();
+        whatsappError.classList.remove("d-none");
+        return;
+    } else {
+        whatsappError.classList.add("d-none");
     }
 
     form.submit();
 });
 
-// TECH HANDLER
-techSelect.addEventListener('change', function() {
+document.getElementById('techSelect').addEventListener('change', function() {
     if (this.value === 'other') {
         customTech.style.display = 'block';
     } else {
@@ -297,7 +323,6 @@ techSelect.addEventListener('change', function() {
     }
 });
 
-// LISTENERS
 inputs.forEach(input => {
     input.addEventListener('input', updateProgress);
     input.addEventListener('change', updateProgress);

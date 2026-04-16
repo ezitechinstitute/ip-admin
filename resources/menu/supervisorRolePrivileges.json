@@ -1,0 +1,118 @@
+{
+  "privileges": [
+    {
+      "key": "supervisor_dashboard",
+      "title": "Supervisor Dashboard",
+      "privileges": [
+        {
+          "key": "supervisor_dashboard_view",
+          "title": "View Dashboard"
+        }
+      ]
+    },
+    {
+      "key": "supervisor_interns",
+      "title": "Intern Management",
+      "privileges": [
+        {
+          "key": "view_supervisor_my_interns",
+          "title": "View My Interns"
+        },
+        {
+          "key": "view_supervisor_active_interns",
+          "title": "Active Interns"
+        },
+        {
+          "key": "view_supervisor_new_interns",
+          "title": "New Interns"
+        },
+        {
+          "key": "view_supervisor_contact_with",
+          "title": "Contact With"
+        },
+        {
+          "key": "view_supervisor_interview_test",
+          "title": "Interview Test"
+        },
+        {
+          "key": "view_supervisor_test_completed",
+          "title": "Test Completed"
+        }
+      ]
+    },
+    {
+      "key": "supervisor_projects",
+      "title": "Projects",
+      "privileges": [
+        {
+          "key": "view_supervisor_projects",
+          "title": "View Projects"
+        }
+      ]
+    },
+    {
+      "key": "supervisor_tasks",
+      "title": "Tasks",
+      "privileges": [
+        {
+          "key": "view_supervisor_tasks",
+          "title": "View Tasks"
+        }
+      ]
+    },
+    {
+      "key": "supervisor_evaluations",
+      "title": "Evaluations",
+      "privileges": [
+        {
+          "key": "view_supervisor_evaluations",
+          "title": "View Evaluations"
+        }
+      ]
+    },
+    {
+      "key": "supervisor_attendance",
+      "title": "Attendance",
+      "privileges": [
+        {
+          "key": "view_supervisor_attendance",
+          "title": "View Attendance"
+        }
+      ]
+    },
+    {
+      "key": "supervisor_leaves",
+      "title": "Leaves",
+      "privileges": [
+        {
+          "key": "view_supervisor_leaves",
+          "title": "View Leaves"
+        }
+      ]
+    },
+    {
+      "key": "supervisor_feedback",
+      "title": "Feedback",
+      "privileges": [
+        {
+          "key": "view_supervisor_feedback",
+          "title": "View Feedback"
+        }
+      ]
+    },
+    {
+      "key": "supervisor_settings",
+      "title": "Settings",
+      "privileges": [
+        {
+          "key": "view_supervisor_profile_settings",
+          "title": "Profile Settings"
+        },
+        {
+          "key": "view_supervisor_knowledge_base",
+          "title": "Knowledge Base"
+        }
+      ]
+    }
+  ]
+}
