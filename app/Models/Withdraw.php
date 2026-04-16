@@ -13,7 +13,7 @@ class Withdraw extends Model
 
     protected $fillable = [
         'eti_id',
-        'req_by ',
+        'req_by',
         'bank',
         'ac_no',
         'ac_name',
