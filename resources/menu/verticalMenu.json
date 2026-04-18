@@ -7,6 +7,12 @@
       "url": "/admin/dashboard"
     },
     {
+  "name": "Communication Center",
+  "icon": "menu-icon tf-icons ti tabler-messages",
+  "slug": "communication-center",
+  "url": "/communication-center"
+},
+    {
       "menuHeader": "Management"
     },
     {

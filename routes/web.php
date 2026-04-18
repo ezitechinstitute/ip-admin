@@ -215,6 +215,7 @@ use App\Http\Middleware\ValidUser;
 use App\Http\Controllers\InternPublicRegistrationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\ChatController;
 
 
 
@@ -460,6 +461,18 @@ Route::prefix('/intern-register')->group(function () {
     Route::get('/success', [InternPublicRegistrationController::class, 'success'])->name('intern.register.success');
 });
 // Public Intern Registration Routes - End
+
+
+// ==========================================
+// PROJECT CHAT ROUTES (Shared across all portals)
+// ==========================================
+
+Route::get('/project-chat/{projectId}', [ChatController::class, 'show'])->name('chat.show');
+Route::post('/project-chat/{projectId}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+Route::get('/communication-center', [ChatController::class, 'index'])->name('chat.index');
+
+
+
 
 // Admin routes - Start
 Route::prefix('/admin')->middleware(['validUser'])->group(function (){

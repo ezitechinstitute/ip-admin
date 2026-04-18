@@ -2,32 +2,41 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Get user based on guard
 $userName = '';
 $userRole = '';
-$userImage = asset('assets/img/branding/ezitech.png');
+$defaultImage = asset('assets/img/branding/ezitech.png');
+$userImage = $defaultImage;
 
 if (Auth::guard('intern')->check()) {
     $user = Auth::guard('intern')->user();
     $userName = $user->name;
     $userRole = 'Intern';
-    $userImage = \App\Helpers\Helpers::getProfileImage($user);
+    
+    $rawImage = \App\Helpers\Helpers::getProfileImage($user);
+    
+    if (!empty($rawImage)) {
+        // Aggressively strip newlines and spaces that break the Data URI
+        $cleanImage = preg_replace('/\s+/', '', $rawImage);
+
+        if (str_starts_with($cleanImage, 'data:image')) {
+            $userImage = $cleanImage;
+        } elseif (strlen($cleanImage) > 100) {
+            $userImage = 'data:image/jpeg;base64,' . $cleanImage;
+        } else {
+            $userImage = asset($cleanImage);
+        }
+    }
 } elseif (Auth::guard('manager')->check()) {
     $user = Auth::guard('manager')->user();
     $userName = $user->name;
     $userRole = $user->loginas ?? 'Manager';
-    if ($user->image) {
-        $userImage = asset($user->image);
-    }
+    $userImage = $user->image ? asset($user->image) : $defaultImage;
 } elseif (Auth::guard('admin')->check()) {
     $user = Auth::guard('admin')->user();
     $userName = $user->name;
     $userRole = 'Admin';
-    if ($user->image) {
-        $userImage = asset($user->image);
-    }
+    $userImage = $user->image ? asset($user->image) : $defaultImage;
 } else {
-    // Fallback
     $account = \App\Models\AdminAccount::first();
     $userName = $account->name ?? 'User';
     $userRole = 'Admin';
@@ -252,7 +261,7 @@ if (Auth::guard('intern')->check()) {
     <li class="nav-item navbar-dropdown dropdown-user dropdown ms-2">
       <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
         <div class="avatar avatar-online">
-          <img src="{{ $userImage }}" alt="Profile Picture" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
+          <img src="{{ $userImage }}" alt="Profile Picture" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" onerror="this.onerror=null; this.src='{{ asset('assets/img/branding/ezitech.png') }}';"/>
         </div>
       </a>
       <ul class="dropdown-menu dropdown-menu-end">
@@ -262,7 +271,7 @@ if (Auth::guard('intern')->check()) {
             <div class="d-flex align-items-center">
               <div class="flex-shrink-0 me-2">
                 <div class="avatar avatar-online">
-                  <img src="{{ $userImage }}" alt class="rounded-circle" />
+                  <img src="{{ $userImage }}" alt class="rounded-circle" onerror="this.onerror=null; this.src='{{ asset('assets/img/branding/ezitech.png') }}';"/>
                 </div>
               </div>
               <div class="flex-grow-1">
