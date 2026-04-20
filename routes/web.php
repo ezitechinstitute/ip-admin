@@ -962,7 +962,8 @@ Route::prefix('/intern')->middleware(['validIntern'])->group(function () {
     // Invoices Routes
     Route::get('/invoices', [InternInvoiceController::class, 'index'])->name('intern.invoices');
     Route::get('/invoices/{id}', [InternInvoiceController::class, 'show'])->name('intern.invoices.show');
-
+Route::post('/invoices', [InternInvoiceController::class, 'store'])
+    ->name('intern.invoices.store');
     // Feedback Routes
     Route::get('/feedback', [InternFeedbackController::class, 'index'])->name('intern.feedback');
     Route::post('/feedback/submit', [InternFeedbackController::class, 'submitFeedback'])->name('intern.feedback.submit');
