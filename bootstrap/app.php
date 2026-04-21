@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\ValidUser;
 use App\Http\Middleware\ValidManager; // English comments: Import the Manager middleware
+use App\Http\Middleware\ValidIntern; // Import the Intern middleware
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\LocaleMiddleware;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'validSupervisor' => \App\Http\Middleware\ValidSupervisor::class,
             'validUser' => \App\Http\Middleware\ValidUser::class,
             'validManager' => \App\Http\Middleware\ValidManager::class,
+            'validIntern' => \App\Http\Middleware\ValidIntern::class,
         ]);
     })
     // 🔥 ADD THIS SECTION BELOW

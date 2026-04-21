@@ -21,7 +21,8 @@ class InvoiceDueReminder extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return ['mail', 'database']; // email + dashboard notification
+        //return ['mail', 'database']; 
+        return ['mail'];
     }
 
     public function toMail($notifiable)
@@ -36,6 +37,8 @@ class InvoiceDueReminder extends Notification implements ShouldQueue
                     ->action('View Invoice', url('/manager/invoices')); // update URL
     }
 
+    /*
+
     public function toDatabase($notifiable)
     {
         return [
@@ -46,5 +49,6 @@ class InvoiceDueReminder extends Notification implements ShouldQueue
             'due_date' => $this->invoice->due_date,
             'message' => 'Invoice due in 4 days'
         ];
-    }
+    }     
+  */
 }

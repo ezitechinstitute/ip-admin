@@ -251,6 +251,8 @@
             </div>
           </div>
           <!-- Add University -->
+
+
           <!-- Edit University Modal -->
           <div class="modal fade" id="editUniversityModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -470,23 +472,24 @@
 
                 {{-- <td><span class="text-heading text-nowrap">{{$university->intern_type}}</span></td> --}}
                 <td>
-                  <div class="d-flex align-items-center">
-
-
-
-                    <a href="javascript:void(0)"
-                      class="btn btn-text-secondary rounded-pill waves-effect btn-icon edit-university"
-                      data-id="{{ $university->uni_id }}" data-name="{{ $university->uni_name }}"
-                      data-email="{{ $university->uni_email }}" data-phone="{{ $university->uni_phone }}"
-                      data-password="{{ $university->uni_password }}" data-uni_status="{{ $university->uni_status }}"
-                      data-account_status="{{ $university->account_status }}">
-                      <i class="icon-base ti tabler-edit icon-22px"></i>
-                    </a>
-
-
-
-
-                  </div>
+                 <div class="d-flex align-items-center gap-2">
+    <!-- Edit Button -->
+    <a href="javascript:void(0)"
+      class="btn btn-text-secondary rounded-pill waves-effect btn-icon edit-university"
+      data-id="{{ $university->uni_id }}" data-name="{{ $university->uni_name }}"
+      data-email="{{ $university->uni_email }}" data-phone="{{ $university->uni_phone }}"
+      data-password="{{ $university->uni_password }}" data-uni_status="{{ $university->uni_status }}"
+      data-account_status="{{ $university->account_status }}">
+      <i class="icon-base ti tabler-edit icon-22px"></i>
+    </a>
+    
+    <!-- Delete Button -->
+    <button class="btn btn-text-secondary rounded-pill waves-effect btn-icon delete-university-btn"
+            data-id="{{ $university->uni_id }}"
+            data-name="{{ $university->uni_name }}">
+      <i class="icon-base ti tabler-trash icon-22px text-danger"></i>
+    </button>
+</div>
 
                 </td>
 
@@ -746,6 +749,46 @@
 @endpush
 
 
+@push('scripts')
+<script>
+// Delete University with SweetAlert Confirmation
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.delete-university-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `Delete university "${name}"? This action cannot be undone.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/admin/university/${id}`;
+                    form.innerHTML = `
+                        @csrf
+                        @method('DELETE')
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+    });
+});
+</script>
+@endpush
 
 
 @endsection

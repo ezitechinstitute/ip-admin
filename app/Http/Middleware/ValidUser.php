@@ -16,11 +16,25 @@ class ValidUser
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(Auth::guard('admin')->check()){
-            return $next($request);
-        }else{
+        // Check if admin is authenticated
+        if(!Auth::guard('admin')->check()){
             return redirect()->route('login')->withErrors(['error' => 'Please login first!']);
         }
+
+        // Validate that the session guard matches the expected guard
+        $sessionGuard = session('auth_guard');
+        if ($sessionGuard && $sessionGuard !== 'admin') {
+            // Session belongs to a different guard, logout and redirect
+            Auth::guard('admin')->logout();
+            session()->invalidate();
+            return redirect()->route('login')->withErrors(['error' => 'Session guard mismatch. Please login again.']);
+        }
+
+        // If session guard is not set, set it now
+        if (!$sessionGuard) {
+            session(['auth_guard' => 'admin']);
+        }
         
+        return $next($request);
     }
 }

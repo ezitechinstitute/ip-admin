@@ -26,10 +26,19 @@ class EscalationCreatedNotification extends Notification implements ShouldQueue
         $this->lastUpdateTime = $lastUpdateTime;
     }
 
-    public function via($notifiable)
-    {
-        return ['mail', 'database']; // email + dashboard notification
-    }
+
+    /*
+    // BEFORE
+   public function via($notifiable)
+   {
+    return ['mail', 'database'];
+   }  */
+
+   // AFTER
+   public function via($notifiable)
+   {
+    return ['mail'];  // ✅ FIXED: Sirf email
+   }
 
     public function toMail($notifiable)
     {
@@ -49,7 +58,7 @@ class EscalationCreatedNotification extends Notification implements ShouldQueue
                     ->line('This is an automated escalation reminder.');
     }
 
-    public function toDatabase($notifiable)
+    /* public function toDatabase($notifiable)
     {
         return [
             'type' => 'escalation_created',
@@ -61,5 +70,5 @@ class EscalationCreatedNotification extends Notification implements ShouldQueue
             'action_url' => "/manager/escalations/{$this->escalationId}",
             'severity' => 'medium',
         ];
-    }
+    }  */
 }
