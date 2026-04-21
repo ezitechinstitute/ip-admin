@@ -65,4 +65,54 @@ class InternInvoiceController extends Controller
         
         return view('pages.intern.invoices.show', compact('invoice'));
     }
+    public function store(Request $request)
+{
+    $intern = Auth::guard('intern')->user();
+
+    if (!$intern) {
+        return redirect()->route('login');
+    }
+
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'intern_email' => 'required|email',
+        'contact' => 'nullable|string|max:20',
+        'invoice_type' => 'required|string',
+        'total_amount' => 'required|numeric|min:0',
+        'received_amount' => 'nullable|numeric|min:0',
+        'due_date' => 'required|date',
+    ]);
+
+    $total = $request->total_amount;
+    $paid = $request->received_amount ?? 0;
+
+    // 🔥 HARD RULE (business logic protection)
+    if ($paid > $total) {
+        return back()->withErrors([
+            'received_amount' => 'Paid amount cannot exceed total amount'
+        ]);
+    }
+
+    $remaining = $total - $paid;
+
+    // 🔥 BETTER ID GENERATION (don’t use rand)
+    $invoiceId = 'INV-' . now()->format('YmdHis') . rand(10, 99);
+
+    DB::table('invoices')->insert([
+        'inv_id' => $invoiceId,
+        'invoice_type' => $request->invoice_type,
+        'name' => $request->name,
+        'intern_email' => $request->intern_email,
+        'contact' => $request->contact,
+        'total_amount' => $total,
+        'received_amount' => $paid,
+        'remaining_amount' => $remaining,
+        'due_date' => $request->due_date,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return redirect()->route('intern.invoices')
+        ->with('success', 'Invoice created successfully');
+}
 }

@@ -2,6 +2,7 @@
 @php
   use Illuminate\Support\Str;
   use App\Helpers\Helpers;
+  
 
   $menuFixed =
       $configData['layout'] === 'vertical' 
@@ -43,6 +44,7 @@
   <meta charset="utf-8" />
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <title>
     @yield('title') | {{ config('variables.templateName') ? config('variables.templateName') : 'TemplateName' }}
