@@ -11,81 +11,106 @@
 @endsection
 
 @section('page-script')
-    {{-- CRITICAL: Load app.js first to initialize window.Echo --}}
     @vite(['resources/js/app.js'])
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // 1. Single declaration of Project ID - Using $project->project_id from Controller
-            const currentChatProjectId = "{{ $project->project_id ?? '' }}";
-            
-            if (!currentChatProjectId) {
-                console.warn("No active project ID found.");
-                return;
+    function handleChatSubmit(event, form) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const input = form.querySelector('input[name="message"]');
+    const messageText = input.value.trim();
+    
+    if (!messageText) return false;
+
+    // 🔥 This PHP line gets the real name from your active session (Supervisor/Admin/Manager)
+    // const currentUserName = "{{ auth()->user()->name ?? 'Supervisor' }}";
+    const currentUserName = "@if(auth()->guard('admin')->check()){{ auth()->guard('admin')->user()->name }}@elseif(auth()->guard('manager')->check()){{ auth()->guard('manager')->user()->name }}@elseif(auth()->guard('intern')->check()){{ auth()->guard('intern')->user()->name }}@else{{ 'User' }}@endif";
+    const tempId = 'temp-' + Date.now();
+    
+    // 1. Instant UI update - Use the Real Name here
+    if (typeof appendMessage === 'function') {
+        appendMessage({
+            id: tempId,
+            message: messageText,
+            sender: { name: currentUserName }
+        }, true);
+    }
+
+    input.value = ''; 
+
+    axios.post(form.action, { message: messageText })
+        .then(response => {
+            const tempEl = document.getElementById(`msg-${tempId}`);
+            if (tempEl && response.data.message) {
+                // 🔥 Rename the ID so the Echo listener can "see" it is already there
+                tempEl.id = `msg-${response.data.message.id}`;
             }
+        })
+        .catch(error => {
+            console.error("AJAX Error:", error);
+            const tempEl = document.getElementById(`msg-${tempId}`);
+            if (tempEl) tempEl.style.opacity = '0.5';
+        });
 
-            console.log("Checking Project ID:", currentChatProjectId);
+    return false;
+}
 
-            // 2. Auto-scroll to bottom on load
-            const chatHistoryBody = document.querySelector('.chat-history-body');
-            const chatHistoryList = document.querySelector('.chat-history');
-            const sendForm = document.querySelector('.form-send-message');
+    document.addEventListener("DOMContentLoaded", function() {
+        const currentChatProjectId = "{{ $project->project_id ?? '' }}";
+        const chatHistoryBody = document.querySelector('.chat-history-body');
+        const chatHistoryList = document.querySelector('.chat-history');
 
-            if (chatHistoryBody) {
-                chatHistoryBody.scrollTop = chatHistoryBody.scrollHeight;
+        window.scrollToBottom = function() {
+            if (chatHistoryBody) chatHistoryBody.scrollTop = chatHistoryBody.scrollHeight;
+        };
+
+        scrollToBottom();
+
+        if (window.Echo) {
+    window.Echo.private(`chat.${currentChatProjectId}`)
+        .listen('.MessageSent', (e) => { 
+            // 1. Check if the ID exists
+            if (document.getElementById(`msg-${e.message.id}`)) return;
+
+            // 2. Extra Safety: Check if a "temp" message with the same text exists
+            // This stops the duplicate if the Axios call is taking too long
+            const tempMessages = document.querySelectorAll('[id^="msg-temp-"]');
+            let isDuplicate = false;
+            tempMessages.forEach(el => {
+                if (el.querySelector('.chat-message-text p').innerText === e.message.message) {
+                    // Update this temp message to the real ID now
+                    el.id = `msg-${e.message.id}`;
+                    isDuplicate = true;
+                }
+            });
+
+            if (!isDuplicate) {
+                appendMessage(e.message, false);
             }
+        });
+}
 
-            // --- 3. Real-Time Listener ---
-            if (window.Echo) {
-                console.log("Echo is active. Listening on: chat." + currentChatProjectId);
-                
-                window.Echo.private(`chat.${currentChatProjectId}`)
-                .listen('.MessageSent', (e) => { // Removed full namespace to match broadcastAs default or manual naming
-                    console.log("Real-time message received!", e);
-                    appendMessage(e.message, false);
-                });
-            } else {
-                console.error("Laravel Echo is not initialized. Check app.js and ensure 'npm run dev' is running.");
-            }
+        window.appendMessage = function(msg, isMe) {
+    if (!msg || document.getElementById(`msg-${msg.id}`)) return;
 
-            // --- 4. AJAX Message Sending ---
-            if (sendForm) {
-                sendForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const input = this.querySelector('input[name="message"]');
-                    const messageText = input.value.trim();
-                    if (!messageText) return;
-
-                    axios.post(this.action, { message: messageText })
-                        .then(response => {
-                            // Append our own message immediately
-                            appendMessage(response.data.message, true);
-                            input.value = '';
-                        })
-                        .catch(error => {
-                            console.error("AJAX Error:", error);
-                        });
-                });
-            }
-
-            // --- 5. Helper Function to Append HTML ---
-            function appendMessage(msg, isMe) {
-                if (!chatHistoryList) return;
-                
-                // Prevent duplicate messages if broadcast returns our own message
-                if (!isMe && document.getElementById(`msg-${msg.id}`)) return;
-
-                const alignment = isMe ? 'chat-message-right' : '';
-                const senderName = msg.sender ? msg.sender.name : 'U';
+    const senderName = msg.sender ? msg.sender.name : 'User';
     const firstLetter = senderName.charAt(0).toUpperCase();
 
+    // 🔥 Sync the colors so they don't change on refresh
+    let avatarColor = 'info'; // Default
+    @if(auth()->guard('admin')->check()) 
+        avatarColor = 'danger';
+    @elseif(auth()->guard('manager')->check()) 
+        avatarColor = 'success';
+    @endif
+
     const messageHtml = `
-        <li class="chat-message ${isMe ? 'chat-message-right' : ''}">
+        <li class="chat-message ${isMe ? 'chat-message-right' : ''}" id="msg-${msg.id}">
             <div class="d-flex overflow-hidden">
-                <div class="user-avatar flex-shrink-0">
+                <div class="user-avatar flex-shrink-0 ${isMe ? 'ms-3' : 'me-3'}">
                     <div class="avatar avatar-sm">
-                        <span class="avatar-initial rounded-circle bg-label-success">
+                        <span class="avatar-initial rounded-circle bg-label-${avatarColor}">
                             ${firstLetter}
                         </span>
                     </div>
@@ -94,16 +119,17 @@
                     <div class="chat-message-text">
                         <p class="mb-0">${msg.message}</p>
                     </div>
+                    <div class="text-muted mt-1">
+                        <small>${senderName}</small>
+                    </div>
                 </div>
             </div>
         </li>`;
-                
-                chatHistoryList.insertAdjacentHTML('beforeend', messageHtml);
-                if (chatHistoryBody) {
-                    chatHistoryBody.scrollTop = chatHistoryBody.scrollHeight;
-                }
-            }
-        });
+
+    document.querySelector('.chat-history').insertAdjacentHTML('beforeend', messageHtml);
+    window.scrollToBottom();
+};
+    });
     </script>
 @endsection
 
@@ -173,37 +199,40 @@
                     <div class="chat-history-body bg-body">
                         <ul class="list-unstyled chat-history">
                             @foreach($messages as $msg)
-                                @php
-                                    $isMe = ($msg->sender_type === $currentUserType && $msg->sender_id === $currentUserId);
-                                    $role = 'Intern';
-                                    if ($msg->sender_type === \App\Models\AdminAccount::class) $role = 'Admin';
-                                    elseif ($msg->sender_type === \App\Models\ManagersAccount::class) $role = 'Manager';
-                                @endphp
-                                <li class="chat-message {{ $isMe ? 'chat-message-right' : '' }}" id="msg-{{ $msg->id }}">
-                                    <div class="d-flex overflow-hidden">
-                                        <div class="user-avatar flex-shrink-0 {{ $isMe ? 'ms-3' : 'me-3' }}">
-                                            <div class="avatar avatar-sm">
-                                                <span class="avatar-initial rounded-circle bg-label-{{ $role == 'Admin' ? 'danger' : ($role == 'Intern' ? 'info' : 'success') }}">
-                                                    {{ substr($msg->sender->name ?? 'U', 0, 1) }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="chat-message-wrapper flex-grow-1">
-                                            <div class="chat-message-text">
-                                                <p class="mb-0">{{ $msg->message }}</p>
-                                            </div>
-                                            <div class="text-muted mt-1">
-                                                <small>{{ $msg->sender->name ?? 'Unknown' }} • {{ $msg->created_at->format('h:i A') }}</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            @endforeach
+    @php
+        $isMe = ($msg->sender_type === $currentUserType && $msg->sender_id === $currentUserId);
+        
+        // Define color based on sender type
+        $avatarColor = 'info'; // Default Intern
+        if ($msg->sender_type === \App\Models\AdminAccount::class) $avatarColor = 'danger';
+        elseif ($msg->sender_type === \App\Models\ManagersAccount::class) $avatarColor = 'success';
+    @endphp
+    
+    <li class="chat-message {{ $isMe ? 'chat-message-right' : '' }}" id="msg-{{ $msg->id }}">
+        <div class="d-flex overflow-hidden">
+            <div class="user-avatar flex-shrink-0 {{ $isMe ? 'ms-3' : 'me-3' }}">
+                <div class="avatar avatar-sm">
+                    <span class="avatar-initial rounded-circle bg-label-{{ $avatarColor }}">
+                        {{ strtoupper(substr($msg->sender->name ?? 'U', 0, 1)) }}
+                    </span>
+                </div>
+            </div>
+            <div class="chat-message-wrapper flex-grow-1">
+                <div class="chat-message-text">
+                    <p class="mb-0">{{ $msg->message }}</p>
+                </div>
+                <div class="text-muted mt-1">
+                    <small>{{ $msg->sender->name ?? 'Unknown' }} • {{ $msg->created_at->format('h:i A') }}</small>
+                </div>
+            </div>
+        </div>
+    </li>
+@endforeach
                         </ul>
                     </div>
 
                     <div class="chat-history-footer border-top">
-                        <form class="form-send-message d-flex" action="{{ route('chat.send', $project->project_id) }}" method="POST">
+                        <form class="form-send-message d-flex" action="{{ route('chat.send', $project->project_id) }}" method="POST" onsubmit="return handleChatSubmit(event, this)">
                             @csrf
                             <input class="form-control message-input border-0 me-3 shadow-none" name="message" placeholder="Type your message here..." autocomplete="off" required>
                             <button type="submit" class="btn btn-primary">

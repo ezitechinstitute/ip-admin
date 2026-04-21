@@ -6,18 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProjectChat extends Model
 {
-    protected $table = 'project_chats';
-    protected $fillable = ['project_id'];
+    protected $table = 'chats'; // Repurposed table
+    protected $fillable = ['project_id', 'created_by', 'chat_type'];
 
-    // Link back to your existing InternProject
-    public function project()
-    {
+    public function project() {
         return $this->belongsTo(InternProject::class, 'project_id', 'project_id');
     }
 
-    // A chat has many messages
-    public function messages()
-    {
+    public function messages() {
         return $this->hasMany(ChatMessage::class, 'chat_id', 'id');
+    }
+
+    // New: Participants logic
+    public function participants() {
+        return $this->hasMany(ChatParticipant::class, 'chat_id');
     }
 }

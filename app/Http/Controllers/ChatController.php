@@ -130,9 +130,6 @@ class ChatController extends Controller
             ]);
         }
 
-        return response()->json([
-    'status' => 'success',
-    'message' => $message->load('sender') // Load the sender relationship!
-]);
+        return back();
     }
 }

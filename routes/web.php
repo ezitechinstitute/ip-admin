@@ -467,9 +467,23 @@ Route::prefix('/intern-register')->group(function () {
 // PROJECT CHAT ROUTES (Shared across all portals)
 // ==========================================
 
+
+
 Route::get('/project-chat/{projectId}', [ChatController::class, 'show'])->name('chat.show');
-Route::post('/project-chat/{projectId}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+// Route::post('/project-chat/{projectId}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
 Route::get('/communication-center', [ChatController::class, 'index'])->name('chat.index');
+
+
+// --- SHARED CHAT ROUTES ---
+Route::middleware(['auth:web,manager,intern'])->group(function () {
+    
+    // The main room view (The Sidebar link)
+    Route::get('/communication-center/{project_id}', [SupervisorProjectController::class, 'showChat'])
+        ->name('chat.show');
+
+    // The Send Message action (The Form submit)
+    Route::post('/communication-center/{project_id}/send', [SupervisorProjectController::class, 'sendMessage'])->name('chat.send');
+});
 
 
 
@@ -858,6 +872,16 @@ Route::post('/escalations/{id}/resolve', [EscalationController::class, 'resolve'
 
 Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function () {
 
+// The route to display the chat room for a specific project
+// Route::get('/projects/chat/{project_id}', [SupervisorProjectController::class, 'showChat'])
+//         ->name('supervisor.projects.chat.room');
+
+//     // ADD THIS: The route for the "Initiate Chat" form
+//     Route::post('/projects/chat/initiate/{project_id}', [SupervisorProjectController::class, 'initiateChat'])
+//         ->name('supervisor.projects.chat.initiate');
+
+        //ends chat routes
+
     Route::get('/dashboard', [DashboardSupervisorController::class, 'index'])->name('supervisor.dashboard');
 
     Route::get('/my-interns', [SupervisorInternController::class, 'myInterns'])->name('supervisor.myInterns');
@@ -870,7 +894,26 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
     Route::get('/progress-monitoring', [SupervisorInternController::class, 'progressMonitoring'])->name('supervisor.progressMonitoring');
 
     Route::get('/projects', [SupervisorProjectController::class, 'index'])->name('supervisor.projects');
-    Route::post('/supervisor/projects/store', [SupervisorProjectController::class, 'store'])->name('supervisor.projects.store');
+    
+
+    // 1. The List Page (GET)
+    Route::get('/projects', [SupervisorProjectController::class, 'index'])->name('supervisor.projects');
+
+    // 2. The Store Action (POST) - This matches the form I just sent you
+    Route::post('/projects/save', [SupervisorProjectController::class, 'store'])->name('supervisor.projects.store');
+
+    // 3. The Initiate Chat Action (POST)
+    Route::post('/projects/chat-initiate/{project_id}', [SupervisorProjectController::class, 'initiateChat'])->name('supervisor.projects.chat.initiate');
+    // 4. The Chat Room (GET)
+    // Route::get('/projects/chat-room/{project_id}', [SupervisorProjectController::class, 'showChat'])
+    // ->name('chat.show');
+
+// changing for now show shat
+    // Route::get('/projects/chat/{project_id}', [SupervisorProjectController::class, 'showChat'])->name('supervisor.projects.chat.room');
+    
+    
+    
+    // Route::post('/supervisor/projects/store', [SupervisorProjectController::class, 'store'])->name('supervisor.projects.store');
     Route::get('/supervisor/projects/{project_id}/tasks', [SupervisorProjectController::class, 'tasks'])->name('supervisor.projects.tasks');
     Route::post('/supervisor/projects/{project_id}/tasks/store', [SupervisorProjectController::class, 'storeTask'])->name('supervisor.projects.tasks.store');
     Route::post('/supervisor/projects/{project_id}/tasks/load-curriculum', [SupervisorProjectController::class, 'loadCurriculum'])->name('supervisor.projects.tasks.loadCurriculum');

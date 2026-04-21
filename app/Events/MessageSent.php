@@ -17,10 +17,27 @@ class MessageSent implements ShouldBroadcast
     public $message;
     public $projectId;
 
+    public function broadcastWith(): array
+    {
+        return [
+            'message' => [
+                'id'      => $this->message->id,
+                'message' => $this->message->message,
+                'sender'  => [
+                    'name' => $this->message->sender->name ?? 'User',
+                    // DO NOT add the image/base64 field here
+                ],
+            ],
+            'projectId' => $this->projectId,
+        ];
+    }
+
     public function __construct(ChatMessage $message, $projectId)
     {
         $this->message = $message;
         $this->projectId = $projectId;
+        // Tip: Eager load sender here so the name pops up in real-time
+        $this->message->load('sender');
     }
 
     public function broadcastOn()
