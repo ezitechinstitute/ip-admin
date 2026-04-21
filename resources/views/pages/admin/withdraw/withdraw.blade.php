@@ -73,8 +73,10 @@
             </style>
             <select name="status" id="statusFilter" class="form-select">
               <option value="">Select Status</option>
-              <option value="1" {{ request('status')=='1' ? 'selected' : '' }}>Completed</option>
               <option value="0" {{ request('status')=='0' ? 'selected' : '' }}>Pending</option>
+              <option value="1" {{ request('status')=='1' ? 'selected' : '' }}>Approved</option>
+              <option value="2" {{ request('status')=='2' ? 'selected' : '' }}>Rejected</option>
+              <option value="3" {{ request('status')=='3' ? 'selected' : '' }}>Paid</option>
             </select>
 
             @php
@@ -195,21 +197,18 @@
                 </td>
                 <td>
                   @php
-                  // Map statuses to Bootstrap badge classes
-                  $statusClasses = [
-                  '1' => 'bg-label-success',
-                  '0' => 'bg-label-danger',
+                  // Map all 4 statuses to Bootstrap badge classes
+                  $statusMap = [
+                    0 => ['label' => 'Pending', 'class' => 'bg-label-warning'],
+                    1 => ['label' => 'Approved', 'class' => 'bg-label-success'],
+                    2 => ['label' => 'Rejected', 'class' => 'bg-label-danger'],
+                    3 => ['label' => 'Paid', 'class' => 'bg-label-info'],
                   ];
-
-                  $status = strtolower($withdraw->req_status); // ensure lowercase
-                  $badgeClass = $statusClasses[$status] ?? 'bg-label-secondary';
+                  
+                  $statusData = $statusMap[$withdraw->req_status] ?? ['label' => 'Unknown', 'class' => 'bg-label-secondary'];
                   @endphp
 
-                  <span class="badge {{ $badgeClass }} text-capitalize">@if ($withdraw->req_status == 1)
-                    Completed
-                    @else
-                    pending
-                    @endif</span>
+                  <span class="badge {{ $statusData['class'] }} text-capitalize">{{ $statusData['label'] }}</span>
                 <td>
                   {{-- @php
                   // Map statuses to Bootstrap badge classes
@@ -235,7 +234,43 @@
 
                 {{-- <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td> --}}
                 <td>
-                  <div class="d-flex align-items-center">
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-icon btn-text-secondary dropdown-toggle hide-arrow"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                      <i class="icon-base ti tabler-dots-vertical"></i>
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      @if($withdraw->req_status == 0)
+                        <!-- Pending Request -->
+                        <li>
+                          <button class="dropdown-item btn-action-approve" data-id="{{ $withdraw->req_id }}">
+                            <i class="icon-base ti tabler-check me-2 text-success"></i> Approve
+                          </button>
+                        </li>
+                        <li>
+                          <button class="dropdown-item btn-action-reject text-danger" data-id="{{ $withdraw->req_id }}" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="icon-base ti tabler-x me-2"></i> Reject
+                          </button>
+                        </li>
+                      @elseif($withdraw->req_status == 1)
+                        <!-- Approved Request -->
+                        <li>
+                          <button class="dropdown-item btn-action-pay" data-id="{{ $withdraw->req_id }}">
+                            <i class="icon-base ti tabler-credit-card me-2 text-primary"></i> Mark as Paid
+                          </button>
+                        </li>
+                      @elseif($withdraw->req_status == 2)
+                        <!-- Rejected -->
+                        <li><span class="dropdown-item disabled">Rejected</span></li>
+                      @elseif($withdraw->req_status == 3)
+                        <!-- Paid -->
+                        <li><span class="dropdown-item disabled">Paid</span></li>
+                      @endif
+                    </ul>
+                  </div>
                     {{-- <a href="javascript:;"
                       class="btn btn-text-secondary rounded-pill waves-effect btn-icon delete-record"
                       data-id="{{ $intern->id }}">
@@ -361,77 +396,119 @@
 @push('scripts')
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const editModal = document.getElementById('editInternModal');
-    
-    if (editModal) {
-        editModal.addEventListener('show.bs.modal', function (event) {
-            // Button that triggered the modal
-            const button = event.relatedTarget;
-            
-            // Extract info from data-* attributes
-            const id = button.getAttribute('data-id');
-            const name = button.getAttribute('data-name');
-            const email = button.getAttribute('data-email');
-            const technology = button.getAttribute('data-technology');
-            const status = button.getAttribute('data-status');
-
-            // Update the modal's content
-            const modalBody = editModal.querySelector('.modal-body');
-            
-            modalBody.querySelector('#int_id').value = id;
-            modalBody.querySelector('#name').value = name;
-            modalBody.querySelector('#email').value = email;
-            modalBody.querySelector('#int_technology').value = technology;
-            
-            // Set the dropdown value
-            const statusSelect = modalBody.querySelector('#int_status');
-            if (statusSelect) {
-                statusSelect.value = status;
-            }
-        });
+    // Helper function to submit form
+    function submitForm(url, method, data = {}) {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = url;
+      
+      // Add CSRF token
+      const token = document.querySelector('meta[name="csrf-token"]')?.content;
+      if (token) {
+        form.innerHTML += `<input type="hidden" name="_token" value="${token}">`;
+      }
+      
+      // Add method spoofing for PUT/DELETE
+      if (method !== 'POST') {
+        form.innerHTML += `<input type="hidden" name="_method" value="${method}">`;
+      }
+      
+      // Add any additional data
+      for (let key in data) {
+        form.innerHTML += `<input type="hidden" name="${key}" value="${data[key]}">`;
+      }
+      
+      document.body.appendChild(form);
+      form.submit();
     }
-});
-</script>
-@endpush
 
-@push('scripts')
-<script>
-  let timer;
-
-  document.getElementById('searchInput').addEventListener('keyup', function () {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      document.getElementById('filterForm').submit();
-    }, 500); // wait 500ms after typing
-  });
-
-  document.getElementById('statusFilter').addEventListener('change', function () {
-    document.getElementById('filterForm').submit();
-  });
-</script>
-
-<script>
-  function downloadWithdrawCSV() {
-    // Current filter values collect karein
-    const search = document.getElementById('searchInput').value;
-    const status = document.getElementById('statusFilter').value;
-
-    // URL parameters banayein
-    const params = new URLSearchParams({
-        search: search,
-        status: status
+    // Approve button from dropdown
+    document.querySelectorAll('.btn-action-approve').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const id = this.dataset.id;
+        if (confirm('Approve this withdrawal request?')) {
+          submitForm(`/admin/withdraw/${id}/approve`, 'PUT');
+        }
+      });
     });
 
-    // Export route par redirect karein
-    window.location.href = "{{ route('admin.withdraw.export') }}?" + params.toString();
-}
+    // Reject button from dropdown
+    document.querySelectorAll('.btn-action-reject').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const id = this.dataset.id;
+        document.getElementById('rejectWithdrawId').value = id;
+      });
+    });
+
+    // Reject form submission
+    const rejectForm = document.getElementById('rejectForm');
+    if (rejectForm) {
+      rejectForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const id = document.getElementById('rejectWithdrawId').value;
+        const reason = document.getElementById('rejectReason').value;
+
+        if (reason.trim()) {
+          // Reset form and close modal before submitting
+          rejectForm.reset();
+          const rejectModal = bootstrap.Modal.getInstance(document.getElementById('rejectModal'));
+          if (rejectModal) rejectModal.hide();
+          
+          submitForm(`/admin/withdraw/${id}/reject`, 'POST', { reason: reason });
+        } else {
+          alert('Please enter a reason for rejection');
+        }
+      });
+    }
+
+    // Mark as Paid button from dropdown
+    document.querySelectorAll('.btn-action-pay').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const id = this.dataset.id;
+        if (confirm('Mark this withdrawal as paid?')) {
+          submitForm(`/admin/withdraw/${id}/pay`, 'PUT');
+        }
+      });
+    });
+  });
+
+  function downloadWithdrawCSV() {
+    const search = document.getElementById('searchInput').value;
+    const status = document.getElementById('statusFilter').value;
+    let url = `{{ route('admin.withdraw.export') }}`;
+    if (search) url += `?search=${search}`;
+    if (status) url += `${search ? '&' : '?'}status=${status}`;
+    window.location.href = url;
+  }
 </script>
 @endpush
 
-
-
-
-
-
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reject Withdrawal Request</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="rejectForm">
+        <input type="hidden" id="rejectWithdrawId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Reason for Rejection <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="rejectReason" required placeholder="Enter reason..." rows="4"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Reject Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 @endsection

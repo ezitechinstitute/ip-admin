@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class ValidManager
+class ValidIntern
 {
     /**
      * Handle an incoming request.
@@ -16,25 +16,23 @@ class ValidManager
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if the manager is authenticated via the manager guard
-        if (!Auth::guard('manager')->check()) {
-            return redirect()->route('login')->withErrors(['error' => 'Please login as Manager first!']);
+        // Check if the intern is authenticated via the intern guard
+        if (!Auth::guard('intern')->check()) {
+            return redirect()->route('login')->withErrors(['error' => 'Please login as Intern first!']);
         }
 
         // Validate that the session guard matches the expected guard
         $sessionGuard = session('auth_guard');
-        if ($sessionGuard && $sessionGuard !== 'manager' && $sessionGuard !== 'supervisor') {
+        if ($sessionGuard && $sessionGuard !== 'intern') {
             // Session belongs to a different guard, logout and redirect
-            Auth::guard('manager')->logout();
+            Auth::guard('intern')->logout();
             session()->invalidate();
             return redirect()->route('login')->withErrors(['error' => 'Session guard mismatch. Please login again.']);
         }
 
-        // If session guard is not set, set it now based on loginas
+        // If session guard is not set, set it now
         if (!$sessionGuard) {
-            $loginas = session('loginas', 'Manager');
-            $guardType = $loginas === 'Supervisor' ? 'supervisor' : 'manager';
-            session(['auth_guard' => $guardType]);
+            session(['auth_guard' => 'intern']);
         }
 
         return $next($request);

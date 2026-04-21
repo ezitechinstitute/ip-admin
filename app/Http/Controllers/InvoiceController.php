@@ -58,7 +58,6 @@ class InvoiceController extends Controller
     ));
 }
 
-
     public function exportInvoiceCSV(Request $request)
 {
     $fileName = 'invoices_export_' . date('Y-m-d_H-i-s') . '.csv';
