@@ -4,8 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\AdminSetting;
 use App\Models\Withdraw;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Mail\WithdrawApprovedMail;
+use App\Mail\WithdrawRejectedMail;
+use Illuminate\Support\Facades\Mail;
 
 class WithdrawAdminController extends Controller
 {
@@ -99,5 +104,115 @@ class WithdrawAdminController extends Controller
 
             fclose($file);
         }, $filename, $headers);
+    }
+
+    // ========== APPROVAL WORKFLOW ==========
+    
+    public function approve($id)
+    {
+        $withdraw = Withdraw::findOrFail($id);
+        
+        // Update status to approved (1)
+        $withdraw->req_status = 1;
+        $withdraw->save();
+
+        // Log transaction
+        Transaction::create([
+            'invoice_id' => null,
+            'type' => 'withdraw',
+            'method' => 'bank_transfer',
+            'amount' => $withdraw->amount,
+            'notes' => "Withdrawal payout approved - {$withdraw->ac_name} ({$withdraw->bank})",
+            'created_by' => Auth::id(),
+            'created_by_name' => Auth::user()->name ?? 'Admin'
+        ]);
+
+        // Send notification email
+        try {
+            Mail::to($withdraw->manager->email)->send(new WithdrawApprovedMail($withdraw));
+        } catch (\Exception $e) {
+            // Log email failure but don't stop the process
+        }
+
+        // Activity log (only if table exists)
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
+                DB::table('activity_logs')->insert([
+                    'user_id' => Auth::id(),
+                    'action' => 'Approved withdrawal request',
+                    'details' => "Withdraw ID: {$id}, Amount: {$withdraw->amount}",
+                    'created_at' => now()
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail if activity logging has issues
+        }
+
+        return back()->with('success', 'Withdrawal request approved!');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500'
+        ]);
+
+        $withdraw = Withdraw::findOrFail($id);
+        
+        // Update status to rejected (2)
+        $withdraw->req_status = 2;
+        $withdraw->save();
+
+        // Send notification email
+        try {
+            Mail::to($withdraw->manager->email)->send(new WithdrawRejectedMail($withdraw, $request->reason));
+        } catch (\Exception $e) {
+            // Log email failure
+        }
+
+        // Activity log (only if table exists)
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
+                DB::table('activity_logs')->insert([
+                    'user_id' => Auth::id(),
+                    'action' => 'Rejected withdrawal request',
+                    'details' => "Withdraw ID: {$id}, Reason: {$request->reason}",
+                    'created_at' => now()
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail if activity logging has issues
+        }
+
+        return back()->with('success', 'Withdrawal request rejected!');
+    }
+
+    public function markPaid($id)
+    {
+        $withdraw = Withdraw::findOrFail($id);
+        
+        if ($withdraw->req_status != 1) {
+            return back()->with('error', 'Only approved requests can be marked as paid.');
+        }
+
+        // Update status to paid (3)
+        $withdraw->req_status = 3;
+        $withdraw->save();
+
+        // Activity log (only if table exists)
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
+                DB::table('activity_logs')->insert([
+                    'user_id' => Auth::id(),
+                    'action' => 'Marked withdrawal as paid',
+                    'details' => "Withdraw ID: {$id}, Amount: {$withdraw->amount}",
+                    'created_at' => now()
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail if activity logging has issues
+        }
+
+        return back()->with('success', 'Withdrawal marked as paid!');
     }
 }

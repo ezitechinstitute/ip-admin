@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Mail\WithdrawSubmittedMail;
+use Illuminate\Support\Facades\Mail;
 
 class WithdrawManagerController extends Controller
 {
@@ -30,7 +32,7 @@ class WithdrawManagerController extends Controller
             'amount' => 'required|numeric|min:1',
         ]);
 
-        DB::table('withdraw_requests')->insert([
+        $withdraw = DB::table('withdraw_requests')->insertGetId([
             'eti_id' => 'ETI-' . time(),
             'req_by' => Auth::id() ?? 1,
             'bank' => $request->bank,
@@ -44,6 +46,28 @@ class WithdrawManagerController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        // Send notification to admin
+        try {
+            $adminEmail = 'admin@ezitech.org'; // Configure this in env
+            Mail::to($adminEmail)->send(new WithdrawSubmittedMail($request->all(), Auth::user()));
+        } catch (\Exception $e) {
+            // Log error but don't fail the submission
+        }
+
+        // Activity log (only if table exists)
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
+                DB::table('activity_logs')->insert([
+                    'user_id' => Auth::id(),
+                    'action' => 'Submitted withdrawal request',
+                    'details' => "Amount: {$request->amount}, Bank: {$request->bank}",
+                    'created_at' => now()
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail if activity logging has issues
+        }
 
         return back()->with('success', 'Request Submitted!');
     }

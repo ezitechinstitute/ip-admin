@@ -505,6 +505,7 @@ Route::get('/intern-projects/export-csv', [InternProjectsController::class, 'exp
 
 //Invoice routes
 Route::get('/invoice',[InvoiceController::class,'invoice'])->name('invoice-page');
+Route::get('/invoices/approval-queue',[InvoiceController::class,'approvalQueue'])->name('admin.invoices.approval-queue');
 Route::get('/export-invoices', [InvoiceController::class, 'exportInvoiceCSV'])->name('admin.export-invoices');
 
 
@@ -609,6 +610,9 @@ Route::put('/transactions/update/{id}', [AccountsController::class, 'updateTrans
 //withdrw routes
 Route::get('withdraw',[WithdrawAdminController::class,'index'])->name('admin.withdraw');
 Route::get('withdraw/export-csv', [WithdrawAdminController::class, 'exportWithdrawCSV'])->name('admin.withdraw.export');
+Route::put('withdraw/{id}/approve', [WithdrawAdminController::class, 'approve'])->name('admin.withdraw.approve');
+Route::post('withdraw/{id}/reject', [WithdrawAdminController::class, 'reject'])->name('admin.withdraw.reject');
+Route::put('withdraw/{id}/pay', [WithdrawAdminController::class, 'markPaid'])->name('admin.withdraw.pay');
 
 // Feeback & complaint
 Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.admin');
