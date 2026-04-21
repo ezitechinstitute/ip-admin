@@ -1,5 +1,29 @@
 <?php
 
+
+/**
+ * ============================================
+ * NOTIFICATION SYSTEM UPDATE - PHASE 3
+ * ============================================
+ * Date: 2026-04-18
+ * 
+ * CHANGES MADE:
+ * - Added deduplication check using reminder_sent_at column
+ * - Mark invoice as reminded after sending email
+ * 
+ * REASON:
+ * - Pehle har roz same invoice ke liye email bhejta tha
+ * - Ek invoice ke liye 30+ duplicate emails ja sakti thin
+ * - reminder_sent_at column se check karte hain ke already bheji hai ya nahi
+ * - Email bhejne ke baad column update karte hain
+ * 
+ * FIXES ISSUE: Duplicate invoice reminders 
+ * 
+ * BEFORE: No deduplication, unlimited emails per invoice
+ * AFTER: Sirf ek baar reminder bhejta hai
+ * ============================================
+ */
+
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -23,9 +47,14 @@ class SendInvoiceReminders extends Command
 
         $this->info("🔔 Sending invoice reminders for invoices due on {$targetDate}...");
 
-        try {
+         try {
+            // [FIXED] ADDED: Deduplication check - sirf un invoices ko bhejo jinhe reminder nahi bheji
             $invoices = Invoice::where('remaining_amount', '>', 0)
                         ->whereDate('due_date', $targetDate)
+                        ->where(function($q) {
+                            $q->whereNull('reminder_sent_at')           // Kabhi reminder nahi bheja
+                              ->orWhereDate('reminder_sent_at', '<', today());  // Ya aaj se pehle bheja tha
+                        })
                         ->get();
 
             $remindersSent = 0;
@@ -59,6 +88,8 @@ class SendInvoiceReminders extends Command
                             Log::info("Invoice reminder sent to intern: {$intern->email}", ['invoice_id' => $invoice->id]);
                         }
                     }
+                    // [FIXED] ADDED: Reminder bhejne ke baad mark karo - duplicate emails rokne ke liye
+                    $invoice->update(['reminder_sent_at' => now()]);
 
                 } catch (\Exception $e) {
                     Log::error("Error sending reminder for invoice {$invoice->id}: {$e->getMessage()}");

@@ -8,114 +8,52 @@ use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Models\InternAccount;
 use App\Models\AdminSetting;
+use App\Services\Invoices\InvoiceStatsService;
+use App\Services\Invoices\InvoiceQueryService;
+use App\Services\Invoices\InvoicePaymentService;
+use App\Services\Invoices\InvoicePDFService;
+use App\Services\ManagerPermissionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
     /**
      * Dashboard with complete statistics
      */
-    public function dashboard(Request $request)
-    {
-        $manager = Auth::guard('manager')->user();
-        
-        // Check if manager has auto-approval permission
-        $hasAutoApproval = false;
-        if ($manager) {
-            try {
-                $hasAutoApproval = DB::table('manager_roles')
-                    ->where('manager_id', $manager->manager_id)
-                    ->where('permission_key', 'invoice_auto_approval')
-                    ->exists();
-            } catch (\Exception $e) {
-                $hasAutoApproval = false;
-            }
-        }
+   public function dashboard(Request $request)
+{
+    $manager = Auth::guard('manager')->user();
+    
+    // Check if manager has auto-approval permission - NOW USING SERVICE
+    $hasAutoApproval = ManagerPermissionService::hasAutoApproval($manager);
 
-        // Complete statistics
-        $stats = [
-            'total' => Invoice::count(),
-            'paid' => Invoice::where('remaining_amount', '<=', 0)->count(),
-            'pending' => Invoice::where('remaining_amount', '>', 0)
-                                ->where('due_date', '>=', now())
-                                ->count(),
-            'overdue' => Invoice::where('due_date', '<', now())
-                                ->where('remaining_amount', '>', 0)
-                                ->count(),
-            'pending_approval' => Invoice::where('approval_status', 'pending')->count(),
-            'total_amount' => Invoice::sum('total_amount'),
-            'received_amount' => Invoice::sum('received_amount'),
-            'remaining_amount' => Invoice::sum('remaining_amount'),
-        ];
+    // Get statistics using Service
+    $stats = InvoiceStatsService::get();
 
-        // Query builder with filters
-        $query = Invoice::query();
+    // Build query with filters using Service
+    $query = InvoiceQueryService::filter($request);
 
-        // Date range filter
-        if ($request->filled('from_date')) {
-            $query->whereDate('created_at', '>=', $request->from_date);
-        }
-        if ($request->filled('to_date')) {
-            $query->whereDate('created_at', '<=', $request->to_date);
-        }
+    $pageLimit = AdminSetting::first();
+    $perPage = $request->input('per_page', $pageLimit->pagination_limit ?? 15);
+    
+    $invoices = $query->orderBy('created_at', 'desc')
+                     ->paginate($perPage)
+                     ->withQueryString();
 
-        // Status filter
-        if ($request->filled('status')) {
-            switch ($request->status) {
-                case 'paid':
-                    $query->where('remaining_amount', '<=', 0);
-                    break;
-                case 'pending':
-                    $query->where('remaining_amount', '>', 0)
-                          ->where('due_date', '>=', now());
-                    break;
-                case 'overdue':
-                    $query->where('due_date', '<', now())
-                          ->where('remaining_amount', '>', 0);
-                    break;
-                case 'pending_approval':
-                    $query->where('approval_status', 'pending');
-                    break;
-            }
-        }
-
-        // Invoice type filter
-        if ($request->filled('invoice_type')) {
-            $query->where('invoice_type', $request->invoice_type);
-        }
-
-        // Technology filter
-        if ($request->filled('technology')) {
-            $query->where('technology', $request->technology);
-        }
-
-        // Search filter
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('inv_id', 'LIKE', "%{$search}%")
-                  ->orWhere('name', 'LIKE', "%{$search}%")
-                  ->orWhere('intern_email', 'LIKE', "%{$search}%");
-            });
-        }
-
-        $pageLimit = AdminSetting::first();
-        $perPage = $request->input('per_page', $pageLimit->pagination_limit ?? 15);
-        
-        $invoices = $query->orderBy('created_at', 'desc')
-                         ->paginate($perPage)
-                         ->withQueryString();
-
-        // Get unique technologies for filter
-        $technologies = Invoice::distinct()->pluck('technology');
-
-        return view('pages.manager.invoices.dashboard', compact(
-            'invoices', 'stats', 'perPage', 'technologies', 'hasAutoApproval'
-        ));
+    // Get unique technologies for filter
+    $technologies = Invoice::distinct()->pluck('technology');
+    
+    // Prepare chart data
+    $chartData = $this->prepareChartData();
+    
+    // Get recent transactions
+    $recentTransactions = Transaction::latest()->take(5)->get();
+    
+    return view('pages.manager.invoices.dashboard', compact(
+        'invoices', 'stats', 'perPage', 'technologies', 'hasAutoApproval', 'chartData', 'recentTransactions'
+    ));
     }
 
     /**
@@ -126,7 +64,7 @@ class InvoiceController extends Controller
         $manager = Auth::guard('manager')->user();
         
         // Get interns in Test stage who can have draft invoices
-        $interns = collect([]); // Empty collection by default
+        $interns = collect([]);
         
         try {
             $interns = InternAccount::whereIn('int_status', ['Test', 'Active'])
@@ -140,7 +78,7 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Store new invoice with approval logic - FIXED VERSION
+     * Store new invoice with approval logic
      */
     public function store(Request $request)
     {
@@ -200,7 +138,7 @@ class InvoiceController extends Controller
                 $paymentStatus = 'pending';
             }
 
-            // Create invoice - ONLY use columns that exist in your database
+            // Create invoice
             $invoice = Invoice::create([
                 'inv_id' => $invoiceId,
                 'name' => $request->name,
@@ -232,7 +170,6 @@ class InvoiceController extends Controller
                         'created_by_name' => $manager->name ?? 'Manager',
                     ]);
                 } catch (\Exception $e) {
-                    // Log but don't fail - invoice is already created
                     Log::warning('Transaction creation failed: ' . $e->getMessage());
                 }
             }
@@ -244,17 +181,13 @@ class InvoiceController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            // Log the error
             Log::error('Invoice creation failed: ' . $e->getMessage());
-            
-            return back()->with('error', 'Failed to create invoice: ' . $e->getMessage())
-                ->withInput();
+            return back()->with('error', 'Failed to create invoice: ' . $e->getMessage())->withInput();
         }
     }
 
     /**
-     * View invoice details with transaction history - FIXED VERSION
+     * View invoice details with transaction history
      */
     public function show($id)
     {
@@ -265,7 +198,6 @@ class InvoiceController extends Controller
             $transactions = collect([]);
             
             try {
-                // Check if payment_date column exists, if not use created_at
                 $transaction = Transaction::first();
                 $hasPaymentDate = $transaction && in_array('payment_date', $transaction->getAttributes());
                 
@@ -281,7 +213,6 @@ class InvoiceController extends Controller
                         ->get();
                 }
             } catch (\Exception $e) {
-                // Fallback to simple query
                 $transactions = Transaction::where('invoice_id', $id)->get();
             }
             
@@ -301,8 +232,7 @@ class InvoiceController extends Controller
             
         } catch (\Exception $e) {
             Log::error('Error viewing invoice: ' . $e->getMessage());
-            return redirect()->route('invoices.dashboard')
-                ->with('error', 'Invoice not found');
+            return redirect()->route('invoices.dashboard')->with('error', 'Invoice not found');
         }
     }
 
@@ -323,13 +253,12 @@ class InvoiceController extends Controller
             
         } catch (\Exception $e) {
             Log::error('Error loading payment form: ' . $e->getMessage());
-            return redirect()->route('invoices.dashboard')
-                ->with('error', 'Invoice not found');
+            return redirect()->route('invoices.dashboard')->with('error', 'Invoice not found');
         }
     }
 
     /**
-     * Record payment with audit trail - FIXED VERSION
+     * Record payment using Service
      */
     public function recordPayment(Request $request, $id)
     {
@@ -342,8 +271,7 @@ class InvoiceController extends Controller
         try {
             $invoice = Invoice::findOrFail($id);
         } catch (\Exception $e) {
-            return redirect()->route('invoices.dashboard')
-                ->with('error', 'Invoice not found');
+            return redirect()->route('invoices.dashboard')->with('error', 'Invoice not found');
         }
 
         $request->validate([
@@ -353,49 +281,16 @@ class InvoiceController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        try {
-            DB::beginTransaction();
+        $result = InvoicePaymentService::record($invoice, $request, $manager);
 
-            // Update invoice
-            $newReceived = $invoice->received_amount + $request->payment_amount;
-            $newRemaining = $invoice->remaining_amount - $request->payment_amount;
-
-            $invoice->received_amount = $newReceived;
-            $invoice->remaining_amount = $newRemaining;
-            
-            if ($newRemaining <= 0) {
-                $invoice->status = 'paid';
-            }
-            
-            $invoice->save();
-
-            // Create transaction
-            try {
-                Transaction::create([
-                    'invoice_id' => $invoice->id,
-                    'inv_id' => $invoice->inv_id,
-                    'amount' => $request->payment_amount,
-                    'type' => 'payment',
-                    'method' => $request->payment_method,
-                    'notes' => $request->notes,
-                    'payment_date' => $request->payment_date,
-                    'created_by' => $manager->manager_id ?? 0,
-                    'created_by_name' => $manager->name ?? 'Manager',
-                ]);
-            } catch (\Exception $e) {
-                Log::warning('Transaction creation failed: ' . $e->getMessage());
-            }
-
-            DB::commit();
-
+        if ($result['success']) {
             // Attempt to unfreeze intern if payment is now complete
             try {
-                $intern = \App\Models\InternAccount::where('email', $invoice->intern_email)
+                $intern = InternAccount::where('email', $invoice->intern_email)
                     ->orWhere('name', $invoice->name)
                     ->first();
                 
-                if ($intern && $newRemaining <= 0) {
-                    // Invoice is paid, unfreeze if no other overdue invoices exist
+                if ($intern && $invoice->remaining_amount <= 0) {
                     $freezeService = new \App\Services\PortalFreezeService();
                     $freezeService->unfreezeOnPayment($intern->int_id);
                 }
@@ -405,14 +300,9 @@ class InvoiceController extends Controller
 
             return redirect()->route('invoices.view', $id)
                 ->with('success', 'Payment of PKR ' . number_format($request->payment_amount, 2) . ' recorded successfully!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Payment recording failed: ' . $e->getMessage());
-            
-            return back()->with('error', 'Failed to record payment: ' . $e->getMessage())
-                ->withInput();
         }
+
+        return back()->with('error', 'Failed to record payment: ' . $result['message'])->withInput();
     }
 
     /**
@@ -429,8 +319,6 @@ class InvoiceController extends Controller
 
         try {
             $invoice = Invoice::findOrFail($id);
-            $oldDate = $invoice->due_date->format('Y-m-d');
-            
             $invoice->due_date = $request->new_due_date;
             $invoice->save();
 
@@ -563,22 +451,8 @@ class InvoiceController extends Controller
     public function getStats()
     {
         try {
-            $stats = [
-                'total' => Invoice::count(),
-                'paid' => Invoice::where('remaining_amount', '<=', 0)->count(),
-                'pending' => Invoice::where('remaining_amount', '>', 0)
-                                    ->where('due_date', '>=', now())
-                                    ->count(),
-                'overdue' => Invoice::where('due_date', '<', now())
-                                    ->where('remaining_amount', '>', 0)
-                                    ->count(),
-                'total_amount' => Invoice::sum('total_amount'),
-                'received_amount' => Invoice::sum('received_amount'),
-                'remaining_amount' => Invoice::sum('remaining_amount'),
-            ];
-            
+            $stats = InvoiceStatsService::get();
             return response()->json($stats);
-            
         } catch (\Exception $e) {
             Log::error('Error getting stats: ' . $e->getMessage());
             return response()->json(['error' => 'Could not fetch stats'], 500);
@@ -586,66 +460,57 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Send invoice email to intern
+     * Generate PDF invoice using Service
      */
-    private function sendInvoiceEmail($invoice)
+    public function generatePDF($id)
     {
         try {
-            Log::info('Email would be sent to: ' . $invoice->intern_email);
+            $invoice = Invoice::findOrFail($id);
+            return InvoicePDFService::generate($invoice, 'download');
         } catch (\Exception $e) {
-            Log::error('Failed to send email: ' . $e->getMessage());
+            Log::error('PDF generation failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to generate PDF: ' . $e->getMessage());
         }
     }
 
     /**
-     * Generate PDF invoice
+     * View PDF invoice in browser using Service
      */
-   /**
- * Generate PDF invoice
- */
-public function generatePDF($id)
-{
-    try {
-        $invoice = Invoice::findOrFail($id);
+    public function viewPDF($id)
+    {
+        try {
+            $invoice = Invoice::findOrFail($id);
+            return InvoicePDFService::generate($invoice, 'stream');
+        } catch (\Exception $e) {
+            Log::error('PDF view failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to load PDF');
+        }
+    }
+
+    /**
+     * Prepare chart data for dashboard
+     */
+    private function prepareChartData()
+    {
+        $monthlyRaw = Invoice::selectRaw('MONTH(created_at) as m, SUM(received_amount) as total')
+            ->whereYear('created_at', date('Y'))
+            ->groupBy('m')
+            ->orderBy('m')
+            ->get()
+            ->keyBy('m');
+
+        $chartSeries = [];
+        $chartLabels = [];
+        $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         
-        // Set paper size and orientation
-        $pdf = Pdf::loadView('pdf.invoice', compact('invoice'))
-                  ->setPaper('a4', 'portrait')
-                  ->setOptions([
-                      'defaultFont' => 'sans-serif',
-                      'isHtml5ParserEnabled' => true,
-                      'isRemoteEnabled' => true
-                  ]);
-        
-        // Download PDF
-        return $pdf->download('invoice-' . $invoice->inv_id . '.pdf');
-        
-    } catch (\Exception $e) {
-        Log::error('PDF generation failed: ' . $e->getMessage());
-        return back()->with('error', 'Failed to generate PDF: ' . $e->getMessage());
+        for ($i = 1; $i <= 12; $i++) {
+            $chartSeries[] = $monthlyRaw->has($i) ? (float) $monthlyRaw[$i]->total : 0;
+            $chartLabels[] = $monthNames[$i - 1];
+        }
+
+        return [
+            'series' => $chartSeries,
+            'labels' => $chartLabels,
+        ];
     }
 }
-
-/**
- * View PDF invoice in browser
- */
-public function viewPDF($id)
-{
-    try {
-        $invoice = Invoice::findOrFail($id);
-        
-        $pdf = Pdf::loadView('pdf.invoice', compact('invoice'))
-                  ->setPaper('a4', 'portrait');
-        
-        // Stream in browser
-        return $pdf->stream('invoice-' . $invoice->inv_id . '.pdf');
-        
-    } catch (\Exception $e) {
-        Log::error('PDF view failed: ' . $e->getMessage());
-        return back()->with('error', 'Failed to load PDF');
-    }
-}
-
-
-}
-

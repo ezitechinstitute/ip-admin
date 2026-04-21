@@ -162,4 +162,17 @@ public function update(Request $request)
     }, $fileName, $headers);
 }
 
+public function destroy($id)
+{
+    $university = University::findOrFail($id);
+    
+    // Check if university has interns
+    if ($university->interns()->count() > 0) {
+        return redirect()->back()->with('error', 'Cannot delete: University has ' . $university->interns()->count() . ' enrolled interns. Remove or reassign interns first.');
+    }
+    
+    $university->delete();
+    return redirect()->back()->with('success', 'University deleted successfully.');
+}
+
 }

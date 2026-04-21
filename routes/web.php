@@ -230,9 +230,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 
-
-
-
 // Main Page Route
 // Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
 // Route::get('/dashboard/analytics', [Analytics::class, 'index'])->name('dashboard-analytics');
@@ -610,7 +607,7 @@ Route::put('university/update', [UniversityController::class, 'update'])
     ->name('university.update.admin');
     // Route for exporting Universities
 Route::get('/universities/export', [UniversityController::class, 'exportUniversityCSV'])->name('university.export.admin');
-
+Route::delete('/university/{id}', [UniversityController::class, 'destroy'])->name('university.delete');
 
   // Settings Page
  Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
