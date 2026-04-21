@@ -32,6 +32,8 @@ class LoginCover extends Controller
     if ($intern && $request->password == $intern->password) {  // ✅ Changed to plain text
         Auth::guard('intern')->login($intern);
         $request->session()->regenerate();
+        // Store guard information to prevent session collision
+        session(['auth_guard' => 'intern', 'user_id' => $intern->id]);
         return redirect()->route('intern.dashboard');
     }
 
@@ -41,6 +43,8 @@ class LoginCover extends Controller
     if ($admin && $request->password == $admin->password) {  // ✅ Changed to plain text
         Auth::guard('admin')->login($admin);
         $request->session()->regenerate();
+        // Store guard information to prevent session collision
+        session(['auth_guard' => 'admin', 'user_id' => $admin->id]);
         return redirect()->route('dashboard-admin');
     }
 
@@ -57,8 +61,13 @@ class LoginCover extends Controller
         Auth::guard('manager')->login($manager);
         $request->session()->regenerate();
 
+        // Store guard information to prevent session collision
+        $guardType = $manager->loginas === 'Supervisor' ? 'supervisor' : 'manager';
+        
         // Store custom session values for middleware
         session([
+            'auth_guard' => $guardType,
+            'user_id' => $manager->id,
             'manager_id' => $manager->manager_id,
             'loginas' => $manager->loginas,
             'manager_email' => $manager->email,
@@ -89,8 +98,9 @@ class LoginCover extends Controller
     Auth::guard('admin')->logout();
     Auth::guard('intern')->logout();
 
-    $request->session()->forget('admin');
-    $request->session()->regenerate();
+    $request->session()->forget(['admin', 'auth_guard', 'user_id']);
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
     return redirect()->route('login');
 }
@@ -99,8 +109,9 @@ class LoginCover extends Controller
 {
     Auth::guard('manager')->logout();
 
-    $request->session()->forget('manager');
-    $request->session()->regenerate();
+    $request->session()->forget(['manager', 'auth_guard', 'user_id', 'manager_id', 'loginas', 'manager_email', 'manager_name', 'manager_department']);
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
     return redirect()->route('login'); 
 }
@@ -109,8 +120,9 @@ class LoginCover extends Controller
 {
     Auth::guard('intern')->logout();
 
-    $request->session()->forget('intern');
-    $request->session()->regenerate();
+    $request->session()->forget(['intern', 'auth_guard', 'user_id']);
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
     return redirect()->route('login');
 }
