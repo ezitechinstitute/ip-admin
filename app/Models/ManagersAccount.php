@@ -1,5 +1,32 @@
 <?php
 
+/**
+ * ============================================
+ * NOTIFICATION SYSTEM UPDATE - PHASE 2
+ * ============================================
+ * Date: 2026-04-18
+ * 
+ * CHANGES MADE:
+ * - Added routeNotificationForMail() method
+ * 
+ * REASON:
+ * - Laravel ko batana zaroori hai ke email kis column mein store hai
+ * - Managers ko notifications receive hoti hain (new interns, tasks, etc.)
+ * - Without this method, manager email notifications will fail
+ * 
+ * AFFECTED MODULES:
+ * - All email notifications sent to Managers
+ * - NewInternAssignedNotification
+ * - TaskSubmittedNotification
+ * - InternshipCompletionNotification
+ * - CertificateRequestedNotification
+ * - Invoice reminders
+ * 
+ * BEFORE: No routeNotificationForMail() method
+ * AFTER: routeNotificationForMail() returns email
+ * ============================================
+ */
+
 namespace App\Models;
 
 // English comments: Crucial change! Extend Authenticatable instead of base Model
@@ -42,5 +69,14 @@ class ManagersAccount extends Authenticatable
     public function getPasswordAttribute($value)
     {
         return trim($value);
+    }
+
+    
+    // [NEW] ADDED: Route notifications to email
+   
+     
+    public function routeNotificationForMail()
+    {
+        return $this->email;
     }
 }
