@@ -49,6 +49,7 @@ class InvoiceController extends Controller
     $receivedAmount = $sumQuery->sum('received_amount');
     $remainingAmount = $sumQuery->sum('remaining_amount');
 
+    
     // 📄 Pagination & Sorting
     // English: latest('id') is faster than latest() without arguments
     $invoice = $query->latest('id')->paginate($perPage)->withQueryString();

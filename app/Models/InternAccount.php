@@ -139,6 +139,16 @@ class InternAccount extends Authenticatable
         return $this->update(['portal_status' => 'active']);
     }
 
+    // ========== new METHOD ( - Only adding) ==========
+
+/**
+ * Get invoices for this intern - NEW relationship
+ */
+public function invoices()
+{
+    return $this->hasMany(\App\Models\invoice::class, 'intern_email', 'email');
+}
+
     /**
      * [NEW] ADDED: Route notifications to email
      */
