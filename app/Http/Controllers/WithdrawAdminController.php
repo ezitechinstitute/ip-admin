@@ -148,7 +148,7 @@ class WithdrawAdminController extends Controller
             // Silently fail if activity logging has issues
         }
 
-        return redirect()->route('admin.withdraw')->with('success', 'Withdrawal request approved!');
+        return redirect('/admin/withdraw')->with('success', 'Withdrawal request approved!');
     }
 
     public function reject(Request $request, $id)
@@ -184,7 +184,7 @@ class WithdrawAdminController extends Controller
             // Silently fail if activity logging has issues
         }
 
-        return redirect()->route('admin.withdraw')->with('success', 'Withdrawal request rejected!');
+        return redirect('/admin/withdraw')->with('success', 'Withdrawal request rejected!');
     }
 
     public function markPaid($id)
