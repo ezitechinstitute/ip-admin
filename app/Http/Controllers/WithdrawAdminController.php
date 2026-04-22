@@ -117,16 +117,8 @@ class WithdrawAdminController extends Controller
             $withdraw->req_status = 1;
             $withdraw->save();
 
-            // Log transaction
-            Transaction::create([
-                'invoice_id' => null,
-                'type' => 'withdraw',
-                'method' => 'bank_transfer',
-                'amount' => $withdraw->amount,
-                'notes' => "Withdrawal payout approved - {$withdraw->ac_name} ({$withdraw->bank})",
-                'created_by' => Auth::id(),
-                'created_by_name' => Auth::user()->name ?? 'Admin'
-            ]);
+            // Note: Skipping transaction logging for withdrawals since withdraw is not tied to an invoice
+            // Uncomment below if you want to track withdraw transactions with a valid inv_id
 
             // Send notification email
             try {
@@ -211,30 +203,44 @@ class WithdrawAdminController extends Controller
 
     public function markPaid($id)
     {
-        $withdraw = Withdraw::findOrFail($id);
-        
-        if ($withdraw->req_status != 1) {
-            return back()->with('error', 'Only approved requests can be marked as paid.');
-        }
-
-        // Update status to paid (3)
-        $withdraw->req_status = 3;
-        $withdraw->save();
-
-        // Activity log (only if table exists)
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
-                DB::table('activity_logs')->insert([
-                    'user_id' => Auth::id(),
-                    'action' => 'Marked withdrawal as paid',
-                    'details' => "Withdraw ID: {$id}, Amount: {$withdraw->amount}",
-                    'created_at' => now()
-                ]);
+            $withdraw = Withdraw::findOrFail($id);
+            
+            if ($withdraw->req_status != 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only approved requests can be marked as paid.'
+                ], 400);
             }
-        } catch (\Exception $e) {
-            // Silently fail if activity logging has issues
-        }
 
-        return back()->with('success', 'Withdrawal marked as paid!');
+            // Update status to paid (3)
+            $withdraw->req_status = 3;
+            $withdraw->save();
+
+            // Activity log (only if table exists)
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
+                    DB::table('activity_logs')->insert([
+                        'user_id' => Auth::id(),
+                        'action' => 'Marked withdrawal as paid',
+                        'details' => "Withdraw ID: {$id}, Amount: {$withdraw->amount}",
+                        'created_at' => now()
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Silently fail if activity logging has issues
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Withdrawal marked as paid!',
+                'redirect_url' => route('admin.withdraw')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
