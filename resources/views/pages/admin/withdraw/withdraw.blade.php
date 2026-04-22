@@ -396,7 +396,7 @@
 @push('scripts')
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    // Helper function to submit form
+    // Helper function to submit form with proper redirect handling
     function submitForm(url, method, data = {}) {
       const form = document.createElement('form');
       form.method = 'POST';
@@ -419,7 +419,36 @@
       }
       
       document.body.appendChild(form);
-      form.submit();
+      
+      // Submit via fetch to handle JSON response
+      const formData = new FormData(form);
+      
+      fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Show success message
+          alert(data.message);
+          // Redirect to the returned URL
+          window.location.href = data.redirect_url;
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+      })
+      .finally(() => {
+        document.body.removeChild(form);
+      });
     }
 
     // Approve button from dropdown

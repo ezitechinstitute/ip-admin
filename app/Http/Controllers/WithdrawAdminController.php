@@ -110,81 +110,103 @@ class WithdrawAdminController extends Controller
     
     public function approve($id)
     {
-        $withdraw = Withdraw::findOrFail($id);
-        
-        // Update status to approved (1)
-        $withdraw->req_status = 1;
-        $withdraw->save();
-
-        // Log transaction
-        Transaction::create([
-            'invoice_id' => null,
-            'type' => 'withdraw',
-            'method' => 'bank_transfer',
-            'amount' => $withdraw->amount,
-            'notes' => "Withdrawal payout approved - {$withdraw->ac_name} ({$withdraw->bank})",
-            'created_by' => Auth::id(),
-            'created_by_name' => Auth::user()->name ?? 'Admin'
-        ]);
-
-        // Send notification email
         try {
-            Mail::to($withdraw->manager->email)->send(new WithdrawApprovedMail($withdraw));
-        } catch (\Exception $e) {
-            // Log email failure but don't stop the process
-        }
+            $withdraw = Withdraw::findOrFail($id);
+            
+            // Update status to approved (1)
+            $withdraw->req_status = 1;
+            $withdraw->save();
 
-        // Activity log (only if table exists)
-        try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
-                DB::table('activity_logs')->insert([
-                    'user_id' => Auth::id(),
-                    'action' => 'Approved withdrawal request',
-                    'details' => "Withdraw ID: {$id}, Amount: {$withdraw->amount}",
-                    'created_at' => now()
-                ]);
+            // Log transaction
+            Transaction::create([
+                'invoice_id' => null,
+                'type' => 'withdraw',
+                'method' => 'bank_transfer',
+                'amount' => $withdraw->amount,
+                'notes' => "Withdrawal payout approved - {$withdraw->ac_name} ({$withdraw->bank})",
+                'created_by' => Auth::id(),
+                'created_by_name' => Auth::user()->name ?? 'Admin'
+            ]);
+
+            // Send notification email
+            try {
+                Mail::to($withdraw->manager->email)->send(new WithdrawApprovedMail($withdraw));
+            } catch (\Exception $e) {
+                // Log email failure but don't stop the process
             }
-        } catch (\Exception $e) {
-            // Silently fail if activity logging has issues
-        }
 
-        return redirect('/admin/withdraw')->with('success', 'Withdrawal request approved!');
+            // Activity log (only if table exists)
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
+                    DB::table('activity_logs')->insert([
+                        'user_id' => Auth::id(),
+                        'action' => 'Approved withdrawal request',
+                        'details' => "Withdraw ID: {$id}, Amount: {$withdraw->amount}",
+                        'created_at' => now()
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Silently fail if activity logging has issues
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Withdrawal request approved!',
+                'redirect_url' => route('admin.withdraw')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function reject(Request $request, $id)
     {
-        $request->validate([
-            'reason' => 'required|string|max:500'
-        ]);
-
-        $withdraw = Withdraw::findOrFail($id);
-        
-        // Update status to rejected (2)
-        $withdraw->req_status = 2;
-        $withdraw->save();
-
-        // Send notification email
         try {
-            Mail::to($withdraw->manager->email)->send(new WithdrawRejectedMail($withdraw, $request->reason));
-        } catch (\Exception $e) {
-            // Log email failure
-        }
+            $request->validate([
+                'reason' => 'required|string|max:500'
+            ]);
 
-        // Activity log (only if table exists)
-        try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
-                DB::table('activity_logs')->insert([
-                    'user_id' => Auth::id(),
-                    'action' => 'Rejected withdrawal request',
-                    'details' => "Withdraw ID: {$id}, Reason: {$request->reason}",
-                    'created_at' => now()
-                ]);
+            $withdraw = Withdraw::findOrFail($id);
+            
+            // Update status to rejected (2)
+            $withdraw->req_status = 2;
+            $withdraw->save();
+
+            // Send notification email
+            try {
+                Mail::to($withdraw->manager->email)->send(new WithdrawRejectedMail($withdraw, $request->reason));
+            } catch (\Exception $e) {
+                // Log email failure
             }
-        } catch (\Exception $e) {
-            // Silently fail if activity logging has issues
-        }
 
-        return redirect('/admin/withdraw')->with('success', 'Withdrawal request rejected!');
+            // Activity log (only if table exists)
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
+                    DB::table('activity_logs')->insert([
+                        'user_id' => Auth::id(),
+                        'action' => 'Rejected withdrawal request',
+                        'details' => "Withdraw ID: {$id}, Reason: {$request->reason}",
+                        'created_at' => now()
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Silently fail if activity logging has issues
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Withdrawal request rejected!',
+                'redirect_url' => route('admin.withdraw')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function markPaid($id)
