@@ -630,8 +630,8 @@ Route::put('/transactions/update/{id}', [AccountsController::class, 'updateTrans
 //withdrw routes
 Route::get('withdraw',[WithdrawAdminController::class,'index'])->name('admin.withdraw');
 Route::get('withdraw/export-csv', [WithdrawAdminController::class, 'exportWithdrawCSV'])->name('admin.withdraw.export');
-Route::put('withdraw/{id}/approve', [WithdrawAdminController::class, 'approve'])->name('admin.withdraw.approve');
-Route::post('withdraw/{id}/reject', [WithdrawAdminController::class, 'reject'])->name('admin.withdraw.reject');
+Route::any('withdraw/{id}/approve', [WithdrawAdminController::class, 'approve'])->name('admin.withdraw.approve');
+Route::any('withdraw/{id}/reject', [WithdrawAdminController::class, 'reject'])->name('admin.withdraw.reject');
 Route::put('withdraw/{id}/pay', [WithdrawAdminController::class, 'markPaid'])->name('admin.withdraw.pay');
 
 // Feeback & complaint
