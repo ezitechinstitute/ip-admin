@@ -8,6 +8,14 @@
       "permission": "manager_dashboard_view"
     },
     {
+  "name": "Communication Center",
+  "icon": "menu-icon tf-icons ti tabler-messages",
+  "slug": "communication-center",
+  "url": "/communication-center",
+  "permission": "view_manager_communication"
+  
+},
+    {
       "menuHeader": "Intern Management"
     },
     {
@@ -63,13 +71,7 @@
       "url": "manager/supervisors",
       "permission": "view_manager_supervisors"
     },
-    {
-      "name": "Communication",
-      "icon": "menu-icon icon-base ti tabler-message-circle",
-      "slug": "manager/communication",
-      "url": "manager/communication",
-      "permission": "view_manager_communication"
-    },
+    
     {
       "name": "Withdrawal",
       "icon": "menu-icon icon-base ti tabler-wallet",

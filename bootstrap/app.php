@@ -10,12 +10,12 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
-        commands: __DIR__ . '/../routes/console.php',
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-       
         $middleware->alias([
             'validSupervisor' => \App\Http\Middleware\ValidSupervisor::class,
             'validUser' => \App\Http\Middleware\ValidUser::class,
@@ -23,6 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'validIntern' => \App\Http\Middleware\ValidIntern::class,
         ]);
     })
+    // 🔥 ADD THIS SECTION BELOW
+    ->withBroadcasting(
+        '/broadcasting/auth',
+        ['middleware' => ['web', 'auth:admin,manager,intern']],
+    )
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

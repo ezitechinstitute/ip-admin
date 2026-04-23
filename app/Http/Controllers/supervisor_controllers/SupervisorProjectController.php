@@ -1,36 +1,42 @@
 <?php
 
+// namespace App\Http\Controllers\supervisor_controllers;
+
+// use App\Http\Controllers\Controller;
+// use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\DB;
+// use Illuminate\Support\Facades\Auth;
 namespace App\Http\Controllers\supervisor_controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+// ADD THESE MODELS EXPLICITLY:
+use App\Models\InternProject;
+use App\Models\ProjectChat;
+use App\Models\ChatMessage;
+use App\Models\ManagersAccount;
+use App\Models\InternAccount;
+use App\Models\AdminAccount;
+use App\Events\MessageSent;
 
 class SupervisorProjectController extends Controller
 {
+
     public function index()
     {
         $supervisorId = Auth::guard('manager')->id() ?? session('manager_id');
 
         if (!$supervisorId) {
-            return redirect()->route('login')->with('error', 'Authentication error: Supervisor ID not found. Please re-login.');
+            return redirect()->route('login')->with('error', 'Authentication error.');
         }
 
-        // 1. Fetch Projects
-        $projects = DB::table('intern_projects')
+        // FIX: Use the Model instead of DB::table to enable relationships
+        $projects = \App\Models\InternProject::with('chat') // Eager load the chat
             ->join('manager_accounts', 'intern_projects.assigned_by', '=', 'manager_accounts.manager_id')
             ->select(
-                'intern_projects.project_id',
-                'intern_projects.eti_id',
-                'intern_projects.email',
-                'intern_projects.title',
-                'intern_projects.start_date',
-                'intern_projects.end_date',
-                'intern_projects.assigned_by',
-                'intern_projects.pstatus',
-                'intern_projects.tech_stack',
-                'intern_projects.difficulty_level',
+                'intern_projects.*',
                 'manager_accounts.name as supervisor_name'
             )
             ->where('intern_projects.assigned_by', $supervisorId)
@@ -38,7 +44,7 @@ class SupervisorProjectController extends Controller
             ->limit(20)
             ->get();
 
-        // 2. Dynamic Intern Filtering (Based on Supervisor Technology Permissions)
+        // Rest of your existing code for interns...
         $permissionTechIds = \App\Models\SupervisorPermission::where('manager_id', $supervisorId)
             ->pluck('tech_id')
             ->toArray();
@@ -48,18 +54,66 @@ class SupervisorProjectController extends Controller
             ->pluck('technology')
             ->toArray();
 
-        if (empty($allowedTechNames)) {
-            $allowedTechNames = ['___NO_ACCESS___']; 
-        }
-
         $interns = DB::table('intern_accounts')
-            ->select('eti_id', 'name', 'email')
-            ->where('int_status', 'active')
-            ->whereIn('int_technology', $allowedTechNames)
-            ->get();
+    ->select('eti_id', 'name', 'email') // <--- Double-check this line
+    ->where('int_status', 'active')
+    ->whereIn('int_technology', $allowedTechNames)
+    ->get();
 
         return view('content.supervisor.projects', compact('projects', 'interns'));
     }
+//uncomment if new code breaks
+    // public function index()
+    // {
+    //     $supervisorId = Auth::guard('manager')->id() ?? session('manager_id');
+
+    //     if (!$supervisorId) {
+    //         return redirect()->route('login')->with('error', 'Authentication error: Supervisor ID not found. Please re-login.');
+    //     }
+
+    //     // 1. Fetch Projects
+    //     $projects = DB::table('intern_projects')
+    //         ->join('manager_accounts', 'intern_projects.assigned_by', '=', 'manager_accounts.manager_id')
+    //         ->select(
+    //             'intern_projects.project_id',
+    //             'intern_projects.eti_id',
+    //             'intern_projects.email',
+    //             'intern_projects.title',
+    //             'intern_projects.start_date',
+    //             'intern_projects.end_date',
+    //             'intern_projects.assigned_by',
+    //             'intern_projects.pstatus',
+    //             'intern_projects.tech_stack',
+    //             'intern_projects.difficulty_level',
+    //             'manager_accounts.name as supervisor_name'
+    //         )
+    //         ->where('intern_projects.assigned_by', $supervisorId)
+    //         ->orderByDesc('intern_projects.project_id')
+    //         ->limit(20)
+    //         ->get();
+
+    //     // 2. Dynamic Intern Filtering (Based on Supervisor Technology Permissions)
+    //     $permissionTechIds = \App\Models\SupervisorPermission::where('manager_id', $supervisorId)
+    //         ->pluck('tech_id')
+    //         ->toArray();
+
+    //     $allowedTechNames = DB::table('technologies')
+    //         ->whereIn('tech_id', $permissionTechIds)
+    //         ->pluck('technology')
+    //         ->toArray();
+
+    //     if (empty($allowedTechNames)) {
+    //         $allowedTechNames = ['___NO_ACCESS___']; 
+    //     }
+
+    //     $interns = DB::table('intern_accounts')
+    //         ->select('eti_id', 'name', 'email')
+    //         ->where('int_status', 'active')
+    //         ->whereIn('int_technology', $allowedTechNames)
+    //         ->get();
+
+    //     return view('content.supervisor.projects', compact('projects', 'interns'));
+    // }
 
     public function store(Request $request)
     {
@@ -403,4 +457,119 @@ class SupervisorProjectController extends Controller
         return redirect()->route('supervisor.projects.tasks', $project_id)
             ->with('success', 'Task deleted successfully.');
     }
+
+    public function initiateChat(Request $request, $id)
+{
+    $request->validate([
+        'participants' => 'required|array',
+    ]);
+
+    $supervisorId = Auth::guard('manager')->id() ?? session('manager_id');
+
+    // 1. Create the Chat record
+    $chat = \App\Models\ProjectChat::create([
+        'project_id' => $id,
+        'created_by' => $supervisorId,
+        'chat_type' => 'project'
+    ]);
+
+    // 2. Add Supervisor (Ensure user_id is NOT null)
+    if ($supervisorId) {
+        \App\Models\ChatParticipant::create([
+            'chat_id' => $chat->id,
+            'user_id' => $supervisorId
+        ]);
+    }
+
+    // 3. Add Interns with a Null Check
+    // Add Interns
+    foreach ($request->participants as $participantValue) {
+        // Search for the intern using the ETI-ID string from the checkbox
+        $intern = \App\Models\InternAccount::where('eti_id', trim($participantValue))->first();
+        
+        // Use 'int_id' as that is your primaryKey in the model
+        if ($intern && $intern->int_id) {
+            \App\Models\ChatParticipant::create([
+                'chat_id' => $chat->id,
+                'user_id' => $intern->int_id
+            ]);
+        }
+    }
+
+    return redirect()->back()->with('success', 'Group chat created successfully.');
+}
+
+    public function showChat($project_id)
+    {
+        // 1. Identify who is logged in across all guards
+        $user = Auth::guard('manager')->user() ?? Auth::guard('intern')->user() ?? Auth::user();
+        
+        if (!$user) return redirect()->route('login');
+
+        // 2. Fetch project and check if user is a participant
+        $project = \App\Models\InternProject::with(['chat.participants', 'chat.messages.sender'])
+            ->where('project_id', $project_id)
+            ->firstOrFail();
+
+        // 3. Security: Only allow participants to enter
+        $isParticipant = $project->chat->participants->contains('user_id', $user->id ?? $user->manager_id ?? $user->int_id);
+        // If you are an Admin (web guard), we usually let them in anyway
+        if (!$isParticipant && !Auth::guard('web')->check()) {
+            abort(403, 'Unauthorized access to this chat.');
+        }
+
+        // 4. Fetch sidebar projects based on role
+        if (Auth::guard('manager')->check()) {
+            $projects = \App\Models\InternProject::where('assigned_by', $user->manager_id)->get();
+        } elseif (Auth::guard('intern')->check()) {
+            $projects = \App\Models\InternProject::where('eti_id', $user->eti_id)->get();
+        } else {
+            $projects = \App\Models\InternProject::all(); // Admin sees everything
+        }
+
+        
+
+        $messages = $project->chat->messages;
+
+        return view('content.chat.room', compact('project', 'projects', 'messages'));
+    }
+
+    // SupervisorProjectController.php
+
+public function sendMessage(Request $request, $project_id)
+    {
+        $request->validate(['message' => 'required|string']);
+
+        // 1. Get Sender Info
+        $senderId = auth()->guard('admin')->id() ?? auth()->guard('manager')->id() ?? auth()->guard('intern')->id();
+        $senderType = auth()->guard('admin')->check() ? \App\Models\AdminAccount::class : 
+                    (auth()->guard('manager')->check() ? \App\Models\ManagersAccount::class : \App\Models\InternAccount::class);
+
+        $project = \App\Models\InternProject::with('chat')->where('project_id', $project_id)->firstOrFail();
+
+        // 2. Save Message
+        $message = \App\Models\ChatMessage::create([
+            'chat_id'     => $project->chat->id,
+            'sender_type' => $senderType,
+            'sender_id'   => $senderId,
+            'message'     => $request->message,
+        ]);
+
+        $message->load('sender');
+
+        // 3. Broadcast (Now working!)
+        broadcast(new \App\Events\MessageSent($message, $project_id))->toOthers();
+
+        return response()->json([
+            'success' => true,
+            'message' => [
+                'id' => $message->id,
+                'message' => $message->message,
+                'sender' => [
+                    'name' => $message->sender->name ?? 'User',
+                ]
+            ]
+        ]);
+    }
+
 }

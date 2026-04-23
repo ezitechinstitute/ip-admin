@@ -4043,10 +4043,13 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-T1DpEqax.js",
+    "file": "assets/app-B3bOBd1D.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "__commonjsHelpers-D6-XlEtG.js"
+    ]
   },
   "resources/js/laravel-user-management.js": {
     "file": "assets/laravel-user-management-Cxu_LAn_.js",
