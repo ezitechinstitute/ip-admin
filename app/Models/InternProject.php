@@ -49,4 +49,9 @@ class InternProject extends Model
             'project_id'    // PK in intern_projects
         );
     }
+    public function chat()
+    {
+        // Points to the Chat/ProjectChat model using project_id as the foreign key
+        return $this->hasOne(ProjectChat::class, 'project_id', 'project_id');
+    }
 }

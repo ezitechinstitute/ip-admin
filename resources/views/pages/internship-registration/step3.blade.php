@@ -77,12 +77,14 @@
         <div class="text-muted" style="font-size:12px;">Recommended path: Training Internship</div>
       </div>
       <div class="d-flex align-items-center gap-2">
-        <span class="fs-4 fw-semibold text-primary" id="pct-label">0%</span>
+<span class="fs-4 fw-semibold text-primary" id="pct-label">
+    {{ $skill_match_percentage ?? 0 }}%
+</span>
         <span class="badge bg-primary bg-opacity-10 text-primary">Strong match</span>
       </div>
     </div>
     <div class="progress" style="height:10px;">
-      <div id="skill-bar" class="progress-bar bg-primary" role="progressbar" style="width:0%;transition:width 1.6s cubic-bezier(0.4,0,0.2,1);" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+<div id="skill-bar" class="progress-bar bg-primary" role="progressbar" style="width: {{ $skill_match_percentage ?? 0 }}%;transition:width 1.6s cubic-bezier(0.4,0,0.2,1);" aria-valuenow="{{ $skill_match_percentage ?? 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
     </div>
     <div class="d-flex justify-content-between mt-1">
       <small class="text-muted">Beginner</small>

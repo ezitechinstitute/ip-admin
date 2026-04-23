@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Gate;
 use App\Models\ManagerRole;
 use App\Models\SupervisorRole;
+use App\Models\InternProject;
+use App\Observers\InternProjectObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +28,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // =========================
+        // PROJECT CHAT OBSERVER
+        // =========================
+        // This automatically creates a chat room when a new project is saved.
+        InternProject::observe(InternProjectObserver::class);
+
+
         // =========================
         // VITE CONFIG (UNCHANGED)
         // =========================

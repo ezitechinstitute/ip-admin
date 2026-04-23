@@ -28,7 +28,9 @@ class ManagerReminderNotification extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return ['mail', 'database']; // email + dashboard notification
+        // return ['mail', 'database']; 
+
+        return ['mail'];
     }
 
     public function toMail($notifiable)
@@ -44,7 +46,7 @@ class ManagerReminderNotification extends Notification implements ShouldQueue
                     ->line('Thank you for your prompt attention to this matter.');
     }
 
-    public function toDatabase($notifiable)
+   /* public function toDatabase($notifiable)
     {
         return [
             'type' => 'manager_reminder',
@@ -55,5 +57,6 @@ class ManagerReminderNotification extends Notification implements ShouldQueue
             'message' => "Pending {$this->escalationType} for {$this->internName} (last {$this->hoursElapsed} hours)",
             'action_url' => "/manager/interns/{$this->internId}",
         ];
-    }
+    }   
+        */
 }

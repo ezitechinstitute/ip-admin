@@ -47,8 +47,8 @@
                         </div>
 
                         <!-- FORM -->
-                        <form id="assessmentForm" action="{{ route('intern.register.step3') }}" method="POST">
-                        @csrf
+<form id="assessmentForm" action="{{ route('intern.register.postStep2') }}" method="POST">
+                            @csrf
 
                         @php
                         $questions = [
