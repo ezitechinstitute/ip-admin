@@ -40,24 +40,38 @@
                             </div>
                         </div>
 
-                        <form id="registerForm" action="{{ route('intern.register.step2') }}" method="GET">
+<form id="registerForm" action="{{ route('intern.register.postStep1') }}" method="POST">
+            @csrf
+
+             <!-- ✅ ADD THIS - DISPLAY ALL ERRORS -->
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error!</strong> Please fix the following issues:
+            <ul class="mb-0 mt-2">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
                             <div class="row mt-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Full Name</label>
-                                    <input type="text" class="form-control form-control-lg" required>
+                                    <input type="text" name="full_name" class="form-control form-control-lg" required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Email</label>
-                                    <input type="email" class="form-control form-control-lg" required>
+                                    <input type="email" name="email" class="form-control form-control-lg" required>
                                 </div>
                             </div>
 
                             <div class="row mt-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Country</label>
-                                    <select class="form-control form-control-lg" required>
+                                    <select name="country" class="form-control form-control-lg" required>
                                         <option value="">Select Country</option>
                                         <option value="AF">Afghanistan</option>
                                         <option value="PK">Pakistan</option>
@@ -83,7 +97,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">City</label>
-                                    <input type="text" class="form-control form-control-lg" required>
+                                    <input type="text" name="city"  class="form-control form-control-lg" required>
                                 </div>
                             </div>
 
@@ -91,7 +105,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">WhatsApp Number</label>
-                                    <input type="tel" id="whatsapp" class="form-control form-control-lg" required>
+                                    <input type="tel" name="whatsapp" id="whatsapp" class="form-control form-control-lg" required>
                                     <small id="whatsappError" class="text-danger d-none">
                                         Invalid WhatsApp number
                                     </small>
@@ -99,7 +113,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">Gender</label>
-                                    <select class="form-control form-control-lg" required>
+                                    <select name="gender" class="form-control form-control-lg" required>
                                         <option value="">Select Gender</option>
                                         <option>Male</option>
                                         <option>Female</option>
@@ -111,19 +125,19 @@
                             <div class="row mt-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Profile Image (Optional)</label>
-                                    <input type="file" class="form-control form-control-lg">
+                                    <input type="file" name="profile_image" class="form-control form-control-lg">
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Join Date</label>
-                                    <input type="date" class="form-control form-control-lg" required>
+                                    <input type="date" name="join_date" class="form-control form-control-lg" required>
                                 </div>
                             </div>
 
                             <div class="row mt-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Date of Birth</label>
-                                    <input type="date" id="dob" class="form-control form-control-lg" required>
+                                    <input type="date" name="dob" id="dob" class="form-control form-control-lg" required>
                                     <small id="ageError" class="text-danger d-none">
                                         Minimum age is 15 years
                                     </small>
@@ -131,7 +145,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">University</label>
-                                    <select class="form-control form-control-lg" required>
+                                    <select name="university" class="form-control form-control-lg" required>
                                         <option value="">Select University</option>
                                         <option>COMSATS University Islamabad</option>
                                         <option>NUST</option>
@@ -150,7 +164,7 @@
                             <div class="row mt-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Interview Type</label>
-                                    <select class="form-control form-control-lg" required>
+                                    <select name="interview_type" class="form-control form-control-lg" required>
                                         <option value="">Select Type</option>
                                         <option>Onsite</option>
                                         <option>Remote</option>
@@ -159,7 +173,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">Technology</label>
-                                    <select id="techSelect" class="form-control form-control-lg" required>
+                                    <select name="technology" id="techSelect" class="form-control form-control-lg" required>
                                         <option value="">Select Technology</option>
                                         <option>MERN Stack</option>
                                         <option>Front-End Development</option>
@@ -172,7 +186,7 @@
                                         <option value="other">Other</option>
                                     </select>
 
-                                    <input type="text" id="customTech"
+                                    <input type="text" name="custom_technology" id="customTech"
                                            class="form-control form-control-lg mt-2"
                                            placeholder="Enter Technology"
                                            style="display:none;">
@@ -182,7 +196,7 @@
                             <div class="row mt-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Duration</label>
-                                    <select class="form-control form-control-lg" required>
+                                    <select name="duration" class="form-control form-control-lg" required>
                                         <option value="">Select Duration</option>
                                         <option>1 Month</option>
                                         <option>2 Month</option>
@@ -193,7 +207,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">Internship Type</label>
-                                    <select class="form-control form-control-lg" required>
+                                    <select name="internship_type" class="form-control form-control-lg" required>
                                         <option value="">Select Type</option>
                                         <option>Onsite</option>
                                         <option>Remote</option>
