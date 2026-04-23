@@ -487,23 +487,20 @@ Route::prefix('/intern-register')->group(function () {
 // ==========================================
 // PROJECT CHAT ROUTES (Shared across all portals)
 // ==========================================
-
-
-
-Route::get('/project-chat/{projectId}', [ChatController::class, 'show'])->name('chat.show');
-// Route::post('/project-chat/{projectId}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
-Route::get('/communication-center', [ChatController::class, 'index'])->name('chat.index');
-
-
-// --- SHARED CHAT ROUTES ---
 Route::middleware(['auth:web,manager,intern'])->group(function () {
     
-    // The main room view (The Sidebar link)
+    // Communication center - Main chat hub for managers/supervisors/interns
+    Route::get('/communication-center', [ChatController::class, 'index'])->name('chat.index');
+    
+    // Project chat view
+    Route::get('/project-chat/{projectId}', [ChatController::class, 'show'])->name('chat.show');
+    
+    // Shared chat routes for project communication
     Route::get('/communication-center/{project_id}', [SupervisorProjectController::class, 'showChat'])
-        ->name('chat.show');
+        ->name('supervisor.chat.show');
 
     // The Send Message action (The Form submit)
-    Route::post('/communication-center/{project_id}/send', [SupervisorProjectController::class, 'sendMessage'])->name('chat.send');
+    Route::post('/communication-center/{project_id}/send', [SupervisorProjectController::class, 'sendMessage'])->name('supervisor.chat.send');
 });
 
 
