@@ -17,7 +17,13 @@
                                  style="max-width: 160px;">
                         </div>
 
-                        <h4 class="text-center">Internship Registration Form</h4>
+                        <h4 class="text-center fw-bold">Ezitech Internship Application</h4>
+                        <p class="text-center text-muted mb-3">Complete this quick assessment to find the best internship path for you.</p>
+
+                        <div class="alert alert-info alert-dismissible fade show" role="alert" style="font-size: 13px;">
+                            <strong>💡 Quick Tip:</strong> This assessment takes about 3–4 minutes and helps us recommend the best internship program based on your skills.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
 
                         <div class="mb-4">
                             <div class="progress" style="height: 20px;">
@@ -29,13 +35,13 @@
 
                             <div class="d-flex justify-content-between mt-2 text-center">
                                 <div class="w-100">
-                                    <small class="fw-bold text-primary">Registration</small>
+                                    <small class="fw-bold text-primary">Step 1: Registration</small>
                                 </div>
                                 <div class="w-100">
-                                    <small>Assessment Test</small>
+                                    <small>Step 2: Assessment</small>
                                 </div>
                                 <div class="w-100">
-                                    <small>Choose Plan</small>
+                                    <small>Step 3: Choose Plan</small>
                                 </div>
                             </div>
                         </div>

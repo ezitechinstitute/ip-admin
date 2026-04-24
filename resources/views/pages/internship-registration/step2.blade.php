@@ -198,6 +198,22 @@
 }
 </style>
 
+<!-- LOADER TRIGGER SCRIPT -->
+<script>
+document.getElementById('assessmentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Show loader
+    const loader = document.getElementById('loaderOverlay');
+    loader.classList.remove('d-none');
+    
+    // Submit after 2 seconds
+    setTimeout(() => {
+        this.submit();
+    }, 2000);
+});
+</script>
+
 <!-- SCRIPT -->
 <script>
 const form = document.getElementById('assessmentForm');

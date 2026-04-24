@@ -196,6 +196,14 @@ class InternPublicRegistrationController extends Controller
         }
 
     Session::forget(['intern_reg_step1', 'intern_reg_step2']);
+    
+    // ✅ Store registration success data in session for success page
+    Session::put('registration_success', [
+        'name' => $step1Data['full_name'] ?? '',
+        'email' => $step1Data['email'] ?? '',
+        'eti_id' => 'ETI-' . $intern->id,
+        'selected_plan' => $request->selected_plan,
+    ]);
 
     return redirect()->route('intern.register.success');
 }
@@ -244,8 +252,14 @@ class InternPublicRegistrationController extends Controller
             if ($level === 'advanced') $advanced++;
         }
         
-        if ($advanced >= 3) return 'industrial';
-        if ($intermediate >= 3) return 'practice';
+        // Recommend based on dominant level (most answers in that category)
+        // This is fairer than requiring a fixed threshold
+        // IMPORTANT: Use >= for tie-breaking (higher level always chosen)
+        if ($advanced >= $intermediate && $advanced >= $beginner) {
+            return 'industrial';
+        } elseif ($intermediate >= $beginner) {
+            return 'practice';
+        }
         return 'training';
     }
     
