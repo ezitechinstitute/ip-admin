@@ -30,7 +30,7 @@ class Kernel extends ConsoleKernel
 
         // Check and enforce portal freeze for overdue invoices - 2x daily at 9 AM and 3 PM
         $schedule->command('portal:freeze-overdue')->dailyAt('09:00');
-        $schedule->command('portal:freeze-overdue')->dailyAt('15:00');
+        $schedule->command('portal:freeze-overdue')->dailyAt('00:01');
     }
 
     /**

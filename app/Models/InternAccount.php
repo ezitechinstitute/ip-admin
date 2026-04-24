@@ -1,5 +1,33 @@
 <?php
 
+/**
+ * ============================================
+ * NOTIFICATION SYSTEM UPDATE - PHASE 2
+ * ============================================
+ * Date: 2026-04-18
+ * 
+ * CHANGES MADE:
+ * - Added routeNotificationForMail() method
+ * 
+ * REASON:
+ * - Laravel ko batana zaroori hai ke email kis column mein store hai
+ * - Interns ko notifications receive hoti hain (task reviews, certificates, etc.)
+ * - Without this method, intern email notifications will fail
+ * 
+ * AFFECTED MODULES:
+ * - All email notifications sent to Interns
+ * - TaskReviewedNotification (when task approved/rejected)
+ * - CertificateApprovedNotification
+ * - PortalFrozenNotification
+ * 
+ * NOTE: isFrozen(), freeze(), unfreeze() methods already EXIST
+ * Unhe change karne ki zaroorat nahi hai
+ * 
+ * BEFORE: No routeNotificationForMail() method
+ * AFTER: routeNotificationForMail() returns email
+ * ============================================
+ */
+
 namespace App\Models;
 
 // English comments: Crucial change! Extend Authenticatable instead of base Model
@@ -117,5 +145,23 @@ class InternAccount extends Authenticatable
     public function activate()
     {
         return $this->update(['portal_status' => 'active']);
+    }
+
+    // ========== new METHOD ( - Only adding) ==========
+
+/**
+ * Get invoices for this intern - NEW relationship
+ */
+public function invoices()
+{
+    return $this->hasMany(\App\Models\invoice::class, 'intern_email', 'email');
+}
+
+    /**
+     * [NEW] ADDED: Route notifications to email
+     */
+    public function routeNotificationForMail()
+    {
+        return $this->email;
     }
 }

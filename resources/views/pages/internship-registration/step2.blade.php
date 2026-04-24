@@ -47,8 +47,8 @@
                         </div>
 
                         <!-- FORM -->
-                        <form id="assessmentForm" action="{{ route('intern.register.step3') }}" method="POST">
-                        @csrf
+<form id="assessmentForm" action="{{ route('intern.register.postStep2') }}" method="POST">
+                            @csrf
 
                         @php
                         $questions = [
@@ -197,6 +197,22 @@
     border-radius: 10px;
 }
 </style>
+
+<!-- LOADER TRIGGER SCRIPT -->
+<script>
+document.getElementById('assessmentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Show loader
+    const loader = document.getElementById('loaderOverlay');
+    loader.classList.remove('d-none');
+    
+    // Submit after 2 seconds
+    setTimeout(() => {
+        this.submit();
+    }, 2000);
+});
+</script>
 
 <!-- SCRIPT -->
 <script>

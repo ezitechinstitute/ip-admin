@@ -7,6 +7,21 @@ $configData = Helper::appClasses();
 $currentPath = request()->path();
 $firstSegment = Request::segment(1);
 
+// ==========================================
+// FIX FOR SHARED ROUTES (Like Chat)
+// If the URL doesn't start with a role, detect it from the logged-in user
+// ==========================================
+if (!in_array($firstSegment, ['admin', 'supervisor', 'manager', 'intern'])) {
+    if (Auth::guard('admin')->check()) {
+        $firstSegment = 'admin';
+    } elseif (Auth::guard('intern')->check()) {
+        $firstSegment = 'intern';
+    } elseif (Auth::guard('manager')->check()) {
+        $userRole = trim(strtolower(Auth::guard('manager')->user()->loginas));
+        $firstSegment = ($userRole === 'supervisor') ? 'supervisor' : 'manager';
+    }
+}
+
 // 1. Menu file decide karein - ADDED INTERN & SUPERVISOR
 if ($firstSegment == 'admin') {
     $menuPath = base_path('resources/menu/verticalMenu.json');

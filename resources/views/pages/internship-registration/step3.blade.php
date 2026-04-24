@@ -8,59 +8,96 @@
 .feat-txt.dim { color:#6c757d; }
 .pulse-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; flex-shrink:0; animation:pulse 2s infinite; display:inline-block; }
 @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+/* Recommended plan styling */
+.plan-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.plan-card:hover { transform: translateY(-5px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+.plan-card.recommended { 
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(13, 110, 253, 0.25);
+}
+.plan-card.recommended .card {
+  border-width: 3px !important;
+}
 </style>
 
-<div class="container py-5" >
+<div class="container py-5">
 
   {{-- Step indicator --}}
   <div class="d-flex align-items-center justify-content-center gap-2 mb-4">
     <div class="d-flex align-items-center gap-2">
       <div class="rounded-circle d-flex align-items-center justify-content-center text-success bg-success bg-opacity-10" style="width:28px;height:28px;font-size:12px;">✓</div>
-      <small class="text-success">Assessment</small>
+      <small class="text-success">Step 1</small>
     </div>
     <div class="border-top" style="width:40px;"></div>
     <div class="d-flex align-items-center gap-2">
       <div class="rounded-circle d-flex align-items-center justify-content-center text-success bg-success bg-opacity-10" style="width:28px;height:28px;font-size:12px;">✓</div>
-      <small class="text-success">Skill check</small>
+      <small class="text-success">Step 2</small>
     </div>
     <div class="border-top" style="width:40px;"></div>
     <div class="d-flex align-items-center gap-2">
       <div class="rounded-circle d-flex align-items-center justify-content-center text-primary bg-primary bg-opacity-10 fw-semibold" style="width:28px;height:28px;font-size:12px;">3</div>
-      <small class="text-primary fw-semibold">Your path</small>
+      <small class="text-primary fw-semibold">Step 3: Choose Plan</small>
     </div>
   </div>
 
   {{-- Header --}}
   <div class="text-center mb-4">
     <span class="badge bg-success bg-opacity-10 text-success mb-2 fs-6 px-3 py-2">✓ Assessment complete</span>
-    <h3 class="fw-semibold">Your recommended internship path</h3>
+    <h3 class="fw-bold">Your Recommended Internship Path</h3>
     <p class="text-muted">Based on your answers, we've matched you with the most suitable program.</p>
   </div>
 
+  {{-- Skill match section --}}
+  <div class="card border rounded-3 p-4 mb-5 bg-light">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <div class="fw-semibold mb-2">Your Skill Assessment Results</div>
+        <p class="text-muted mb-0" style="font-size:13px;">
+          Based on your answers, here's how well you match with the recommended program. Students with similar skill levels usually choose this program.
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end text-center">
+        <div class="d-flex align-items-center justify-content-md-end justify-content-center gap-2 mt-3 mt-md-0">
+          <div>
+            <div class="fw-bold text-primary" style="font-size: 28px;" id="pct-label">{{ $skill_match_percentage ?? 0 }}%</div>
+            <div class="text-muted small">Skill Match</div>
+          </div>
+          <div>
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">Strong Match</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="progress mt-3" style="height:12px;">
+      <div id="skill-bar" class="progress-bar bg-primary" role="progressbar" style="width: {{ $skill_match_percentage ?? 0 }}%;transition:width 1.6s cubic-bezier(0.4,0,0.2,1);" aria-valuenow="{{ $skill_match_percentage ?? 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+  </div>
+
   {{-- Social proof --}}
-  <div class="row g-3 mb-4">
-    <div class="col-4">
-      <div class="bg-light rounded-3 p-3 text-center">
+  <div class="row g-3 mb-5">
+    <div class="col-md-4">
+      <div class="bg-primary bg-opacity-10 rounded-3 p-3 text-center">
         <div class="fs-4 fw-semibold text-primary">500+</div>
-        <small class="text-muted">Active interns</small>
+        <small class="text-muted">Active Interns</small>
       </div>
     </div>
-    <div class="col-4">
-      <div class="bg-light rounded-3 p-3 text-center">
+    <div class="col-md-4">
+      <div class="bg-success bg-opacity-10 rounded-3 p-3 text-center">
         <div class="fs-4 fw-semibold text-success">120+</div>
-        <small class="text-muted">Successfully placed</small>
+        <small class="text-muted">Successfully Placed</small>
       </div>
     </div>
-    <div class="col-4">
-      <div class="bg-light rounded-3 p-3 text-center">
+    <div class="col-md-4">
+      <div class="bg-warning bg-opacity-10 rounded-3 p-3 text-center">
         <div class="fs-4 fw-semibold text-warning">4.8/5</div>
-        <small class="text-muted">Average rating</small>
+        <small class="text-muted">Average Rating</small>
       </div>
     </div>
   </div>
 
   {{-- Live activity ticker --}}
-  <div class="bg-light rounded-3 p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+  <div class="bg-light rounded-3 p-3 mb-5 d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
       <span class="pulse-dot"></span>
       <span class="fw-semibold small">Active intern developers right now</span>
@@ -69,180 +106,184 @@
     <small class="text-muted" id="live-count">Loading...</small>
   </div>
 
-  {{-- Skill match --}}
-  <div class="card border rounded-3 p-3 mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-      <div>
-        <div class="fw-semibold small">Your skill match</div>
-        <div class="text-muted" style="font-size:12px;">Recommended path: Training Internship</div>
-      </div>
-      <div class="d-flex align-items-center gap-2">
-        <span class="fs-4 fw-semibold text-primary" id="pct-label">0%</span>
-        <span class="badge bg-primary bg-opacity-10 text-primary">Strong match</span>
-      </div>
-    </div>
-    <div class="progress" style="height:10px;">
-      <div id="skill-bar" class="progress-bar bg-primary" role="progressbar" style="width:0%;transition:width 1.6s cubic-bezier(0.4,0,0.2,1);" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
-    <div class="d-flex justify-content-between mt-1">
-      <small class="text-muted">Beginner</small>
-      <small class="text-muted">Advanced</small>
-    </div>
-  </div>
-
   {{-- PAYMENT PLANS SECTION --}}
-<div class="border-top pt-4 mb-3">
-  <h6 class="fw-semibold text-center">Choose your internship plan</h6>
-  <p class="text-muted small text-center">
-    All plans are structured with equal access layout for better comparison.
-  </p>
-</div>
+  <div class="mb-4">
+    <h5 class="fw-bold text-center mb-2">Choose Your Internship Plan</h5>
+    <p class="text-muted small text-center">Select the plan that best matches your goals and learning preferences</p>
+  </div>
 
-<div class="row g-3 align-items-stretch">
+  <div class="row g-4 align-items-stretch mb-5">
 
- 
-  {{-- PLAN 2 --}}
-<div class="col-md-4 d-flex">
-  <div class="card border rounded-3 p-3 w-100 d-flex flex-column h-100">
+    {{-- DYNAMICALLY RENDER PLANS BASED ON RECOMMENDATION --}}
+    @php
+      $plans = [
+        'practice' => [
+          'title' => 'Project Practice Internship',
+          'badge' => 'Standard',
+          'badgeBg' => 'bg-secondary bg-opacity-10 text-secondary',
+          'description' => 'Best for students who already understand basic development concepts',
+          'oldPrice' => 'PKR 4,000',
+          'price' => 'PKR 3,000',
+          'discount' => '25% OFF',
+          'features' => [
+            ['no', 'Dedicated Mentor Support'],
+            ['no', 'Step-by-Step Training Guidance'],
+            ['yes', 'Industrial Project Development'],
+            ['yes', 'Weekly Progress Reviews'],
+            ['yes', 'Portfolio Project Development'],
+            ['yes', 'Internship Completion Certificate'],
+            ['yes', 'Job Opportunity for Top Performers'],
+            ['yes', 'Offer Letter for University (if required)'],
+          ],
+          'outcomes' => [
+            ['yes', 'Hands-on Real Project Experience'],
+            ['yes', 'Strong Portfolio Development'],
+            ['yes', 'Freelance/Entry-Level Readiness'],
+          ]
+        ],
+        'training' => [
+          'title' => 'Training Internship',
+          'badge' => '🎯 RECOMMENDED FOR YOU',
+          'badgeBg' => 'bg-primary bg-opacity-10 text-primary fw-semibold',
+          'description' => 'Best for guided learning with structured mentorship and professional guidance',
+          'oldPrice' => 'PKR 10,000',
+          'price' => 'PKR 6,000',
+          'discount' => '40% OFF',
+          'features' => [
+            ['yes-bold', 'Dedicated Mentor Support'],
+            ['yes-bold', 'Step-by-Step Training Guidance'],
+            ['yes', 'Industrial Project Development'],
+            ['yes', 'Weekly Progress Reviews'],
+            ['yes', 'Portfolio Project Development'],
+            ['yes', 'Internship Completion Certificate'],
+            ['yes', 'Job Opportunity for Top Performers'],
+            ['yes', 'Offer Letter for University (if required)'],
+          ],
+          'outcomes' => [
+            ['yes', 'Build real-world development projects'],
+            ['yes', 'Understand professional development workflows'],
+            ['yes', 'Create portfolio-ready projects'],
+            ['yes', 'Prepare for junior developer opportunities'],
+          ],
+          'note' => '💡 Students who complete this internship typically build 3–5 portfolio projects'
+        ],
+        'industrial' => [
+          'title' => 'Industrial Environment Internship',
+          'badge' => 'Basic',
+          'badgeBg' => 'bg-dark bg-opacity-10 text-dark',
+          'description' => 'For experienced developers seeking real-world exposure',
+          'oldPrice' => 'PKR 1,000',
+          'price' => 'PKR 500',
+          'discount' => '50% OFF',
+          'features' => [
+            ['no', 'Dedicated Mentor Support'],
+            ['no', 'Step-by-Step Training Guidance'],
+            ['yes', 'Industrial Project Access'],
+            ['no', 'Weekly Progress Reviews'],
+            ['yes', 'Real Development Environment'],
+            ['yes', 'Experience Letter'],
+            ['yes', 'Team Collaboration Exposure'],
+            ['yes', 'Production-Level Code Exposure'],
+          ],
+          'outcomes' => [
+            ['yes', 'Real development environment experience'],
+            ['yes', 'Professional team collaboration'],
+            ['yes', 'Industry exposure and networking'],
+          ]
+        ]
+      ];
 
-    <div class="text-center mb-2">
-      <span class="badge bg-secondary bg-opacity-10 text-secondary">Standard</span>
-    </div>
+      $planOrder = [];
+      // Center position gets the recommended plan
+      $planOrder[] = $recommended_program ?? 'training';
+      // Add the other two plans on sides
+      foreach (['training', 'practice', 'industrial'] as $plan) {
+        if ($plan !== $recommended_program) {
+          $planOrder[] = $plan;
+        }
+      }
+    @endphp
 
-    <h6 class="fw-semibold text-center">Project Practice Internship</h6>
+    @foreach($planOrder as $index => $planKey)
+      @php
+        $plan = $plans[$planKey];
+        $isRecommended = ($planKey === ($recommended_program ?? 'training'));
+        $cardClass = $isRecommended ? 'plan-card recommended' : 'plan-card';
+        $borderClass = $isRecommended ? 'border border-primary' : 'border';
+      @endphp
 
-    <p class="text-muted small text-center mb-2">
-      Best for students who already understand basic development concepts
-    </p>
+      <div class="col-md-4 d-flex">
+        <div class="{{ $cardClass }} w-100 d-flex">
+          <div class="card {{ $borderClass }} rounded-3 p-4 w-100 d-flex flex-column h-100">
 
-    <div class="text-center mb-3">
-      <div class="text-decoration-line-through text-muted small">PKR 4,000</div>
-      <div class="fs-4 fw-semibold">PKR 3,000</div>
-      <small class="text-success">25% OFF</small>
-    </div>
+            <div class="text-center mb-3">
+              <span class="badge {{ $plan['badgeBg'] }} px-3 py-2">{{ $plan['badge'] }}</span>
+            </div>
 
-    <div class="flex-grow-1">
+            <h5 class="fw-bold text-center mb-2 {{ $isRecommended ? 'text-primary' : '' }}">{{ $plan['title'] }}</h5>
 
-      <h3 class="text-uppercase text-muted mb-2" style="font-size:11px;">
-        What You Will Get & Achieve
-      </h3>
+            <p class="text-muted small text-center mb-3">{{ $plan['description'] }}</p>
 
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Industrial Project Development (Hands-on Experience)</span></div>
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Weekly Progress Reviews</span></div>
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Portfolio Project Development</span></div>
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Internship Completion Certificate</span></div>
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Job Opportunity for Top Performers</span></div>
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Offer Letter for University (if required)</span></div>
+            <div class="text-center mb-4">
+              <div class="text-decoration-line-through text-muted small">{{ $plan['oldPrice'] }}</div>
+              <div class="fs-{{ $isRecommended ? '2' : '3' }} fw-bold {{ $isRecommended ? 'text-primary' : 'text-success' }}">{{ $plan['price'] }}</div>
+              <small class="text-success fw-bold">{{ $plan['discount'] }}</small>
+            </div>
 
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Hands-on Real Project Experience</span></div>
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Strong Portfolio Development</span></div>
-    
+            <div class="flex-grow-1">
+              <h6 class="text-uppercase text-muted mb-3" style="font-size:12px; font-weight: 600;">What You Will Get</h6>
 
-    </div>
+              @foreach($plan['features'] as $feature)
+                <div class="feat-row">
+                  <span class="feat-{{ $feature[0] === 'no' ? 'no' : 'yes' }}">{{ $feature[0] === 'no' ? '✖' : '✔' }}</span>
+                  <span class="{{ $feature[0] === 'no' ? 'feat-txt dim' : ($feature[0] === 'yes-bold' ? 'fw-semibold' : '') }}">{{ $feature[1] }}</span>
+                </div>
+              @endforeach
 
-    <a href="#" class="btn btn-outline-primary w-100 mt-3">
-      Choose Plan
+              <div class="mt-3 pt-2 border-top">
+                <h6 class="text-uppercase text-muted mb-2" style="font-size:12px; font-weight: 600;">What You Can Achieve</h6>
+                @foreach($plan['outcomes'] as $outcome)
+                  <div class="feat-row">
+                    <span class="feat-yes">✔</span>
+                    <span>{{ $outcome[1] }}</span>
+                  </div>
+                @endforeach
+                @if(isset($plan['note']))
+                  <small class="text-muted d-block mt-2" style="font-size: 12px;">{{ $plan['note'] }}</small>
+                @endif
+              </div>
+            </div>
+
+            @if($isRecommended)
+              <div class="mt-4 p-3 bg-primary bg-opacity-10 rounded-2 mb-3">
+                <small class="text-primary d-block mb-1">
+                  <strong>✓ This recommendation is based on your skill assessment answers.</strong>
+                </small>
+                <small class="text-muted d-block">Students with similar skill levels usually choose this program.</small>
+              </div>
+            @endif
+
+            <form method="POST" action="{{ route('intern.register.complete') }}" class="mt-4">
+              @csrf
+              <input type="hidden" name="selected_plan" value="{{ $planKey }}">
+              <button type="submit" class="btn btn-{{ $isRecommended ? 'primary fw-bold btn-lg' : 'outline-secondary fw-semibold' }} w-100">
+                {{ $isRecommended ? 'Continue with this Program →' : 'Choose This Plan' }}
+              </button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    @endforeach
+
+  </div>
+
+  {{-- Back button --}}
+  <div class="text-center">
+    <a href="{{ route('intern.register.step2') }}" class="btn btn-light text-muted">
+      ← Back to Assessment
     </a>
-
   </div>
-</div>
- {{-- PLAN 1 (RECOMMENDED) --}}
-  <div class="col-md-4 d-flex">
-    <div class="card border border-primary rounded-3 p-3 w-100 d-flex flex-column h-100">
-
-      <div class="text-center mb-2">
-        <span class="badge bg-primary bg-opacity-10 text-primary">Recommended</span>
-      </div>
-
-      <h6 class="fw-semibold text-center">Training Internship</h6>
-
-      <p class="text-muted small text-center mb-2">
-        Best for guided learning with structured mentorship
-      </p>
-
-      <div class="text-center mb-3">
-        <div class="text-decoration-line-through text-muted small">PKR 10,000</div>
-        <div class="fs-4 fw-semibold text-primary">PKR 6,000</div>
-        <small class="text-success">40% OFF</small>
-      </div>
-
-      <div class="flex-grow-1">
-        <h3 class="text-uppercase text-muted mb-2" style="font-size:11px;">
-          What You Will Get
-        </h3>
-
-        <div class="feat-row"><span class="feat-yes">✔</span><span>Dedicated Mentor Support</span></div>
-        <div class="feat-row"><span class="feat-yes">✔</span><span>Step-by-Step Training Guidance</span></div>
-        <div class="feat-row"><span class="feat-yes">✔</span><span>Industrial Project Development</span></div>
-        <div class="feat-row"><span class="feat-yes">✔</span><span>Weekly Progress Reviews</span></div>
-        <div class="feat-row"><span class="feat-yes">✔</span><span>Portfolio Development</span></div>
-        <div class="feat-row"><span class="feat-yes">✔</span><span>Certificate</span></div>
-        <div class="feat-row"><span class="feat-yes">✔</span><span>Job Opportunity</span></div>
-        <div class="feat-row"><span class="feat-yes">✔</span><span>University Offer Letter</span></div>
-          <div class="feat-row"><span class="feat-yes">✔</span><span>Freelance / Entry-Level Readiness</span></div>
-      </div>
-
-      <form method="POST" action="{{ route('intern.register.complete') }}">
-    @csrf
-    <input type="hidden" name="selected_plan" value="training">
-
-    <button type="submit" class="btn btn-primary w-100">
-        Continue with this Program
-    </button>
-</form>
-
-    </div>
-  </div>
-
-  {{-- PLAN 3 --}}
- <div class="col-md-4 d-flex">
-  <div class="card border rounded-3 p-3 w-100 d-flex flex-column h-100">
-
-    <div class="text-center mb-2">
-      <span class="badge bg-dark bg-opacity-10 text-dark">Basic</span>
-    </div>
-
-    <h6 class="fw-semibold text-center">Industrial Access Internship</h6>
-
-    <p class="text-muted small text-center mb-2">
-      Real-world development environment exposure
-    </p>
-
-    <div class="text-center mb-3">
-      <div class="text-decoration-line-through text-muted small">PKR 1,000</div>
-      <div class="fs-4 fw-semibold">PKR 500</div>
-      <small class="text-success">50% OFF</small>
-    </div>
-
-    <div class="flex-grow-1">
-
-      <h3 class="text-uppercase text-muted mb-2" style="font-size:11px;">
-        What You Will Get & Achieve
-      </h3>
-
-      <div class="feat-row"><span class="feat-no">✖</span><span class="feat-txt dim">Dedicated Mentor Support</span></div>
-      <div class="feat-row"><span class="feat-no">✖</span><span class="feat-txt dim">Step-by-Step Training Guidance</span></div>
-
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Industrial Project Access</span></div>
-      <div class="feat-row"><span class="feat-no">✖</span><span class="feat-txt dim">Weekly Progress Reviews</span></div>
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Real Development Environment Exposure</span></div>
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Experience Letter</span></div>
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Team Collaboration Workflow</span></div>
-      <div class="feat-row"><span class="feat-yes">✔</span><span>Production-Level Code Exposure</span></div>
-
-    </div>
-
-    <a href="#" class="btn btn-outline-primary w-100 mt-3">
-      Choose Plan
-    </a>
-
-  </div>
-</div>
-
-</div>
-      
-
-</div>
 @endsection
 
 @push('scripts')
@@ -279,7 +320,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var bar = document.getElementById('skill-bar');
   var label = document.getElementById('pct-label');
-  var target = 82, duration = 1600, startTime = null;
+  var currentPct = parseInt(label.textContent);
+  var target = currentPct, duration = 1600, startTime = null;
   function ease(t){ return t<0.5?2*t*t:-1+(4-2*t)*t; }
   function animate(ts){
     if(!startTime) startTime = ts;

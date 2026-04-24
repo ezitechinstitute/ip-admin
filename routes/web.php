@@ -228,9 +228,7 @@ use App\Http\Middleware\ValidUser;
 use App\Http\Controllers\InternPublicRegistrationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-
-
-
+use App\Http\Controllers\ChatController;
 
 
 // Main Page Route
@@ -466,13 +464,47 @@ Route::post('/set-password-generate', [OTPVerifyController::class, 'updateSetPas
 
 // Public Intern Registration Routes - Start
 Route::prefix('/intern-register')->group(function () {
+    // Step 1 - Form display and data save
     Route::get('/step1', [InternPublicRegistrationController::class, 'step1'])->name('intern.register.step1');
-    Route::post('/step2', [InternPublicRegistrationController::class, 'step2'])->name('intern.register.step2');
-    Route::post('/step3', [InternPublicRegistrationController::class, 'step3'])->name('intern.register.step3');
+    Route::post('/step1', [InternPublicRegistrationController::class, 'postStep1'])->name('intern.register.postStep1');
+    
+    // Step 2 - Assessment form display and answers save
+    Route::get('/step2', [InternPublicRegistrationController::class, 'step2'])->name('intern.register.step2');
+    Route::post('/step2', [InternPublicRegistrationController::class, 'postStep2'])->name('intern.register.postStep2');
+    
+    // Step 3 - Plan selection
+    Route::get('/step3', [InternPublicRegistrationController::class, 'step3'])->name('intern.register.step3');
+    
+    // Complete registration
     Route::post('/complete', [InternPublicRegistrationController::class, 'complete'])->name('intern.register.complete');
+    
+    // Success page
     Route::get('/success', [InternPublicRegistrationController::class, 'success'])->name('intern.register.success');
 });
 // Public Intern Registration Routes - End
+
+
+// ==========================================
+// PROJECT CHAT ROUTES (Shared across all portals)
+// ==========================================
+Route::middleware(['auth:web,manager,intern'])->group(function () {
+    
+    // Communication center - Main chat hub for managers/supervisors/interns
+    Route::get('/communication-center', [ChatController::class, 'index'])->name('chat.index');
+    
+    // Project chat view
+    Route::get('/project-chat/{projectId}', [ChatController::class, 'show'])->name('chat.show');
+    
+    // Shared chat routes for project communication
+    Route::get('/communication-center/{project_id}', [SupervisorProjectController::class, 'showChat'])
+        ->name('supervisor.chat.show');
+
+    // The Send Message action (The Form submit)
+    Route::post('/communication-center/{project_id}/send', [SupervisorProjectController::class, 'sendMessage'])->name('supervisor.chat.send');
+});
+
+
+
 
 // Admin routes - Start
 Route::prefix('/admin')->middleware(['validUser'])->group(function (){
@@ -610,7 +642,7 @@ Route::put('university/update', [UniversityController::class, 'update'])
     ->name('university.update.admin');
     // Route for exporting Universities
 Route::get('/universities/export', [UniversityController::class, 'exportUniversityCSV'])->name('university.export.admin');
-
+Route::delete('/university/{id}', [UniversityController::class, 'destroy'])->name('university.delete');
 
   // Settings Page
  Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
@@ -863,6 +895,16 @@ Route::post('/escalations/{id}/resolve', [EscalationController::class, 'resolve'
 
 Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function () {
 
+// The route to display the chat room for a specific project
+// Route::get('/projects/chat/{project_id}', [SupervisorProjectController::class, 'showChat'])
+//         ->name('supervisor.projects.chat.room');
+
+//     // ADD THIS: The route for the "Initiate Chat" form
+//     Route::post('/projects/chat/initiate/{project_id}', [SupervisorProjectController::class, 'initiateChat'])
+//         ->name('supervisor.projects.chat.initiate');
+
+        //ends chat routes
+
     Route::get('/dashboard', [DashboardSupervisorController::class, 'index'])->name('supervisor.dashboard');
 
     Route::get('/my-interns', [SupervisorInternController::class, 'myInterns'])->name('supervisor.myInterns');
@@ -875,7 +917,26 @@ Route::prefix('/supervisor')->middleware(['validSupervisor'])->group(function ()
     Route::get('/progress-monitoring', [SupervisorInternController::class, 'progressMonitoring'])->name('supervisor.progressMonitoring');
 
     Route::get('/projects', [SupervisorProjectController::class, 'index'])->name('supervisor.projects');
-    Route::post('/supervisor/projects/store', [SupervisorProjectController::class, 'store'])->name('supervisor.projects.store');
+    
+
+    // 1. The List Page (GET)
+    Route::get('/projects', [SupervisorProjectController::class, 'index'])->name('supervisor.projects');
+
+    // 2. The Store Action (POST) - This matches the form I just sent you
+    Route::post('/projects/save', [SupervisorProjectController::class, 'store'])->name('supervisor.projects.store');
+
+    // 3. The Initiate Chat Action (POST)
+    Route::post('/projects/chat-initiate/{project_id}', [SupervisorProjectController::class, 'initiateChat'])->name('supervisor.projects.chat.initiate');
+    // 4. The Chat Room (GET)
+    // Route::get('/projects/chat-room/{project_id}', [SupervisorProjectController::class, 'showChat'])
+    // ->name('chat.show');
+
+// changing for now show shat
+    // Route::get('/projects/chat/{project_id}', [SupervisorProjectController::class, 'showChat'])->name('supervisor.projects.chat.room');
+    
+    
+    
+    // Route::post('/supervisor/projects/store', [SupervisorProjectController::class, 'store'])->name('supervisor.projects.store');
     Route::get('/supervisor/projects/{project_id}/tasks', [SupervisorProjectController::class, 'tasks'])->name('supervisor.projects.tasks');
     Route::post('/supervisor/projects/{project_id}/tasks/store', [SupervisorProjectController::class, 'storeTask'])->name('supervisor.projects.tasks.store');
     Route::post('/supervisor/projects/{project_id}/tasks/load-curriculum', [SupervisorProjectController::class, 'loadCurriculum'])->name('supervisor.projects.tasks.loadCurriculum');

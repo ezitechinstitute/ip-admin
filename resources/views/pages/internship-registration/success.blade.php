@@ -186,6 +186,20 @@ $customizerHidden = 'customizer-hide';
                     Congratulations! Your internship registration has been successfully submitted. We've received your information and skill assessment.
                 </p>
 
+                @if(session('registration_success'))
+                    <div style="background: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; text-align: left;">
+                        <div style="font-weight: 600; color: #0066cc; margin-bottom: 0.5rem;">Your Registration Details</div>
+                        <div style="color: #333; font-size: 0.95rem; line-height: 1.8;">
+                            <div><strong>Name:</strong> {{ session('registration_success.name') }}</div>
+                            <div><strong>Email:</strong> {{ session('registration_success.email') }}</div>
+                            <div style="background: #f0f8ff; padding: 0.75rem; border-radius: 4px; margin-top: 0.75rem;">
+                                <div style="color: #0066cc; font-size: 0.85rem;">Your ETI (Ezitech Trainee ID)</div>
+                                <div style="font-size: 1.25rem; font-weight: 700; color: #0047b3; font-family: monospace;">{{ session('registration_success.eti_id') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="info-box">
                     <i class="icon-base ti tabler-info-circle"></i>
                     <span class="info-box-text">

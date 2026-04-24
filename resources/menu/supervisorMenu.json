@@ -7,6 +7,13 @@
       "url": "supervisor/dashboard",
       "permission": "supervisor_dashboard_view"
     },
+  {
+  "name": "Communication Center",
+  "icon": "menu-icon tf-icons ti tabler-messages",
+  "slug": "chat-index",
+  "url": "communication-center",
+  "permission": "view_supervisor_chat"
+},
     {
       "menuHeader": "Intern Management"
     },

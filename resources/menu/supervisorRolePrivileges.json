@@ -91,6 +91,16 @@
       ]
     },
     {
+  "key": "supervisor_communication",
+  "title": "Communication",
+  "privileges": [
+    {
+      "key": "view_supervisor_chat",
+      "title": "Access Communication Center"
+    }
+  ]
+},
+    {
       "key": "supervisor_feedback",
       "title": "Feedback",
       "privileges": [
