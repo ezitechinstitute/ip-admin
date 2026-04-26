@@ -232,7 +232,7 @@
                     </div>
 
                     <div class="chat-history-footer border-top">
-                        <form class="form-send-message d-flex" action="{{ route('chat.send', $project->project_id) }}" method="POST" onsubmit="return handleChatSubmit(event, this)">
+                        <form class="form-send-message d-flex" action="{{ route('supervisor.chat.send', $project->project_id) }}" method="POST" onsubmit="return handleChatSubmit(event, this)">
                             @csrf
                             <input class="form-control message-input border-0 me-3 shadow-none" name="message" placeholder="Type your message here..." autocomplete="off" required>
                             <button type="submit" class="btn btn-primary">
