@@ -319,6 +319,17 @@
         .priority-progress { width: 100%; margin-top: 8px; }
         .task-table th, .task-table td { padding: 0.5rem; font-size: 0.7rem; }
     }
+
+    /* Tooltip styling */
+[data-bs-toggle="tooltip"] {
+    cursor: help;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+[data-bs-toggle="tooltip"]:hover {
+    opacity: 1;
+}
 </style>
 @endsection
 
@@ -525,38 +536,51 @@ $allowedColors = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'
                         @if($hasOverdue || $hasDeadlineSoon || $hasPending)
                         <div class="d-flex flex-column gap-2">
                          {{-- Overdue Tasks --}}
+{{-- Overdue Tasks - Urgency Meter Style --}}
 @if($hasOverdue)
-<div class="dashboard-card p-3 mb-3" style="border-left: 4px solid #ef4444;">
-    <div class="d-flex align-items-start gap-3">
-        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" 
-             style="width: 48px; height: 48px; background: rgba(239,68,68,0.1);">
-            <i class="bi bi-clock-history text-danger fs-4"></i>
+<div class="dashboard-card p-3 mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h6 class="fw-bold mb-0 text-danger">⚠️ Urgent Attention Required</h6>
+            <small class="text-muted">{{ $dashboard->overdueTasksCount ?? 0 }} task(s) past deadline</small>
         </div>
-        <div class="flex-grow-1">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                <div>
-                    <div class="text-muted small">Priority</div>
-                    <div class="fw-bold fs-5 text-danger">{{ $dashboard->overdueTasksCount ?? 0 }} Overdue Tasks</div>
-                </div>
-                <span class="badge bg-danger rounded-pill px-3 py-2">Urgent</span>
-            </div>
-            <div class="d-flex flex-wrap gap-2 mt-2">
-                @foreach(($dashboard->overdueTaskTitles ?? []) as $index => $title)
-                    @if($index < 2)
-                    <div class="d-flex align-items-center gap-2 bg-light rounded-pill px-3 py-1">
-                        <i class="bi bi-file-text text-danger small"></i>
-                        <span class="small">{{ \Illuminate\Support\Str::limit($title, 20) }}</span>
-                    </div>
-                    @endif
-                @endforeach
-                @if($dashboard->overdueTasksCount > 2)
-                <a href="{{ url('/intern/tasks?filter=overdue') }}" class="small text-danger text-decoration-none d-flex align-items-center gap-1">
-                    +{{ $dashboard->overdueTasksCount - 2 }} more <i class="bi bi-arrow-right"></i>
-                </a>
-                @endif
-            </div>
+        <div class="text-end">
+            <div class="fs-3 fw-bold text-danger">{{ $dashboard->overdueTasksCount ?? 0 }}</div>
+            <small class="text-muted">Overdue</small>
         </div>
     </div>
+    
+    {{-- Urgency Meter --}}
+    <div class="mb-3">
+        <div class="d-flex justify-content-between small mb-1">
+            <span>Urgency Level</span>
+            <span class="text-danger fw-bold">{{ min(100, ($dashboard->overdueTasksCount ?? 0) * 20) }}%</span>
+        </div>
+        <div class="progress rounded-pill" style="height: 8px; background: rgba(239,68,68,0.1);">
+            <div class="progress-bar bg-danger rounded-pill" style="width: {{ min(100, ($dashboard->overdueTasksCount ?? 0) * 20) }}%;"></div>
+        </div>
+    </div>
+    
+    {{-- Task Chips --}}
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        @foreach(($dashboard->overdueTaskTitles ?? []) as $index => $title)
+            @if($index < 3)
+            <div class="d-flex align-items-center gap-2 bg-danger bg-opacity-10 rounded-pill px-3 py-1">
+                <i class="bi bi-file-text text-danger small"></i>
+                <span class="small">{{ \Illuminate\Support\Str::limit($title, 18) }}</span>
+            </div>
+            @endif
+        @endforeach
+        @if($dashboard->overdueTasksCount > 3)
+        <a href="{{ url('/intern/tasks?filter=overdue') }}" class="small text-danger text-decoration-none d-flex align-items-center gap-1">
+            +{{ $dashboard->overdueTasksCount - 3 }} <i class="bi bi-arrow-right"></i>
+        </a>
+        @endif
+    </div>
+    
+    <a href="{{ url('/intern/tasks?filter=overdue') }}" class="btn btn-sm btn-danger w-100 rounded-pill">
+        <i class="bi bi-check2-circle me-1"></i> Resolve Overdue Tasks
+    </a>
 </div>
 @endif
 
@@ -627,59 +651,141 @@ $allowedColors = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'
     </div>
 </div>
 
-{{-- ======================= 3 STAT CARDS ======================= --}}
+{{-- ======================= 3 STAT CARDS (Professional & Clean) ======================= --}}
 <div class="row g-4 mb-5">
+    {{-- Task Progress Card --}}
     <div class="col-md-4">
-        <div class="dashboard-card p-3 text-center stat-card">
-            <div class="position-relative d-inline-block mb-2">
-                <svg width="80" height="80" viewBox="0 0 100 100" class="stat-ring">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,0.05)" stroke-width="6" />
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="#3b82f6" stroke-width="6"
+        <div class="dashboard-card p-4 text-center stat-card h-100" style="transition: all 0.3s ease;">
+            <div class="position-relative d-inline-block mb-3">
+                <svg width="120" height="120" viewBox="0 0 100 100" class="stat-ring">
+                    <defs>
+                        <linearGradient id="taskGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#3b82f6" />
+                            <stop offset="100%" stop-color="#1e40af" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(59,130,246,0.1)" stroke-width="8" />
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#taskGradient)" stroke-width="8"
                             stroke-dasharray="263.89" stroke-dashoffset="263.89"
                             stroke-linecap="round"
                             class="stat-ring-progress" data-percent="{{ $dashboard->completionRate ?? 0 }}" />
                 </svg>
-                <div class="stat-ring-center">{{ $dashboard->tasksCompleted ?? 0 }}/{{ $dashboard->totalTasks ?? 0 }}</div>
+                <div class="stat-ring-center">
+                    <span class="fw-bold fs-3 text-primary">{{ $dashboard->completionRate ?? 0 }}<span class="fs-6">%</span></span>
+                </div>
             </div>
-            <div class="stat-number text-primary mt-2">{{ $dashboard->completionRate ?? 0 }}%</div>
-            <div class="text-muted small fw-semibold">Tasks Completed</div>
-            <div class="mt-2"><span class="stat-trend-up"><i class="bi bi-arrow-up-short"></i> +{{ $dashboard->completionRate ?? 0 }}%</span></div>
+            <div class="mt-2">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                    <i class="bi bi-check2-circle text-primary fs-5"></i>
+                    <h6 class="mb-0 fw-bold">Tasks Completed</h6>
+                </div>
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                    <span class="fw-bold fs-2 text-primary">{{ $dashboard->completionRate ?? 0 }}<span class="fs-6">%</span></span>
+                    <span class="text-muted small">({{ $dashboard->tasksCompleted ?? 0 }}/{{ $dashboard->totalTasks ?? 0 }})</span>
+                </div>
+                <div class="progress rounded-pill mx-auto" style="height: 5px; width: 80%; background: rgba(59,130,246,0.1);">
+                    <div class="progress-bar bg-primary rounded-pill" style="width: {{ $dashboard->completionRate ?? 0 }}%;"></div>
+                </div>
+                <div class="mt-3">
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">
+                        <i class="bi bi-arrow-up-short me-1"></i> {{ $dashboard->completionRate ?? 0 }}% Complete
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
 
+    {{-- Average Score Card --}}
     <div class="col-md-4">
-        <div class="dashboard-card p-3 text-center stat-card">
-            <div class="position-relative d-inline-block mb-2">
-                <svg width="80" height="80" viewBox="0 0 100 100" class="stat-ring">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,0.05)" stroke-width="6" />
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="#10b981" stroke-width="6"
+        <div class="dashboard-card p-4 text-center stat-card h-100" style="transition: all 0.3s ease;">
+            <div class="position-relative d-inline-block mb-3">
+                <svg width="120" height="120" viewBox="0 0 100 100" class="stat-ring">
+                    <defs>
+                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#10b981" />
+                            <stop offset="100%" stop-color="#047857" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(16,185,129,0.1)" stroke-width="8" />
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#scoreGradient)" stroke-width="8"
                             stroke-dasharray="263.89" stroke-dashoffset="263.89"
                             stroke-linecap="round"
                             class="stat-ring-progress" data-percent="{{ $dashboard->averageScore ?? 0 }}" />
                 </svg>
-                <div class="stat-ring-center">{{ $dashboard->averageScore ?? 0 }}%</div>
+                <div class="stat-ring-center">
+                    <span class="fw-bold fs-3 text-success">{{ $dashboard->averageScore ?? 0 }}<span class="fs-6">%</span></span>
+                </div>
             </div>
-            <div class="stat-number text-success">{{ $dashboard->averageScore ?? 0 }}%</div>
-            <div class="text-muted small fw-semibold">Avg. Score</div>
-            <div class="mt-2"><span class="stat-trend-up"><i class="bi bi-arrow-up-short"></i> +5%</span></div>
+            <div class="mt-2">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                    <i class="bi bi-star-fill text-warning fs-5"></i>
+                    <h6 class="mb-0 fw-bold">Average Score</h6>
+                </div>
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                    <span class="fw-bold fs-2 text-success">{{ $dashboard->averageScore ?? 0 }}<span class="fs-6">%</span></span>
+                    <span class="text-muted small">Grade</span>
+                </div>
+                <div class="progress rounded-pill mx-auto" style="height: 5px; width: 80%; background: rgba(16,185,129,0.1);">
+                    <div class="progress-bar bg-success rounded-pill" style="width: {{ $dashboard->averageScore ?? 0 }}%;"></div>
+                </div>
+                <div class="mt-3">
+                    @if(($dashboard->averageScore ?? 0) >= 75)
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">
+                        <i class="bi bi-trophy-fill me-1"></i> Excellent
+                    </span>
+                    @elseif(($dashboard->averageScore ?? 0) >= 50)
+                    <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2">
+                        <i class="bi bi-arrow-up-short me-1"></i> Good
+                    </span>
+                    @else
+                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Needs Improvement
+                    </span>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 
+    {{-- Active Projects Card --}}
     <div class="col-md-4">
-        <div class="dashboard-card p-3 text-center stat-card">
-            <div class="position-relative d-inline-block mb-2">
-                <svg width="80" height="80" viewBox="0 0 100 100" class="stat-ring">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,0.05)" stroke-width="6" />
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="#f59e0b" stroke-width="6"
+        <div class="dashboard-card p-4 text-center stat-card h-100" style="transition: all 0.3s ease;">
+            <div class="position-relative d-inline-block mb-3">
+                <svg width="120" height="120" viewBox="0 0 100 100" class="stat-ring">
+                    <defs>
+                        <linearGradient id="projectGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f59e0b" />
+                            <stop offset="100%" stop-color="#b45309" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(245,158,11,0.1)" stroke-width="8" />
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#projectGradient)" stroke-width="8"
                             stroke-dasharray="263.89" stroke-dashoffset="263.89"
                             stroke-linecap="round"
                             class="stat-ring-progress" data-percent="{{ $dashboard->projectCompletionRate ?? 0 }}" />
                 </svg>
-                <div class="stat-ring-center">{{ $dashboard->activeProjects ?? 0 }}/{{ $dashboard->totalProjects ?? 0 }}</div>
+                <div class="stat-ring-center">
+                    <span class="fw-bold fs-3 text-warning">{{ $dashboard->activeProjects ?? 0 }}/{{ $dashboard->totalProjects ?? 0 }}</span>
+                </div>
             </div>
-            <div class="stat-number text-warning">{{ $dashboard->activeProjects ?? 0 }}/{{ $dashboard->totalProjects ?? 0 }}</div>
-            <div class="text-muted small fw-semibold">Active Projects</div>
-            <div class="mt-2"><span class="stat-trend-up"><i class="bi bi-arrow-up-short"></i> +12%</span></div>
+            <div class="mt-2">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                    <i class="bi bi-briefcase-fill text-warning fs-5"></i>
+                    <h6 class="mb-0 fw-bold">Active Projects</h6>
+                </div>
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                    <span class="fw-bold fs-2 text-warning">{{ $dashboard->activeProjects ?? 0 }}</span>
+                    <span class="text-muted small">/{{ $dashboard->totalProjects ?? 0 }} Total</span>
+                </div>
+                <div class="progress rounded-pill mx-auto" style="height: 5px; width: 80%; background: rgba(245,158,11,0.1);">
+                    <div class="progress-bar bg-warning rounded-pill" style="width: {{ $dashboard->projectCompletionRate ?? 0 }}%;"></div>
+                </div>
+                <div class="mt-3">
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">
+                        <i class="bi bi-play-circle-fill me-1"></i> {{ $dashboard->activeProjects ?? 0 }} In Progress
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
