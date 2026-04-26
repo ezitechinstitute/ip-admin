@@ -1,190 +1,268 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Project Tasks')
-@php
-use Illuminate\Support\Str;
-@endphp
+@section('title', 'Progress Monitoring')
+
+@section('vendor-style')
+@vite(['resources/assets/vendor/libs/apex-charts/apex-charts.scss'])
+<style>
+    /* Styling for the table progress bars to make them look sleek */
+    .progress-tracking-table .progress { background-color: rgba(115, 103, 240, 0.08); border-radius: 10px; }
+    .progress-tracking-table .progress-bar { border-radius: 10px; }
+    .chart-header-small { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+</style>
+@endsection
+
+@section('vendor-script')
+@vite(['resources/assets/vendor/libs/apex-charts/apexcharts.js'])
+@endsection
+
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0">Project Tasks: {{ $project->title ?? 'N/A' }}</h4>
-    <div class="d-flex gap-2">
-      <button type="button" class="btn btn-label-primary" data-bs-toggle="modal" data-bs-target="#loadCurriculumModal">
-        <i class="ti tabler-download me-1"></i> Load Curriculum
-      </button>
-      <a href="{{ route('supervisor.projects') }}" class="btn btn-secondary">Back to Projects</a>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-4">
-      <div class="card mb-4">
-        <div class="card-header">
-          <h5 class="mb-0">Create New Task</h5>
+    {{-- Uniform Header --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Performance Monitoring</h4>
+            <p class="text-muted mb-0">Analytics for <span class="fw-bold text-primary">{{ $technology }}</span> department</p>
         </div>
-        <div class="card-body">
-          <form method="POST" action="{{ route('supervisor.projects.tasks.store', $project->project_id) }}">
-            @csrf
-            <div class="row g-3">
-              <div class="col-12">
-                <label class="form-label">Task Title</label>
-                <input type="text" name="task_title" class="form-control" placeholder="Enter task title" required>
-              </div>
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <button class="btn btn-label-secondary" onclick="window.print()">
+                <i class="ti ti-printer me-1"></i> Print Report
+            </button>
+            <button class="btn btn-primary" onclick="window.location.reload()">
+                <i class="ti ti-refresh me-1"></i> Refresh Data
+            </button>
+        </div>
+    </div>
 
-              <div class="col-12">
-                <label class="form-label">Milestone Title (Optional)</label>
-                <input type="text" name="milestone_title" class="form-control" placeholder="e.g. Week 1: Basics">
-              </div>
-
-              <div class="col-6">
-                <label class="form-label">Start Date</label>
-                <input type="date" name="t_start_date" class="form-control" required>
-              </div>
-
-              <div class="col-6">
-                <label class="form-label">End Date</label>
-                <input type="date" name="t_end_date" class="form-control" required>
-              </div>
-
-              <div class="col-6">
-                <label class="form-label">Days</label>
-                <input type="number" name="task_days" class="form-control" value="1" required>
-              </div>
-
-              <div class="col-6">
-                <label class="form-label">Marks</label>
-                <input type="number" step="0.01" name="task_mark" class="form-control" required>
-              </div>
-
-              <input type="hidden" name="task_duration" value="1">
-              <input type="hidden" name="task_status" value="Ongoing">
-
-              <div class="col-12">
-                <label class="form-label">Description</label>
-                <textarea name="description" class="form-control" rows="3" required></textarea>
-              </div>
-
-              <div class="col-12">
-                <button type="submit" class="btn btn-primary w-100">Create Task</button>
-              </div>
+    {{-- Top Statistics Row --}}
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="chart-header-small text-muted d-block mb-1">Avg. Progress</small>
+                        <h4 class="mb-0 fw-bold text-primary">{{ round($interns->avg('progress')) }}%</h4>
+                    </div>
+                    <span class="badge bg-label-primary rounded p-2"><i class="ti ti-chart-pie-2 ti-md"></i></span>
+                </div>
             </div>
-          </form>
         </div>
-      </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="chart-header-small text-muted d-block mb-1">Team Compliance</small>
+                        <h4 class="mb-0 fw-bold text-success">{{ round($interns->avg('compliance')) }}%</h4>
+                    </div>
+                    <span class="badge bg-label-success rounded p-2"><i class="ti ti-discount-check ti-md"></i></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card bg-label-danger border-0 h-100 shadow-none">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="chart-header-small text-danger d-block mb-1">Critical Overdue</small>
+                        <h4 class="mb-0 fw-bold text-danger">{{ $interns->sum('overdue_tasks') }}</h4>
+                    </div>
+                    <span class="badge bg-white text-danger rounded p-2"><i class="ti ti-alert-octagon ti-md"></i></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="chart-header-small text-muted d-block mb-1">Active Staff</small>
+                        <h4 class="mb-0 fw-bold">{{ $interns->count() }}</h4>
+                    </div>
+                    <span class="badge bg-label-info rounded p-2"><i class="ti ti-users ti-md"></i></span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="col-md-8">
-      @php
-        $milestones = $tasks->groupBy('milestone_title');
-      @endphp
+    {{-- Chart Analytics Row --}}
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header border-bottom d-flex justify-content-between align-items-center py-3">
+                    <h5 class="card-title mb-0">Production Distribution</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge badge-dot bg-primary"></span> <small class="text-muted">Tasks</small>
+                        <span class="badge badge-dot bg-info"></span> <small class="text-muted">Projects</small>
+                    </div>
+                </div>
+                <div class="card-body pt-4">
+                    <div id="performanceCompareChart" style="min-height: 350px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header border-bottom py-3 text-center">
+                    <h5 class="card-title mb-0">Overall Team Compliance</h5>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div id="complianceRadialChart"></div>
+                    <div class="text-center mt-3">
+                        <p class="text-muted small px-3">Aggregated score based on successful milestone completion vs. deadlines.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-      @forelse($milestones as $milestone => $milestoneTasks)
-        <div class="card mb-4">
-          <div class="card-header bg-label-secondary d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">{{ $milestone ?: 'Uncategorized Tasks' }}</h5>
-            <span class="badge bg-primary">{{ $milestoneTasks->count() }} Tasks</span>
-          </div>
-          <div class="table-responsive text-nowrap">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Task Title</th>
-                  <th>Deadline</th>
-                  <th>Marks</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach($milestoneTasks as $task)
-                  <tr>
-                    <td>
-                      <div class="fw-bold">{{ $task->task_title }}</div>
-                      <small class="text-muted">{{ Str::limit($task->description, 40) }}</small>
-                    </td>
-                    <td>{{ $task->t_end_date }}</td>
-                    <td>{{ $task->task_mark }}</td>
-                    <td>
-                      <span class="badge bg-label-{{ $task->task_status == 'Completed' ? 'success' : ($task->task_status == 'Rejected' ? 'danger' : 'warning') }}">
-                        {{ $task->task_status }}
-                      </span>
-                    </td>
-                    <td>
-                      <div class="d-flex gap-2">
-                        <a href="{{ route('supervisor.projects.tasks.edit', [$project->project_id, $task->task_id]) }}" class="btn btn-sm btn-icon btn-label-warning">
-                          <i class="ti tabler-edit"></i>
-                        </a>
-                        <form action="{{ route('supervisor.projects.tasks.delete', [$project->project_id, $task->task_id]) }}" method="POST" onsubmit="return confirm('Delete this task?')">
-                          @csrf
-                          @method('DELETE')
-                          <button type="submit" class="btn btn-sm btn-icon btn-label-danger">
-                            <i class="ti tabler-trash"></i>
-                          </button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                @endforeach
-              </tbody>
+    {{-- Searchable Intern Table --}}
+    <div class="card">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h5 class="card-title mb-0">Real-time Performance Logs</h5>
+            <div class="d-flex align-items-center">
+                <div class="input-group input-group-merge">
+                    <span class="input-group-text"><i class="ti ti-search text-muted"></i></span>
+                    <input type="text" class="form-control" placeholder="Search Intern ID or Name..." id="tableSearch">
+                </div>
+            </div>
+        </div>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle progress-tracking-table">
+                <thead class="table-light">
+                    <tr>
+                        <th>Intern</th>
+                        <th>Task Progress</th>
+                        <th>Project Milestone</th>
+                        <th class="text-center">Quality Score</th>
+                        <th>Tracking Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @foreach($interns as $intern)
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar avatar-sm me-2">
+                                    <span class="avatar-initial rounded-circle bg-label-primary">{{ strtoupper(substr($intern->name, 0, 1)) }}</span>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold text-heading small">{{ $intern->name }}</span>
+                                    <small class="text-muted" style="font-size: 0.7rem;">{{ $intern->int_technology }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="min-width: 200px;">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">{{ $intern->completed_tasks }}/{{ $intern->total_tasks }} Tasks</small>
+                                <small class="fw-bold text-primary">{{ $intern->progress }}%</small>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar shadow-none" style="width:{{ $intern->progress }}%"></div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold text-heading">{{ $intern->project_completion }}%</span>
+                                <small class="text-muted" title="Projects Assigned">({{ $intern->total_projects }} projects)</small>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            @php $qColor = $intern->code_quality >= 80 ? 'success' : ($intern->code_quality >= 50 ? 'warning' : 'danger'); @endphp
+                            <span class="badge bg-label-{{ $qColor }} rounded-pill">{{ $intern->code_quality }}%</span>
+                        </td>
+                        <td>
+                            @if($intern->overdue_tasks > 0)
+                                <span class="badge bg-label-danger">
+                                    <i class="ti ti-alert-triangle ti-xs me-1"></i> {{ $intern->overdue_tasks }} Overdue
+                                </span>
+                            @else
+                                <span class="badge bg-label-success">On Track</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{{ route('supervisor.viewIntern', $intern->int_id) }}" class="btn btn-icon btn-sm btn-label-secondary" title="View Profile">
+                                    <i class="ti ti-user"></i>
+                                </a>
+                                <a href="{{ route('supervisor.evaluations.create', $intern->eti_id) }}" class="btn btn-icon btn-sm btn-label-success" title="Submit Review">
+                                    <i class="ti ti-star"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
             </table>
-          </div>
         </div>
-      @empty
-        <div class="card">
-          <div class="card-body text-center py-5">
-            <i class="ti tabler-clipboard-off mb-2 display-6 text-muted"></i>
-            <h5>No tasks assigned yet</h5>
-            <p class="text-muted">Create a task manually or load a curriculum to get started.</p>
-          </div>
-        </div>
-      @endforelse
     </div>
-  </div>
 </div>
+@endsection
 
-<!-- Load Curriculum Modal -->
-<div class="modal fade" id="loadCurriculumModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Load Curriculum Template</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form action="{{ route('supervisor.projects.tasks.loadCurriculum', $project->project_id) }}" method="POST">
-        @csrf
-        <div class="modal-body">
-          <p>Select a technology to load the standard curriculum tasks into this project.</p>
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label">Standard Curriculums</label>
-              <select name="technology" class="form-select" required>
-                <option value="">-- Select Technology --</option>
-                <option value="Laravel">Laravel Development (Full Stack)</option>
-                <option value="React">React.js Frontend Development</option>
-                <option value="UI/UX">UI/UX Design Fundamentals</option>
-                <option value="WordPress">WordPress Engine & SEO</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Set Start Date for All Tasks</label>
-              <input type="date" name="base_start_date" class="form-control" required>
-            </div>
-            <div class="col-12 mt-3">
-              <div class="alert alert-info d-flex align-items-center" role="alert">
-                <span class="alert-icon text-info me-2">
-                  <i class="ti tabler-info-circle"></i>
-                </span>
-                Tasks will be automatically created following the curriculum milestones. Marks and descriptions will be pre-filled.
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-label-secondary" data-bs-toggle="modal">Close</button>
-          <button type="submit" class="btn btn-primary">Import Curriculum</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+@section('page-script')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const isDark = document.documentElement.classList.contains('dark-style');
+    const labelColor = isDark ? '#b6bee3' : '#6f6b7d';
+    const borderColor = isDark ? '#3b3e59' : '#e9ebeb';
+
+    // 1. Productivity Comparison (Bar Chart)
+    const perfChartEl = document.querySelector('#performanceCompareChart');
+    if (perfChartEl) {
+        const perfOptions = {
+            series: [{
+                name: 'Tasks',
+                data: [@foreach($interns as $intern) {{ $intern->progress }}, @endforeach]
+            }, {
+                name: 'Projects',
+                data: [@foreach($interns as $intern) {{ $intern->project_completion }}, @endforeach]
+            }],
+            chart: { height: 350, type: 'bar', toolbar: { show: false } },
+            plotOptions: { bar: { columnWidth: '45%', borderRadius: 4, dataLabels: { position: 'top' } } },
+            colors: ['#7367f0', '#00bad1'],
+            dataLabels: { enabled: false },
+            grid: { borderColor: borderColor, padding: { top: -20, bottom: -10 } },
+            xaxis: {
+                categories: [@foreach($interns as $intern) '{{ explode(' ', $intern->name)[0] }}', @endforeach],
+                labels: { style: { colors: labelColor } },
+                axisBorder: { show: false }
+            },
+            yaxis: { labels: { style: { colors: labelColor } }, max: 100 },
+            legend: { position: 'top', horizontalAlign: 'right', labels: { colors: labelColor } }
+        };
+        new ApexCharts(perfChartEl, perfOptions).render();
+    }
+
+    // 2. Compliance Semi-Circle Gauge
+    const compChartEl = document.querySelector('#complianceRadialChart');
+    if (compChartEl) {
+        const compOptions = {
+            series: [{{ round($interns->avg('compliance')) }}],
+            chart: { height: 320, type: 'radialBar', sparkline: { enabled: true } },
+            plotOptions: {
+                radialBar: {
+                    startAngle: -90,
+                    endAngle: 90,
+                    hollow: { size: '65%' },
+                    track: { background: isDark ? '#3b3e59' : '#f0f2f8', strokeWidth: '97%' },
+                    dataLabels: {
+                        name: { show: false },
+                        value: { offsetY: -2, fontSize: '32px', color: isDark ? '#fff' : '#444', fontWeight: '700' }
+                    }
+                }
+            },
+            colors: ['#28c76f'],
+            labels: ['Team Compliance']
+        };
+        new ApexCharts(compChartEl, compOptions).render();
+    }
+});
+
+// Simple Table Filter logic for Big Data
+document.getElementById('tableSearch').addEventListener('keyup', function() {
+    let value = this.value.toLowerCase();
+    let rows = document.querySelectorAll('.progress-tracking-table tbody tr');
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().indexOf(value) > -1 ? '' : 'none';
+    });
+});
+</script>
 @endsection
