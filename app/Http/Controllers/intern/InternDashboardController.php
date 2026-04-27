@@ -211,42 +211,65 @@ class InternDashboardController extends Controller
     /**
      * Get performance data
      */
-    private function getPerformanceData($etiId)
-    {
-        // Task completion over time (last 30 days)
+   private function getPerformanceData($etiId)
+{
+    // Task completion over time (last 30 days)
+    $taskCompletion = collect([]);
+    try {
+        $taskCompletion = DB::table('intern_tasks')
+            ->select(DB::raw('DATE(updated_at) as date'), DB::raw('count(*) as count'))
+            ->where('eti_id', $etiId)
+            ->where('task_status', 'approved')
+            ->where('updated_at', '>=', Carbon::now()->subDays(30))
+            ->groupBy(DB::raw('DATE(updated_at)'))
+            ->get();
+    } catch (\Exception $e) {
+        // Fallback if group by fails
         $taskCompletion = collect([]);
-        try {
-            $taskCompletion = DB::table('intern_tasks')
-                ->select(DB::raw('DATE(updated_at) as date'), DB::raw('count(*) as count'))
-                ->where('eti_id', $etiId)
-                ->where('task_status', 'approved')
-                ->where('updated_at', '>=', Carbon::now()->subDays(30))
-                ->groupBy(DB::raw('DATE(updated_at)'))
-                ->get();
-        } catch (\Exception $e) {
-            // Fallback if group by fails
-            $taskCompletion = collect([]);
-        }
-        
-        // Calculate average score safely
-        $averageScore = 0;
-        try {
-            $averageScore = DB::table('intern_tasks')
-                ->where('eti_id', $etiId)
-                ->whereNotNull('grade')
-                ->avg('grade');
-            $averageScore = round($averageScore ?? 0, 2);
-        } catch (\Exception $e) {
-            $averageScore = 0;
-        }
-        
-        return [
-            'task_completion' => $taskCompletion,
-            'total_tasks' => DB::table('intern_tasks')->where('eti_id', $etiId)->count(),
-            'completed_tasks' => DB::table('intern_tasks')->where('eti_id', $etiId)->where('task_status', 'approved')->count(),
-            'average_score' => $averageScore,
-        ];
     }
+    
+    // Calculate average score safely - FIXED
+    $averageScore = 0;
+    try {
+        // First try to get from grade column
+        $avgGrade = DB::table('intern_tasks')
+            ->where('eti_id', $etiId)
+            ->whereNotNull('grade')
+            ->avg('grade');
+        
+        if ($avgGrade && $avgGrade > 0) {
+            $averageScore = $avgGrade;
+        } else {
+            // If no grade, calculate from task_obt_points
+            $tasksWithPoints = DB::table('intern_tasks')
+                ->where('eti_id', $etiId)
+                ->whereNotNull('task_obt_points')
+                ->where('task_obt_points', '>', 0)
+                ->whereNotNull('task_points')
+                ->where('task_points', '>', 0)
+                ->get();
+            
+            if ($tasksWithPoints->count() > 0) {
+                $totalPercentage = 0;
+                foreach ($tasksWithPoints as $task) {
+                    $totalPercentage += ($task->task_obt_points / $task->task_points) * 100;
+                }
+                $averageScore = $totalPercentage / $tasksWithPoints->count();
+            }
+        }
+        
+        $averageScore = round($averageScore ?? 0);
+    } catch (\Exception $e) {
+        $averageScore = 0;
+    }
+    
+    return [
+        'task_completion' => $taskCompletion,
+        'total_tasks' => DB::table('intern_tasks')->where('eti_id', $etiId)->count(),
+        'completed_tasks' => DB::table('intern_tasks')->where('eti_id', $etiId)->where('task_status', 'approved')->count(),
+        'average_score' => $averageScore,
+    ];
+}
 
     /**
      * Mark a single notification as read

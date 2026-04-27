@@ -25,17 +25,24 @@ class InternTaskController extends Controller
             ->where('eti_id', $intern->eti_id)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
+
+         // For Kanban & Timeline Views (ALL tasks - future proof)
+         $allTasks = DB::table('intern_tasks')
+        ->where('eti_id', $intern->eti_id)
+        ->orderBy('created_at', 'desc')
+        ->get();
         
         // Get task statistics
         $stats = [
             'total' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->count(),
-            'pending' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->where('task_status', 'Assigned')->count(),
+            // FIXED: Include both 'pending' AND 'Assigned' statuses
+            'pending' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->whereIn('task_status', ['pending', 'Assigned'])->count(),
             'submitted' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->where('task_status', 'submitted')->count(),
             'approved' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->whereIn('task_status', ['Completed', 'approved'])->count(),
             'rejected' => DB::table('intern_tasks')->where('eti_id', $intern->eti_id)->where('task_status', 'Rejected')->count(),
         ];
         
-        return view('pages.intern.tasks.index', compact('tasks', 'stats'));
+        return view('pages.intern.tasks.index', compact('tasks','allTasks', 'stats'));
     }
     
     public function show($id)
@@ -126,8 +133,8 @@ $canResubmit = in_array($task->task_status, ['Rejected', 'Assigned', 'pending'])
         // Create notification for intern
         $this->createSubmissionNotification($task, $intern);
         
-        return redirect()->route('intern.tasks.show', $id)
-            ->with('success', 'Task submitted successfully! Waiting for supervisor review.');
+      return redirect()->route('intern.tasks')
+        ->with('success', 'Task submitted successfully! Waiting for supervisor review.');
     }
     
     private function createSubmissionNotification($task, $intern)
