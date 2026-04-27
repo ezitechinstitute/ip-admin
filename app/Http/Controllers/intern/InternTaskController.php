@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
 
 class InternTaskController extends Controller
@@ -74,8 +76,19 @@ class InternTaskController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // For pagination (table view)
-        $tasks = collect($allTasksCollection)->paginate(10);
+        // For pagination (table view) - manually paginate collection
+        $perPage = 10;
+        $page = Paginator::resolveCurrentPage();
+        $tasks = new LengthAwarePaginator(
+            collect($allTasksCollection)->forPage($page, $perPage)->values(),
+            count($allTasksCollection),
+            $perPage,
+            $page,
+            [
+                'path' => route('intern.tasks'),
+                'query' => request()->query(),
+            ]
+        );
 
         // For Kanban & Timeline Views (ALL tasks - no pagination)
         $allTasks = $allTasksCollection;
