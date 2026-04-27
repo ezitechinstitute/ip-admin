@@ -6,140 +6,126 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Services\InternDashboardService;
 use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 class InternDashboardController extends Controller
 {
     public function index()
-    {
-        $intern = Auth::guard('intern')->user();
-        if (!$intern) {
-            return redirect()->route('login');
-        }
+{
+    $intern = Auth::guard('intern')->user();
+    if (!$intern) {
+        return redirect()->route('login');
+    }
 
+    // Portal freeze check
+    $freezeStatus = PortalFreezeHelper::getStatus($intern->email);
+    $freezeWarning = $freezeStatus['frozen'] ? $freezeStatus['message'] : null;
 
-        // ✅  PORTAL FREEZE CHECK HERE
-        $freezeStatus = PortalFreezeHelper::getStatus($intern->email);
-        $freezeWarning = null;
-        
-        if ($freezeStatus['frozen']) {
-            $freezeWarning = $freezeStatus['message'];
-        }
+    $internEtiId = $intern->eti_id;
+    $internEmail = $intern->email;
+    $internId = $intern->int_id;
 
+    // Task counts
+    $tasksQuery = DB::table('intern_tasks')->where('eti_id', $internEtiId);
+    $totalTasks = (clone $tasksQuery)->count();
+    $completedTasks = (clone $tasksQuery)->where('task_status', 'approved')->count();
+    $pendingTasks = (clone $tasksQuery)->where('task_status', 'pending')->count();
+    $submittedTasks = (clone $tasksQuery)->where('task_status', 'submitted')->count();
 
-        $internEtiId = $intern->eti_id;
-        $internEmail = $intern->email;
-        $internId = $intern->int_id;
+    // Project counts
+    $totalProjects = DB::table('intern_projects')->where('eti_id', $internEtiId)->count();
+    $completedProjects = DB::table('intern_projects')->where('eti_id', $internEtiId)->where('pstatus', 'approved')->count();
+    $ongoingProjects = DB::table('intern_projects')->where('eti_id', $internEtiId)->where('pstatus', 'ongoing')->count();
 
-        // Task counts
-        $totalTasks = DB::table('intern_tasks')->where('eti_id', $internEtiId)->count();
-        $completedTasks = DB::table('intern_tasks')->where('eti_id', $internEtiId)->where('task_status', 'approved')->count();
-        $pendingTasks = DB::table('intern_tasks')->where('eti_id', $internEtiId)->where('task_status', 'pending')->count();
-        $submittedTasks = DB::table('intern_tasks')->where('eti_id', $internEtiId)->where('task_status', 'submitted')->count();
+    // Invoice status
+    $invoices = DB::table('invoices')->where('intern_email', $internEmail)->get();
+    $totalInvoices = $invoices->count();
+    $paidInvoices = $invoices->where('remaining_amount', '<=', 0)->count();
+    $pendingInvoices = $invoices->filter(fn($inv) => ($inv->remaining_amount ?? 0) > 0 && !empty($inv->due_date) && Carbon::parse($inv->due_date)->gte(Carbon::now()))->count();
+    $overdueInvoices = $invoices->filter(fn($inv) => ($inv->remaining_amount ?? 0) > 0 && !empty($inv->due_date) && Carbon::parse($inv->due_date)->lt(Carbon::now()))->count();
+    $isFrozen = $overdueInvoices > 0;
 
-        // Project counts
-        $totalProjects = DB::table('intern_projects')->where('eti_id', $internEtiId)->count();
-        $completedProjects = DB::table('intern_projects')->where('eti_id', $internEtiId)->where('pstatus', 'approved')->count();
-        $ongoingProjects = DB::table('intern_projects')->where('eti_id', $internEtiId)->where('pstatus', 'ongoing')->count();
+    // Supervisor name
+    $supervisorName = 'Not Assigned';
+    if ($intern->supervisor_id) {
+        $supervisor = DB::table('manager_accounts')->where('manager_id', $intern->supervisor_id)->first();
+        $supervisorName = $supervisor ? $supervisor->name : 'Not Assigned';
+    }
 
-        // Invoice status
-        $invoices = DB::table('invoices')->where('intern_email', $internEmail)->get();
-        $totalInvoices = $invoices->count();
-        $paidInvoices = $invoices->where('remaining_amount', '<=', 0)->count();
-        $pendingInvoices = $invoices->filter(function($inv) {
-            return $inv->remaining_amount > 0 && $inv->due_date >= Carbon::now();
-        })->count();
-        $overdueInvoices = $invoices->filter(function($inv) {
-            return $inv->remaining_amount > 0 && $inv->due_date < Carbon::now();
-        })->count();
+    // Remaining duration & status
+    $startDate = $intern->start_date ? Carbon::parse($intern->start_date) : Carbon::now();
+    $endDate = $startDate->copy()->addMonths(6);
+    $remainingDays = max(0, Carbon::now()->diffInDays($endDate, false));
+    $internshipStatus = $isFrozen ? 'Frozen' : (Carbon::now()->greaterThan($endDate) ? 'Completed' : 'Active');
 
-        $isFrozen = $overdueInvoices > 0;
+    // Progress percentages
+    $taskPercentage = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
+    $projectPercentage = $totalProjects > 0 ? round(($completedProjects / $totalProjects) * 100) : 0;
+    $totalAmount = $invoices->sum('total_amount');
+    $paidAmount = $invoices->sum('received_amount');
+    $paymentPercentage = $totalAmount > 0 ? round(($paidAmount / $totalAmount) * 100) : 0;
 
-        // Supervisor name
-        $supervisorName = 'Not Assigned';
-        if ($intern->supervisor_id) {
-            $supervisor = DB::table('manager_accounts')->where('manager_id', $intern->supervisor_id)->first();
-            $supervisorName = $supervisor ? $supervisor->name : 'Not Assigned';
-        }
+    // Recent tasks & deadlines
+    $recentTasks = DB::table('intern_tasks')
+        ->where('eti_id', $internEtiId)
+        ->orderBy('created_at', 'desc')
+        ->limit(5)
+        ->get();
 
-        // Remaining duration
-        $startDate = $intern->start_date ? Carbon::parse($intern->start_date) : Carbon::now();
-        $endDate = $startDate->copy()->addMonths(6);
-        $remainingDays = max(0, Carbon::now()->diffInDays($endDate, false));
+    $upcomingDeadlines = DB::table('intern_tasks')
+        ->where('eti_id', $internEtiId)
+        ->where('task_status', '!=', 'approved')
+        ->where('task_end', '>=', Carbon::now())
+        ->orderBy('task_end', 'asc')
+        ->limit(5)
+        ->get();
 
-        // Internship status
-        if ($isFrozen) {
-            $internshipStatus = 'Frozen';
-        } elseif (Carbon::now()->greaterThan($endDate)) {
-            $internshipStatus = 'Completed';
-        } else {
-            $internshipStatus = 'Active';
-        }
+    // Timeline (convert array to Collection)
+    $timeline = collect($this->getTimeline($intern));
 
-        // Progress percentages
-        $taskPercentage = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
-        $projectPercentage = $totalProjects > 0 ? round(($completedProjects / $totalProjects) * 100) : 0;
-        $totalAmount = $invoices->sum('total_amount');
-        $paidAmount = $invoices->sum('received_amount');
-        $paymentPercentage = $totalAmount > 0 ? round(($paidAmount / $totalAmount) * 100) : 0;
+    // Notifications & performance
+    $notifications = $this->getNotifications($internId);
+    $performance = $this->getPerformanceData($internEtiId);
 
-        // Recent tasks
-        $recentTasks = DB::table('intern_tasks')
-            ->where('eti_id', $internEtiId)
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
+    // Stats array
+    $stats = [
+        'internship_status' => $internshipStatus,
+        'is_frozen' => $isFrozen,
+        'technology' => $intern->int_technology ?? 'Not Assigned',
+        'supervisor_name' => $supervisorName,
+        'projects_assigned' => $totalProjects,
+        'projects_completed' => $completedProjects,
+        'projects_ongoing' => $ongoingProjects,
+        'tasks_total' => $totalTasks,
+        'tasks_completed' => $completedTasks,
+        'tasks_pending' => $pendingTasks,
+        'tasks_submitted' => $submittedTasks,
+        'remaining_days' => $remainingDays,
+        'total_invoices' => $totalInvoices,
+        'paid_invoices' => $paidInvoices,
+        'pending_invoices' => $pendingInvoices,
+        'overdue_invoices' => $overdueInvoices,
+    ];
 
-        // Upcoming deadlines
-        $upcomingDeadlines = DB::table('intern_tasks')
-            ->where('eti_id', $internEtiId)
-            ->where('task_status', '!=', 'approved')
-            ->where('task_end', '>=', Carbon::now())
-            ->orderBy('task_end', 'asc')
-            ->limit(5)
-            ->get();
+    $progress = [
+        'task_percentage' => $taskPercentage,
+        'project_percentage' => $projectPercentage,
+        'payment_percentage' => $paymentPercentage,
+    ];
 
-        // Timeline
-        $timeline = $this->getTimeline($intern);
+    // Prepare dashboard data via service
+    $dashboardService = new InternDashboardService();
+    $dashboardData = $dashboardService->prepareDashboardData(
+        $intern, $stats, $progress, $performance,
+        $recentTasks, $upcomingDeadlines, $notifications,
+        $timeline, $freezeWarning
+    );
 
-        // Notifications
-        $notifications = $this->getNotifications($internId);
-
-        // Performance data
-        $performance = $this->getPerformanceData($internEtiId);
-
-        $stats = [
-            'internship_status' => $internshipStatus,
-            'is_frozen' => $isFrozen,
-            'technology' => $intern->int_technology ?? 'Not Assigned',
-            'supervisor_name' => $supervisorName,
-            'projects_assigned' => $totalProjects,
-            'projects_completed' => $completedProjects,
-            'projects_ongoing' => $ongoingProjects,
-            'tasks_total' => $totalTasks,
-            'tasks_completed' => $completedTasks,
-            'tasks_pending' => $pendingTasks,
-            'tasks_submitted' => $submittedTasks,
-            'remaining_days' => $remainingDays,
-            'total_invoices' => $totalInvoices,
-            'paid_invoices' => $paidInvoices,
-            'pending_invoices' => $pendingInvoices,
-            'overdue_invoices' => $overdueInvoices,
-        ];
-
-        $progress = [
-            'task_percentage' => $taskPercentage,
-            'project_percentage' => $projectPercentage,
-            'payment_percentage' => $paymentPercentage,
-        ];
-
-        // ✅ freezeWarning to compact
-        return view('pages.intern.dashboard', compact(
-            'intern', 'stats', 'progress', 'recentTasks', 'upcomingDeadlines',
-            'timeline', 'notifications', 'performance', 'freezeWarning'
-        ));
-        }
+    // Single return – all logic now in service
+    return view('pages.intern.dashboard', ['dashboard' => $dashboardData]);
+}
 
     /**
      * Get internship timeline
@@ -225,42 +211,65 @@ class InternDashboardController extends Controller
     /**
      * Get performance data
      */
-    private function getPerformanceData($etiId)
-    {
-        // Task completion over time (last 30 days)
+   private function getPerformanceData($etiId)
+{
+    // Task completion over time (last 30 days)
+    $taskCompletion = collect([]);
+    try {
+        $taskCompletion = DB::table('intern_tasks')
+            ->select(DB::raw('DATE(updated_at) as date'), DB::raw('count(*) as count'))
+            ->where('eti_id', $etiId)
+            ->where('task_status', 'approved')
+            ->where('updated_at', '>=', Carbon::now()->subDays(30))
+            ->groupBy(DB::raw('DATE(updated_at)'))
+            ->get();
+    } catch (\Exception $e) {
+        // Fallback if group by fails
         $taskCompletion = collect([]);
-        try {
-            $taskCompletion = DB::table('intern_tasks')
-                ->select(DB::raw('DATE(updated_at) as date'), DB::raw('count(*) as count'))
-                ->where('eti_id', $etiId)
-                ->where('task_status', 'approved')
-                ->where('updated_at', '>=', Carbon::now()->subDays(30))
-                ->groupBy(DB::raw('DATE(updated_at)'))
-                ->get();
-        } catch (\Exception $e) {
-            // Fallback if group by fails
-            $taskCompletion = collect([]);
-        }
-        
-        // Calculate average score safely
-        $averageScore = 0;
-        try {
-            $averageScore = DB::table('intern_tasks')
-                ->where('eti_id', $etiId)
-                ->whereNotNull('grade')
-                ->avg('grade');
-            $averageScore = round($averageScore ?? 0, 2);
-        } catch (\Exception $e) {
-            $averageScore = 0;
-        }
-        
-        return [
-            'task_completion' => $taskCompletion,
-            'total_tasks' => DB::table('intern_tasks')->where('eti_id', $etiId)->count(),
-            'completed_tasks' => DB::table('intern_tasks')->where('eti_id', $etiId)->where('task_status', 'approved')->count(),
-            'average_score' => $averageScore,
-        ];
     }
+    
+    // Calculate average score safely - FIXED
+    $averageScore = 0;
+    try {
+        // First try to get from grade column
+        $avgGrade = DB::table('intern_tasks')
+            ->where('eti_id', $etiId)
+            ->whereNotNull('grade')
+            ->avg('grade');
+        
+        if ($avgGrade && $avgGrade > 0) {
+            $averageScore = $avgGrade;
+        } else {
+            // If no grade, calculate from task_obt_points
+            $tasksWithPoints = DB::table('intern_tasks')
+                ->where('eti_id', $etiId)
+                ->whereNotNull('task_obt_points')
+                ->where('task_obt_points', '>', 0)
+                ->whereNotNull('task_points')
+                ->where('task_points', '>', 0)
+                ->get();
+            
+            if ($tasksWithPoints->count() > 0) {
+                $totalPercentage = 0;
+                foreach ($tasksWithPoints as $task) {
+                    $totalPercentage += ($task->task_obt_points / $task->task_points) * 100;
+                }
+                $averageScore = $totalPercentage / $tasksWithPoints->count();
+            }
+        }
+        
+        $averageScore = round($averageScore ?? 0);
+    } catch (\Exception $e) {
+        $averageScore = 0;
+    }
+    
+    return [
+        'task_completion' => $taskCompletion,
+        'total_tasks' => DB::table('intern_tasks')->where('eti_id', $etiId)->count(),
+        'completed_tasks' => DB::table('intern_tasks')->where('eti_id', $etiId)->where('task_status', 'approved')->count(),
+        'average_score' => $averageScore,
+    ];
+}
 
     /**
      * Mark a single notification as read

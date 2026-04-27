@@ -995,8 +995,7 @@ Route::prefix('/intern')->middleware(['validIntern'])->group(function () {
     // Profile Routes
     Route::get('/profile', [InternProfileController::class, 'index'])->name('intern.profile');
     Route::get('/profile/edit', [InternProfileController::class, 'edit'])->name('intern.profile.edit');
-    Route::post('/profile/update', [InternProfileController::class, 'update'])->name('intern.profile.update');
-    Route::post('/update-profile-image', [InternProfileController::class, 'updateProfileImage'])->name('intern.update-profile-image');
+Route::post('/profile/update', [InternProfileController::class, 'update'])->name('intern.profile.update');    Route::post('/update-profile-image', [InternProfileController::class, 'updateProfileImage'])->name('intern.update-profile-image');
     Route::get('/profile/public/{identifier?}', [InternProfileController::class, 'publicProfile'])->name('intern.profile.public');
     Route::get('/portfolio', [InternProfileController::class, 'portfolio'])->name('intern.portfolio');
 

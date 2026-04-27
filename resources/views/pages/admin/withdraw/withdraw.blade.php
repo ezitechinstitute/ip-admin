@@ -487,15 +487,29 @@
     }
 
     // Approve button from dropdown
-    document.querySelectorAll('.btn-action-approve').forEach(btn => {
-      btn.addEventListener('click', function (e) {
-        e.preventDefault();
-        const id = this.dataset.id;
-        if (confirm('Approve this withdrawal request?')) {
-          submitForm(`/admin/withdraw/${id}/approve`, 'PUT');
-        }
-      });
-    });
+
+    // Approve button from dropdown
+document.querySelectorAll('.btn-action-approve').forEach(btn => {
+  btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    const id = this.dataset.id;
+    if (confirm('Approve this withdrawal request?')) {
+      // 🔥 Use the route helper with a placeholder
+      let url = "{{ route('admin.withdraw.approve', ':id') }}";
+      url = url.replace(':id', id); 
+      submitForm(url, 'PUT');
+    }
+  });
+});
+    // document.querySelectorAll('.btn-action-approve').forEach(btn => {
+    //   btn.addEventListener('click', function (e) {
+    //     e.preventDefault();
+    //     const id = this.dataset.id;
+    //     if (confirm('Approve this withdrawal request?')) {
+    //       submitForm(`/admin/withdraw/${id}/approve`, 'PUT');
+    //     }
+    //   });
+    // });
 
     // Reject button from dropdown
     document.querySelectorAll('.btn-action-reject').forEach(btn => {
