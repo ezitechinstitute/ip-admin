@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\intern;
 
 use App\Http\Controllers\Controller;
-use App\Helpers\Helpers;
+use App\Services\PortfolioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +13,13 @@ use Carbon\Carbon;
 
 class InternProfileController extends Controller
 {
+    protected $portfolioService;
+
+    public function __construct(PortfolioService $portfolioService)
+    {
+        $this->portfolioService = $portfolioService;
+    }
+
     public function index()
     {
         $intern = Auth::guard('intern')->user();
@@ -21,15 +28,16 @@ class InternProfileController extends Controller
             return redirect()->route('login');
         }
         
-        $profileImage = Helpers::getProfileImage($intern);
+        $profileImage = $this->portfolioService->getProfileImage($intern);
+        $stats = $this->portfolioService->getPortfolioStats($intern);
+        $skills = $this->portfolioService->getInternSkills($intern->int_id);
         
-        // Get statistics for profile
-        $stats = $this->getProfileStats($intern->eti_id);
-        
-        // Get skills
-        $skills = $this->getInternSkills($intern->int_id);
-        
-        return view('pages.intern.profile.index', compact('intern', 'profileImage', 'stats', 'skills'));
+        return view('pages.intern.profile.index', compact(
+            'intern', 
+            'profileImage', 
+            'stats', 
+            'skills'
+        ));
     }
     
     public function edit()
@@ -40,15 +48,20 @@ class InternProfileController extends Controller
             return redirect()->route('login');
         }
         
-        $profileImage = Helpers::getProfileImage($intern);
-        $skills = $this->getInternSkills($intern->int_id);
+        $profileImage = $this->portfolioService->getProfileImage($intern);
+        $skills = $this->portfolioService->getInternSkills($intern->int_id);
+        $skillsArray = $skills->toArray();
         
-        return view('pages.intern.profile.edit', compact('intern', 'profileImage', 'skills'));
+        return view('pages.intern.profile.edit', compact('intern', 'profileImage', 'skills', 'skillsArray'));
     }
     
     public function update(Request $request)
     {
         $intern = Auth::guard('intern')->user();
+        
+        if (!$intern) {
+            return redirect()->route('login');
+        }
         
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -56,106 +69,79 @@ class InternProfileController extends Controller
             'city' => 'nullable|string|max:100',
             'university' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:1000',
-            'github' => 'nullable|string|max:255',
-            'linkedin' => 'nullable|string|max:255',
-            'portfolio_url' => 'nullable|string|max:255',
-            'internship_type' => 'nullable|string|max:50',
-            'skills' => 'nullable', // JSON string from hidden field
+            'skills' => 'nullable|string',
+            'current_password' => 'nullable|string',
+            'new_password' => 'nullable|string|min:8|confirmed',
         ]);
         
-        // Prepare update data - only update fields that exist
-        $updateData = [
-            'name' => $validated['name'],
-            'updated_at' => now(),
-        ];
-        
-        // Check each column before updating
-        if (Schema::hasColumn('intern_accounts', 'phone')) {
-            $updateData['phone'] = $validated['phone'] ?? $intern->phone;
-        }
-        
-        if (Schema::hasColumn('intern_accounts', 'city')) {
-            $updateData['city'] = $validated['city'] ?? null;
-        }
-        
-        if (Schema::hasColumn('intern_accounts', 'university')) {
-            $updateData['university'] = $validated['university'] ?? null;
-        }
-        
-        if (Schema::hasColumn('intern_accounts', 'bio')) {
-            $updateData['bio'] = $validated['bio'] ?? null;
-        }
-        
-        if (Schema::hasColumn('intern_accounts', 'github')) {
-            $updateData['github'] = $validated['github'] ?? null;
-        }
-        
-        if (Schema::hasColumn('intern_accounts', 'linkedin')) {
-            $updateData['linkedin'] = $validated['linkedin'] ?? null;
-        }
-        
-        if (Schema::hasColumn('intern_accounts', 'portfolio_url')) {
-            $updateData['portfolio_url'] = $validated['portfolio_url'] ?? null;
-        }
-        
-        if (Schema::hasColumn('intern_accounts', 'internship_type')) {
-            $updateData['internship_type'] = $validated['internship_type'] ?? $intern->internship_type;
-        }
-        
         // Update basic info
+        $updateData = ['name' => $validated['name']];
+        $fields = ['phone', 'city', 'university', 'bio'];
+        foreach ($fields as $field) {
+            if (Schema::hasColumn('intern_accounts', $field) && isset($validated[$field])) {
+                $updateData[$field] = $validated[$field];
+            }
+        }
+        
         DB::table('intern_accounts')
             ->where('int_id', $intern->int_id)
             ->update($updateData);
         
-        // Update skills if table exists
-        if (Schema::hasTable('intern_skills')) {
-            
-            $skillsArray = [];
-            
-            if ($request->filled('skills')) {
-                $decoded = json_decode($request->skills, true);
-                
-                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                    // Filter out any email addresses from skills
-                    $skillsArray = array_filter($decoded, function($skill) {
-                        return !filter_var($skill, FILTER_VALIDATE_EMAIL);
-                    });
-                }
+        // Update password if provided
+        if (!empty($validated['new_password'])) {
+            if ($validated['current_password'] != $intern->password) {
+                return back()->withErrors(['current_password' => 'Current password is incorrect'])->withInput();
             }
             
-            DB::beginTransaction();
-            
-            try {
-                // Delete old skills
-                DB::table('intern_skills')
-                    ->where('intern_id', $intern->int_id)
-                    ->delete();
-                
-                // Insert new skills
-                foreach ($skillsArray as $skill) {
-                    $skill = trim($skill);
-                    
-                    if (!empty($skill)) {
-                        DB::table('intern_skills')->insert([
-                            'intern_id' => $intern->int_id,
-                            'skill' => $skill,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    }
-                }
-                
-                DB::commit();
-                
-            } catch (\Exception $e) {
-                DB::rollBack();
-                
-                return back()->with('error', 'Failed to update skills: ' . $e->getMessage());
-            }
+            DB::table('intern_accounts')
+                ->where('int_id', $intern->int_id)
+                ->update(['password' => $validated['new_password']]);
         }
+        
+        // Update skills
+        $this->updateInternSkills($intern->int_id, $request->skills);
         
         return redirect()->route('intern.profile')
             ->with('success', 'Profile updated successfully!');
+    }
+    
+    private function updateInternSkills(int $internId, ?string $skillsJson): void
+    {
+        if (!Schema::hasTable('intern_skills')) {
+            return;
+        }
+        
+        $skillsArray = [];
+        
+        if (!empty($skillsJson)) {
+            $decoded = json_decode($skillsJson, true);
+            
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $skillsArray = array_filter($decoded, function($skill) {
+                    $skill = trim($skill);
+                    return !empty($skill);
+                });
+                $skillsArray = array_values(array_unique($skillsArray));
+            }
+        }
+        
+        // Delete old skills
+        DB::table('intern_skills')
+            ->where('intern_id', $internId)
+            ->delete();
+        
+        // Insert new skills
+        foreach ($skillsArray as $skill) {
+            $skill = trim($skill);
+            if (!empty($skill)) {
+                DB::table('intern_skills')->insert([
+                    'intern_id' => $internId,
+                    'skill' => $skill,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
     }
     
     public function updateProfileImage(Request $request)
@@ -170,11 +156,9 @@ class InternProfileController extends Controller
             $image = $request->file('profile_image');
             $imageName = time() . '_' . $intern->int_id . '.' . $image->getClientOriginalExtension();
             
-            // Store in public/storage/uploads/interns
             $path = $image->storeAs('uploads/interns', $imageName, 'public');
             $imagePath = 'storage/' . $path;
             
-            // Delete old image if exists and not default
             if ($intern->image && !str_contains($intern->image, 'ezitech.png')) {
                 $oldPath = str_replace('storage/', '', $intern->image);
                 if (Storage::disk('public')->exists($oldPath)) {
@@ -182,14 +166,9 @@ class InternProfileController extends Controller
                 }
             }
             
-            $updateData = ['image' => $imagePath];
-            if (Schema::hasColumn('intern_accounts', 'updated_at')) {
-                $updateData['updated_at'] = now();
-            }
-            
             DB::table('intern_accounts')
                 ->where('int_id', $intern->int_id)
-                ->update($updateData);
+                ->update(['image' => $imagePath]);
             
             return redirect()->back()->with('success', 'Profile image updated successfully!');
         }
@@ -197,40 +176,9 @@ class InternProfileController extends Controller
         return redirect()->back()->with('error', 'Failed to upload image.');
     }
     
-    public function updatePassword(Request $request)
-    {
-        $intern = Auth::guard('intern')->user();
-        
-        $validated = $request->validate([
-            'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
-        ]);
-        
-        // Verify current password (plain text comparison)
-        if ($validated['current_password'] != $intern->password) {
-            return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect']);
-        }
-        
-        // Update password (store as plain text)
-        $updateData = [
-            'password' => $validated['new_password'],
-        ];
-        
-        if (Schema::hasColumn('intern_accounts', 'updated_at')) {
-            $updateData['updated_at'] = now();
-        }
-        
-        DB::table('intern_accounts')
-            ->where('int_id', $intern->int_id)
-            ->update($updateData);
-        
-        return redirect()->back()->with('success', 'Password updated successfully!');
-    }
-    
     public function publicProfile($identifier = null)
     {
         if ($identifier) {
-            // Try to find by eti_id or name
             $intern = DB::table('intern_accounts')
                 ->where('eti_id', $identifier)
                 ->orWhere('name', 'LIKE', "%{$identifier}%")
@@ -243,181 +191,35 @@ class InternProfileController extends Controller
             abort(404, 'Intern profile not found');
         }
         
-        $profileImage = Helpers::getProfileImage($intern);
-        $stats = $this->getProfileStats($intern->eti_id);
-        $skills = $this->getInternSkills($intern->int_id);
-        
-        // Get completed projects - with safe ordering
-        $projects = collect([]);
-        if (Schema::hasTable('intern_projects')) {
-            $query = DB::table('intern_projects')
-                ->where('eti_id', $intern->eti_id)
-                ->where('pstatus', 'approved');
-            
-            // Check if created_at column exists before ordering by it
-            if (Schema::hasColumn('intern_projects', 'created_at')) {
-                $query->orderBy('created_at', 'desc');
-            } elseif (Schema::hasColumn('intern_projects', 'project_id')) {
-                $query->orderBy('project_id', 'desc');
-            } elseif (Schema::hasColumn('intern_projects', 'end_date')) {
-                $query->orderBy('end_date', 'desc');
-            }
-            
-            $projects = $query->limit(10)->get();
-        }
-        
-        // Get certificates
-        $certificates = collect([]);
-        if (Schema::hasTable('generated_certificates')) {
-            $query = DB::table('generated_certificates')
-                ->where('intern_id', $intern->int_id)
-                ->where('status', 'approved');
-            
-            // Check if created_at column exists before ordering
-            if (Schema::hasColumn('generated_certificates', 'created_at')) {
-                $query->orderBy('created_at', 'desc');
-            } elseif (Schema::hasColumn('generated_certificates', 'id')) {
-                $query->orderBy('id', 'desc');
-            }
-            
-            $certificates = $query->get();
-        }
+        // Prepare portfolio data using service
+        $profileImage = $this->portfolioService->getProfileImage($intern);
+        $stats = $this->portfolioService->getPortfolioStats($intern);
+        $statItems = $this->portfolioService->getStatItems($stats);
+        $internshipData = $this->portfolioService->calculateInternshipProgress($intern);
+        $taskRate = $this->portfolioService->calculateTaskRate($stats);
+        $projectRate = $this->portfolioService->calculateProjectRate($stats);
+        $skills = $this->portfolioService->getInternSkills($intern->int_id);
+        $badgesData = $this->portfolioService->getAchievementBadges($stats);
+        $projects = $this->portfolioService->getApprovedProjects($intern->eti_id);
+        $certificates = $this->portfolioService->getApprovedCertificates($intern->int_id);
         
         return view('pages.intern.profile.public', compact(
-            'intern', 'profileImage', 'stats', 'skills', 'projects', 'certificates'
+            'intern',
+            'profileImage',
+            'stats',
+            'statItems',
+            'internshipData',
+            'taskRate',
+            'projectRate',
+            'skills',
+            'badgesData',
+            'projects',
+            'certificates'
         ));
     }
     
-    /**
-     * Get profile statistics
-     */
-    private function getProfileStats($etiId)
-    {
-        $stats = [
-            'total_tasks' => 0,
-            'completed_tasks' => 0,
-            'total_projects' => 0,
-            'completed_projects' => 0,
-        ];
-        
-        try {
-            if (Schema::hasTable('intern_tasks')) {
-                $stats['total_tasks'] = DB::table('intern_tasks')
-                    ->where('eti_id', $etiId)
-                    ->count();
-                    
-                // Check if task_status column exists
-                if (Schema::hasColumn('intern_tasks', 'task_status')) {
-                    $stats['completed_tasks'] = DB::table('intern_tasks')
-                        ->where('eti_id', $etiId)
-                        ->where('task_status', 'approved')
-                        ->count();
-                }
-            }
-            
-            if (Schema::hasTable('intern_projects')) {
-                $stats['total_projects'] = DB::table('intern_projects')
-                    ->where('eti_id', $etiId)
-                    ->count();
-                    
-                // Check if pstatus column exists
-                if (Schema::hasColumn('intern_projects', 'pstatus')) {
-                    $stats['completed_projects'] = DB::table('intern_projects')
-                        ->where('eti_id', $etiId)
-                        ->where('pstatus', 'approved')
-                        ->count();
-                }
-            }
-        } catch (\Exception $e) {
-            // Tables might not exist yet
-        }
-        
-        return $stats;
-    }
-    
-    /**
-     * Get intern skills
-     */
-    private function getInternSkills($internId)
-    {
-        if (!Schema::hasTable('intern_skills')) {
-            return collect([]);
-        }
-        
-        try {
-            $skills = DB::table('intern_skills')
-                ->where('intern_id', $internId)
-                ->pluck('skill');
-            
-            // Filter out any email addresses from skills
-            $filteredSkills = $skills->filter(function($skill) {
-                return !filter_var($skill, FILTER_VALIDATE_EMAIL);
-            });
-            
-            // Also filter out empty strings
-            $filteredSkills = $filteredSkills->filter(function($skill) {
-                return !empty(trim($skill));
-            });
-            
-            return $filteredSkills;
-        } catch (\Exception $e) {
-            return collect([]);
-        }
-    }
-
-    /**
-     * Show intern's own portfolio (authenticated view)
-     * This is the same as public profile but for the intern to preview
-     */
     public function portfolio()
     {
-        $intern = Auth::guard('intern')->user();
-        
-        if (!$intern) {
-            return redirect()->route('login');
-        }
-        
-        $profileImage = Helpers::getProfileImage($intern);
-        $stats = $this->getProfileStats($intern->eti_id);
-        $skills = $this->getInternSkills($intern->int_id);
-        
-        // Get completed projects - with safe ordering
-        $projects = collect([]);
-        if (Schema::hasTable('intern_projects')) {
-            $query = DB::table('intern_projects')
-                ->where('eti_id', $intern->eti_id)
-                ->where('pstatus', 'approved');
-            
-            // Check if created_at column exists before ordering by it
-            if (Schema::hasColumn('intern_projects', 'created_at')) {
-                $query->orderBy('created_at', 'desc');
-            } elseif (Schema::hasColumn('intern_projects', 'project_id')) {
-                $query->orderBy('project_id', 'desc');
-            } elseif (Schema::hasColumn('intern_projects', 'end_date')) {
-                $query->orderBy('end_date', 'desc');
-            }
-            
-            $projects = $query->limit(10)->get();
-        }
-        
-        // Get certificates
-        $certificates = collect([]);
-        if (Schema::hasTable('generated_certificates')) {
-            $query = DB::table('generated_certificates')
-                ->where('intern_id', $intern->int_id)
-                ->where('status', 'approved');
-            
-            if (Schema::hasColumn('generated_certificates', 'created_at')) {
-                $query->orderBy('created_at', 'desc');
-            } elseif (Schema::hasColumn('generated_certificates', 'id')) {
-                $query->orderBy('id', 'desc');
-            }
-            
-            $certificates = $query->get();
-        }
-        
-        return view('pages.intern.profile.public', compact(
-            'intern', 'profileImage', 'stats', 'skills', 'projects', 'certificates'
-        ));
+        return $this->publicProfile();
     }
 }

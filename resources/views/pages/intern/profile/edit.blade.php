@@ -1,15 +1,30 @@
 @php
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\Helpers;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 $intern = Auth::guard('intern')->user();
 $profileImage = Helpers::getProfileImage($intern);
 
-$skillsArray = $skills->toArray();
-$skillsArray = array_filter($skillsArray, function($skill) {
-    return !filter_var($skill, FILTER_VALIDATE_EMAIL);
-});
-$skillsArray = array_values($skillsArray);
+// Get skills from controller or database
+$skillsList = [];
+if (isset($skills) && $skills->count() > 0) {
+    $skillsList = $skills->toArray();
+} elseif (isset($skillsArray) && is_array($skillsArray) && count($skillsArray) > 0) {
+    $skillsList = $skillsArray;
+} else {
+    // Direct database fetch
+    if (Schema::hasTable('intern_skills')) {
+        $skillsList = DB::table('intern_skills')
+            ->where('intern_id', $intern->int_id)
+            ->pluck('skill')
+            ->toArray();
+    }
+}
+$skillsList = array_values(array_filter($skillsList, function($skill) {
+    return !empty(trim($skill));
+}));
 @endphp
 
 @extends('layouts/layoutMaster')
@@ -18,6 +33,7 @@ $skillsArray = array_values($skillsArray);
 
 @section('page-style')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
     .avatar-upload-preview {
         width: 120px;
@@ -26,27 +42,56 @@ $skillsArray = array_values($skillsArray);
         border: 3px solid #f8f9fa;
     }
     .skill-tag {
-        font-size: 0.85rem;
         display: inline-flex;
         align-items: center;
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .skill-tag:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     .skill-tag .btn-close {
         font-size: 0.5rem;
         margin-left: 0.5rem;
+        width: 0.5rem;
+        height: 0.5rem;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    .skill-tag .btn-close:hover {
+        opacity: 1;
     }
     .form-label {
         font-weight: 600;
         font-size: 0.875rem;
         color: #495057;
     }
+    .skills-container {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        min-height: 80px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .skills-container input {
+        flex: 1;
+        min-width: 150px;
+    }
 </style>
 @endsection
 
 @section('content')
-<div class="container-py-4">
+<div class="container py-4">
     <form id="profileForm" action="{{ route('intern.profile.update') }}" method="POST">
         @csrf
-        @method('PUT')
 
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
@@ -79,12 +124,18 @@ $skillsArray = array_values($skillsArray);
                         <h6 class="fw-bold mb-0"><i class="bi bi-code-slash me-2 text-primary"></i>Skills & Technologies</h6>
                     </div>
                     <div class="card-body px-4 pb-4">
-                        <div class="border rounded p-2 bg-light mb-2 d-flex flex-wrap gap-2" id="skillsWrap">
+                        <div class="skills-container mb-2" id="skillsWrap">
+                            @foreach($skillsList as $skill)
+                            <span class="skill-tag badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 py-2 px-3" data-skill="{{ $skill }}">
+                                {{ $skill }}
+                                <button type="button" class="btn-close" onclick="confirmRemoveSkill('{{ addslashes($skill) }}', {{ $loop->index }})"></button>
+                            </span>
+                            @endforeach
                             <input type="text" id="skills_text" class="form-control form-control-sm border-0 bg-transparent" 
-                                   placeholder="Add a skill..." style="box-shadow: none; min-width: 100px;">
+                                   placeholder="Type a skill and press Enter..." style="box-shadow: none; width: auto; flex: 1;">
                         </div>
-                        <input type="hidden" name="skills" id="skills_hidden">
-                        <small class="text-muted">Press Enter or comma to add tags.</small>
+                        <input type="hidden" name="skills" id="skills_hidden" value='@json($skillsList)'>
+                        <small class="text-muted">Type a skill and press Enter to add. Click the × to remove.</small>
                     </div>
                 </div>
             </div>
@@ -112,7 +163,7 @@ $skillsArray = array_values($skillsArray);
                                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
                                     <input type="email" class="form-control border-start-0 bg-light" value="{{ $intern->email }}" disabled>
                                 </div>
-                                <small class="text-muted italic"><i class="bi bi-info-circle me-1"></i>Email cannot be modified.</small>
+                                <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Email cannot be modified.</small>
                             </div>
 
                             <div class="col-md-6">
@@ -199,49 +250,168 @@ $skillsArray = array_values($skillsArray);
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    /* --- Skills Tagger --- */
-    const wrap = document.getElementById("skillsWrap");
-    const input = document.getElementById("skills_text");
-    const hidden = document.getElementById("skills_hidden");
-    let skills = @json($skillsArray);
+// Global skills array
+let globalSkills = @json($skillsList);
 
-    function renderTags() {
-        wrap.querySelectorAll('.skill-tag').forEach(t => t.remove());
-        skills.forEach((s, i) => {
-            const tag = document.createElement('span');
-            tag.className = 'badge bg-primary-subtle text-primary border border-primary-subtle skill-tag py-2 px-3';
-            tag.innerHTML = `${s} <button type="button" class="btn-close" onclick="removeSkill(${i})"></button>`;
-            wrap.insertBefore(tag, input);
-        });
-        hidden.value = JSON.stringify(skills);
-    }
-
-    window.removeSkill = function(index) {
-        skills.splice(index, 1);
-        renderTags();
-    };
-
-    input.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            let val = input.value.trim().replace(/,$/, '');
-            if (val && !skills.includes(val)) {
-                skills.push(val);
-                renderTags();
+function renderSkills() {
+    const wrap = document.getElementById('skillsWrap');
+    const input = document.getElementById('skills_text');
+    const hidden = document.getElementById('skills_hidden');
+    
+    if (!wrap || !input) return;
+    
+    // Remove all existing skill tags
+    const tags = wrap.querySelectorAll('.skill-tag');
+    tags.forEach(tag => tag.remove());
+    
+    // Add skill tags
+    if (globalSkills && globalSkills.length > 0) {
+        globalSkills.forEach((skill, index) => {
+            if (skill && skill.trim() !== '') {
+                const tag = document.createElement('span');
+                tag.className = 'skill-tag badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 py-2 px-3';
+                tag.innerHTML = `${escapeHtml(skill)} <button type="button" class="btn-close" onclick="confirmRemoveSkill('${escapeHtml(skill)}', ${index})"></button>`;
+                wrap.insertBefore(tag, input);
             }
-            input.value = '';
+        });
+    }
+    
+    // Update hidden field
+    if (hidden) {
+        hidden.value = JSON.stringify(globalSkills);
+    }
+}
+
+function confirmRemoveSkill(skillName, index) {
+    Swal.fire({
+        title: 'Remove Skill?',
+        text: `Remove "${skillName}" from your skills?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, remove',
+        cancelButtonText: 'Cancel',
+        toast: false,
+        position: 'center',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdrop: 'rgba(0,0,0,0.2)'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            removeSkill(index, skillName);
         }
     });
+}
 
-    renderTags();
+function removeSkill(index, skillName) {
+    globalSkills.splice(index, 1);
+    renderSkills();
+    
+    // Center toast message
+    Swal.fire({
+        icon: 'success',
+        title: 'Removed!',
+        text: `"${skillName}" has been removed from your skills.`,
+        toast: false,
+        position: 'center',
+        showConfirmButton: true,
+        confirmButtonColor: '#2b9a82',
+        confirmButtonText: 'OK',
+        timer: 2500,
+        timerProgressBar: true,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdrop: 'rgba(0,0,0,0.1)'
+    });
+}
+
+function addSkill(skill) {
+    if (skill && !globalSkills.includes(skill)) {
+        globalSkills.push(skill);
+        renderSkills();
+        
+        // Center toast message for add
+        Swal.fire({
+            icon: 'success',
+            title: 'Added!',
+            text: `"${skill}" has been added to your skills.`,
+            toast: false,
+            position: 'center',
+            showConfirmButton: true,
+            confirmButtonColor: '#2b9a82',
+            confirmButtonText: 'OK',
+            timer: 2000,
+            timerProgressBar: true,
+            background: 'rgba(255, 255, 255, 0.95)'
+        });
+        return true;
+    } else if (skill && globalSkills.includes(skill)) {
+        // Center warning for duplicate
+        Swal.fire({
+            icon: 'warning',
+            title: 'Already Exists!',
+            text: `"${skill}" is already in your skills list.`,
+            toast: false,
+            position: 'center',
+            showConfirmButton: true,
+            confirmButtonColor: '#2b9a82',
+            confirmButtonText: 'OK',
+            timer: 2000,
+            timerProgressBar: true,
+            background: 'rgba(255, 255, 255, 0.95)'
+        });
+        return false;
+    }
+    return false;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Initial render
+    renderSkills();
+    
+    // Handle Enter key for adding skills
+    const input = document.getElementById("skills_text");
+    if (input) {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                let newSkill = this.value.trim();
+                if (newSkill) {
+                    addSkill(newSkill);
+                    this.value = '';
+                }
+                return false;
+            }
+        });
+    }
+    
+    // Form submit - ensure hidden field is updated
+    const form = document.getElementById('profileForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const hidden = document.getElementById('skills_hidden');
+            if (hidden) {
+                hidden.value = JSON.stringify(globalSkills);
+            }
+        });
+    }
 
     /* --- Character Count --- */
     const bio = document.getElementById("bioTextarea");
     const cnt = document.getElementById("bioCount");
-    bio.addEventListener('input', () => cnt.textContent = bio.value.length);
-    cnt.textContent = bio.value.length;
+    if (bio && cnt) {
+        bio.addEventListener('input', () => cnt.textContent = bio.value.length);
+        cnt.textContent = bio.value.length;
+    }
 });
 
 function checkStrength(v) {
@@ -252,23 +422,33 @@ function checkStrength(v) {
     if (/[0-9]/.test(v)) strength += 25;
     if (/[^A-Za-z0-9]/.test(v)) strength += 25;
     
-    fill.style.width = strength + '%';
-    fill.className = 'progress-bar ' + (strength < 50 ? 'bg-danger' : (strength < 100 ? 'bg-warning' : 'bg-success'));
+    if (fill) {
+        fill.style.width = strength + '%';
+        fill.className = 'progress-bar ' + (strength < 50 ? 'bg-danger' : (strength < 100 ? 'bg-warning' : 'bg-success'));
+    }
 }
 
 function checkMatch() {
-    const np = document.getElementById('new_password').value;
-    const cp = document.getElementById('new_password_confirmation').value;
+    const np = document.getElementById('new_password');
+    const cp = document.getElementById('new_password_confirmation');
     const msg = document.getElementById('matchMsg');
-    if (!cp) return msg.textContent = '';
-    msg.textContent = (np === cp) ? 'Passwords match' : 'Passwords do not match';
-    msg.className = 'mt-1 d-block small ' + (np === cp ? 'text-success' : 'text-danger');
+    if (!np || !cp || !msg) return;
+    
+    if (!cp.value) {
+        msg.textContent = '';
+        return;
+    }
+    msg.textContent = (np.value === cp.value) ? 'Passwords match' : 'Passwords do not match';
+    msg.className = 'mt-1 d-block small ' + (np.value === cp.value ? 'text-success' : 'text-danger');
 }
 
 function previewModal(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
-        reader.onload = e => document.getElementById('modalPreview').src = e.target.result;
+        reader.onload = e => {
+            const preview = document.getElementById('modalPreview');
+            if (preview) preview.src = e.target.result;
+        };
         reader.readAsDataURL(input.files[0]);
     }
 }
