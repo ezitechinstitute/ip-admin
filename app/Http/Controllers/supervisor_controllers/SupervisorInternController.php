@@ -14,26 +14,37 @@ class SupervisorInternController extends Controller
      */
     private function getSupervisorTechnology()
     {
-        return strtolower(trim(session('manager_department')));
+        // On live, we want the raw value first: "Web Development"
+        return session('manager_department', '');
     }
 
     /**
      * Apply common filters
      */
-    private function applyTechnologyFilter($query, $technology)
-    {
-         if ($technology === 'web development') {
-            $query->whereIn('int_technology', ['Laravel', 'ReactJS', 'Flutter']);
-        } else {
-            $query->where('int_technology', 'LIKE', '%' . $technology . '%');
-        }
-
+   private function applyTechnologyFilter($query, $technology)
+{
+    if (empty($technology)) {
         return $query;
-        // if (!empty($technology)) {
-        //     $query->where('int_technology', 'LIKE', '%' . $technology . '%');
-        // }
-        // return $query;
     }
+
+    // Standardize the input
+    $techLower = strtolower(trim($technology));
+
+    // Fix: Use a broad LIKE search for everything. 
+    // This handles "Web Development", "Laravel", "Video Editing" etc. all in one line.
+    $query->where(function($q) use ($techLower, $technology) {
+        if ($techLower === 'web development') {
+            // For Web Dev, we still check the specific group OR the name itself
+            $q->whereIn('int_technology', ['Laravel', 'laravel', 'ReactJS', 'reactjs', 'Flutter', 'flutter'])
+              ->orWhere('int_technology', 'LIKE', '%' . $technology . '%');
+        } else {
+            // For all other departments (Video, Graphics, etc.)
+            $q->where('int_technology', 'LIKE', '%' . $technology . '%');
+        }
+    });
+
+    return $query;
+}
 
     /**
      * My Interns (ALL)
@@ -41,6 +52,8 @@ class SupervisorInternController extends Controller
     public function myInterns(Request $request)
 {
     $technology = $this->getSupervisorTechnology();
+    // DEBUG LINE: Remove this once you see the result on your live site
+    // dd($technology, session()->all());
 
     // Start with your original select
     $query = DB::table('intern_accounts')

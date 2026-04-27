@@ -1,0 +1,21 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "http:\/\/localhost"
+        }
+    ],
+    "info": {
+        "name": "Laravel API Documentation",
+        "_postman_id": "df3ea2fd-83e7-4630-97b6-048b1dc4954a",
+        "description": "",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+    },
+    "item": [],
+    "auth": {
+        "type": "noauth"
+    }
+}
