@@ -134,9 +134,82 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const filterSelect = document.getElementById('internFilter');
-    let isFetching = false; // Prevent multiple simultaneous AJAX calls
+    
+    if ($.fn.select2) {
+        $('#internFilter').select2().on('change', function() {
+            filterSelect.dispatchEvent(new Event('change'));
+        });
+    }
 
-    // 1. Initialize Sortable FIRST
+    if (filterSelect) {
+        filterSelect.addEventListener('change', function(e) {
+            const etiId = e.target.value;
+            document.querySelectorAll('.kanban-list').forEach(list => list.innerHTML = '');
+            
+            fetch(`{{ route('supervisor.tasks.fetchKanbanAjax') }}?eti_id=${etiId}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.tasks.forEach(task => {
+                        const column = document.querySelector(`.kanban-list[data-status="${task.status}"]`);
+                        if (!column) return;
+
+                        let cardClass = 'border-0';
+                        let customBadge = '';
+                        let dateText = `<small class="text-muted"><i class="ti tabler-calendar ti-xs me-1"></i>${task.end_date}</small>`;
+
+                        if (task.status === 'Expired') {
+                            cardClass = 'expired-card';
+                            customBadge = '<span class="badge bg-label-danger btn-xs">EXPIRED</span>';
+                        } 
+                        else if (task.is_overdue) {
+                            cardClass = 'overdue-glow border-start border-danger border-3';
+                            customBadge = '<span class="badge bg-danger pulse-danger btn-xs">OVERDUE</span>';
+                        }
+
+                        const typeBadge = task.type === 'project' 
+                            ? '<span class="badge bg-label-info btn-xs">Project</span>' 
+                            : '<span class="badge bg-label-primary btn-xs">Task</span>';
+                        
+                        let actionButtons = `<a href="${task.edit_url}" class="btn btn-sm btn-icon text-secondary"><i class="ti tabler-edit ti-xs"></i></a>`;
+                        if (task.type !== 'project') {
+                            actionButtons = `<a href="${task.review_url}" class="btn btn-sm btn-icon text-primary"><i class="ti tabler-eye ti-xs"></i></a>` + actionButtons;
+                        }
+
+                        const cardHtml = `
+                            <div class="card kanban-task-card shadow-sm ${cardClass}" data-task-id="${task.id}" data-task-type="${task.type}" style="cursor:grab">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <div class="d-flex gap-1">${typeBadge}${customBadge}</div>
+                                        <div class="avatar avatar-xs">
+                                            <span class="avatar-initial rounded-circle bg-label-secondary small">${task.intern_name.charAt(0)}</span>
+                                        </div>
+                                    </div>
+                                    <h6 class="mb-2 fw-bold text-heading">${task.title}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted fw-medium">${task.intern_name}</small>
+                                        ${dateText}
+                                    </div>
+                                    <div class="d-flex justify-content-end mt-3 pt-2 border-top">
+                                        ${actionButtons}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        column.insertAdjacentHTML('beforeend', cardHtml);
+                    });
+                    updateColumnBadges();
+                });
+        });
+        filterSelect.dispatchEvent(new Event('change'));
+    }
+
+    function updateColumnBadges() {
+        document.querySelectorAll('.kanban-column').forEach(col => {
+            const taskCount = col.querySelectorAll('.kanban-task-card').length;
+            col.querySelector('.column-badge').textContent = taskCount;
+        });
+    }
+
     if (typeof Sortable !== 'undefined') {
         document.querySelectorAll('.kanban-list').forEach(column => {
             new Sortable(column, {
@@ -167,96 +240,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
-
-    // 2. The Task Fetching Function
-    function loadKanbanTasks(etiId) {
-        if (isFetching) return;
-        isFetching = true;
-
-        // Clear columns before injection to prevent duplication
-        document.querySelectorAll('.kanban-list').forEach(list => list.innerHTML = '');
-
-        fetch(`{{ route('supervisor.tasks.fetchKanbanAjax') }}?eti_id=${etiId}`)
-            .then(response => response.json())
-            .then(data => {
-                data.tasks.forEach(task => {
-                    const column = document.querySelector(`.kanban-list[data-status="${task.status}"]`);
-                    if (!column) return;
-
-                    let cardClass = 'border-0';
-                    let customBadge = '';
-                    let dateText = `<small class="text-muted"><i class="ti tabler-calendar ti-xs me-1"></i>${task.end_date}</small>`;
-
-                    if (task.status === 'Expired') {
-                        cardClass = 'expired-card';
-                        customBadge = '<span class="badge bg-label-danger btn-xs">EXPIRED</span>';
-                    } 
-                    else if (task.is_overdue) {
-                        cardClass = 'overdue-glow border-start border-danger border-3';
-                        customBadge = '<span class="badge bg-danger pulse-danger btn-xs">OVERDUE</span>';
-                    }
-
-                    const typeBadge = task.type === 'project' 
-                        ? '<span class="badge bg-label-info btn-xs">Project</span>' 
-                        : '<span class="badge bg-label-primary btn-xs">Task</span>';
-                    
-                    let actionButtons = `<a href="${task.edit_url}" class="btn btn-sm btn-icon text-secondary"><i class="ti tabler-edit ti-xs"></i></a>`;
-                    if (task.type !== 'project') {
-                        actionButtons = `<a href="${task.review_url}" class="btn btn-sm btn-icon text-primary"><i class="ti tabler-eye ti-xs"></i></a>` + actionButtons;
-                    }
-
-                    const cardHtml = `
-                        <div class="card kanban-task-card shadow-sm ${cardClass}" data-task-id="${task.id}" data-task-type="${task.type}" style="cursor:grab">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <div class="d-flex gap-1">${typeBadge}${customBadge}</div>
-                                    <div class="avatar avatar-xs">
-                                        <span class="avatar-initial rounded-circle bg-label-secondary small">${task.intern_name.charAt(0)}</span>
-                                    </div>
-                                </div>
-                                <h6 class="mb-2 fw-bold text-heading">${task.title}</h6>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted fw-medium">${task.intern_name}</small>
-                                    ${dateText}
-                                </div>
-                                <div class="d-flex justify-content-end mt-3 pt-2 border-top">
-                                    ${actionButtons}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    column.insertAdjacentHTML('beforeend', cardHtml);
-                });
-                updateColumnBadges();
-                isFetching = false;
-            })
-            .catch(() => { isFetching = false; });
-    }
-
-    // 3. Initialize Select2 and Handlers
-    if ($.fn.select2) {
-        $('#internFilter').select2({
-            placeholder: "Filter by Intern",
-            allowClear: true
-        }).on('change', function() {
-            loadKanbanTasks($(this).val());
-        });
-    } else {
-        filterSelect.addEventListener('change', function() {
-            loadKanbanTasks(this.value);
-        });
-    }
-
-    function updateColumnBadges() {
-        document.querySelectorAll('.kanban-column').forEach(col => {
-            const taskCount = col.querySelectorAll('.kanban-task-card').length;
-            const badge = col.querySelector('.column-badge');
-            if(badge) badge.textContent = taskCount;
-        });
-    }
-
-    // Initial Load
-    loadKanbanTasks('all');
 });
 </script>
 @endsection   
