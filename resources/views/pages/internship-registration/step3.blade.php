@@ -224,12 +224,6 @@
 
             <p class="text-muted small text-center mb-3">{{ $plan['description'] }}</p>
 
-            <div class="text-center mb-4">
-              <div class="text-decoration-line-through text-muted small">{{ $plan['oldPrice'] }}</div>
-              <div class="fs-{{ $isRecommended ? '2' : '3' }} fw-bold {{ $isRecommended ? 'text-primary' : 'text-success' }}">{{ $plan['price'] }}</div>
-              <small class="text-success fw-bold">{{ $plan['discount'] }}</small>
-            </div>
-
             <div class="flex-grow-1">
               <h6 class="text-uppercase text-muted mb-3" style="font-size:12px; font-weight: 600;">What You Will Get</h6>
 
