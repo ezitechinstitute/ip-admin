@@ -9,15 +9,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE transactions 
-            MODIFY instructor_email VARCHAR(255) NULL,
-            MODIFY manager_email VARCHAR(255) NULL");
+        if (Schema::hasTable('transactions')) {
+            if (Schema::hasColumn('transactions', 'instructor_email')) {
+                DB::statement("ALTER TABLE transactions MODIFY instructor_email VARCHAR(255) NULL");
+            }
+            if (Schema::hasColumn('transactions', 'manager_email')) {
+                DB::statement("ALTER TABLE transactions MODIFY manager_email VARCHAR(255) NULL");
+            }
+        }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE transactions 
-            MODIFY instructor_email VARCHAR(255) NOT NULL,
-            MODIFY manager_email VARCHAR(255) NOT NULL");
+        if (Schema::hasTable('transactions')) {
+            if (Schema::hasColumn('transactions', 'instructor_email')) {
+                DB::statement("ALTER TABLE transactions MODIFY instructor_email VARCHAR(255) NOT NULL");
+            }
+            if (Schema::hasColumn('transactions', 'manager_email')) {
+                DB::statement("ALTER TABLE transactions MODIFY manager_email VARCHAR(255) NOT NULL");
+            }
+        }
     }
 };
