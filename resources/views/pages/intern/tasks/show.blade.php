@@ -235,7 +235,7 @@
             @endif
 
             {{-- Submission Card --}}
-            @if($task->task_git_url || $task->task_live_url || $task->task_screenshot || $task->submit_description)
+            @if(isset($task->task_git_url) && $task->task_git_url || isset($task->task_live_url) && $task->task_live_url || isset($task->task_screenshot) && $task->task_screenshot || isset($task->submit_description) && $task->submit_description)
             <div class="glass-card p-4 mb-4 animate-card" style="animation-delay: 0.3s;">
                 <div class="d-flex align-items-center gap-2 mb-3">
                     <i class="bi bi-upload text-primary fs-3"></i>
