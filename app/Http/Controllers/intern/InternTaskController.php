@@ -216,15 +216,22 @@ class InternTaskController extends Controller
         ]);
         
         $updateData = [
-            'task_git_url' => $validated['task_git_url'] ?? null,
-            'task_live_url' => $validated['task_live_url'] ?? null,
             'task_status' => 'submitted',
             'updated_at' => now(),
         ];
         
-        // Add submit_description only for intern tasks
-        if ($taskSource === 'intern') {
-            $updateData['submit_description'] = $validated['submit_description'] ?? null;
+        // Only add fields if they are provided
+        if (!empty($validated['task_git_url'])) {
+            $updateData['task_git_url'] = $validated['task_git_url'];
+        }
+        
+        if (!empty($validated['task_live_url'])) {
+            $updateData['task_live_url'] = $validated['task_live_url'];
+        }
+        
+        // Add submit_description only for intern tasks if provided
+        if ($taskSource === 'intern' && !empty($validated['submit_description'])) {
+            $updateData['submit_description'] = $validated['submit_description'];
         }
         
         // Handle file upload
