@@ -179,9 +179,9 @@
                                 <div>
                                     <small class="text-muted d-block">Points / Score</small>
                                     <div class="fw-semibold">{{ $task->task_points ?? 'Not specified' }}</div>
-                                    @if($task->grade)
+                                    @isset($task->grade)
                                     <small class="text-success">Grade: {{ $task->grade }}%</small>
-                                    @endif
+                                    @endisset
                                 </div>
                             </div>
                         </div>
