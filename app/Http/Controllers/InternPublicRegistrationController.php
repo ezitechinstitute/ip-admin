@@ -6,6 +6,7 @@ use App\Models\Intern;
 use App\Models\InternAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Mail;
 use App\Services\UnifiedNotificationService;
 
 class InternPublicRegistrationController extends Controller
@@ -148,9 +149,9 @@ class InternPublicRegistrationController extends Controller
     ]);
 
     // Create Intern Account
-    InternAccount::create([
+    $internAccount = InternAccount::create([
         'int_id' => $intern->id,
-     'eti_id' => 'ETI-' . $intern->id,
+        'eti_id' => 'ETI-' . $intern->id,
         'name' => $step1Data['full_name'] ?? '',
         'email' => $step1Data['email'] ?? '',
         'phone' => $step1Data['whatsapp'] ?? '',
@@ -162,38 +163,44 @@ class InternPublicRegistrationController extends Controller
         'start_date' => now(),
     ]);
 
-     // ✅ Send email to intern (AFTER data saved, BEFORE redirect)
-        $notificationService = app(UnifiedNotificationService::class);
-        
-        $notificationService->send(
-            $intern,
-            'intern',
-            'registration_complete',
-            'Welcome to Ezitech Internship Program!',
-            "Dear {$step1Data['full_name']},\n\n" .
-            "Thank you for registering with Ezitech Internship Program.\n\n" .
-            "Your registration has been received successfully.\n" .
-            "Your ETI ID: ETI-{$intern->id}\n\n" .
-            "Our team will review your application and contact you soon for an interview.\n\n" .
-            "Best regards,\nEzitech Team",
-            ['action_url' => '/intern/login']
-        );
-        
-        // ✅ Send email to Admin
-        $admin = AdminAccount::first();
-        if ($admin) {
-            $notificationService->send(
-                $admin,
-                'admin',
-                'new_registration',
-                'New Intern Registration',
-                "A new intern has registered:\n" .
-                "Name: {$step1Data['full_name']}\n" .
-                "Email: {$step1Data['email']}\n" .
-                "Technology: {$step1Data['technology']}",
-                ['action_url' => '/admin/all-interns']
-            );
+    // ✅ Send Welcome Email to Intern
+    try {
+        Mail::send('mail.intern_welcome', [
+            'name' => $step1Data['full_name'] ?? '',
+            'email' => $step1Data['email'] ?? '',
+            'eti_id' => 'ETI-' . $intern->id,
+            'intern_id' => $intern->id,
+            'password' => 'default_password_' . $intern->id,
+        ], function($mail) use ($step1Data, $intern) {
+            $mail->to($step1Data['email'], $step1Data['full_name'])
+                ->subject('Welcome to Ezitech Internship Program!')
+                ->from(config('mail.from.address', 'info@ezitech.org'), 'Ezitech Learning Institute');
+        });
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('Welcome email failed: ' . $e->getMessage());
+    }
+    
+    // ✅ Send Notification to Admin
+    $admin = AdminAccount::first();
+    if ($admin) {
+        try {
+            Mail::send('mail.notification', [
+                'name' => $admin->name ?? 'Admin',
+                'messageBody' => "A new intern has registered:\n\n" .
+                    "Name: {$step1Data['full_name']}\n" .
+                    "Email: {$step1Data['email']}\n" .
+                    "Technology: {$step1Data['technology']}\n" .
+                    "ETI ID: ETI-{$intern->id}",
+                'action_url' => url('/admin/all-interns'),
+            ], function($mail) use ($admin) {
+                $mail->to($admin->email, $admin->name)
+                    ->subject('New Intern Registration - ' . date('Y-m-d'))
+                    ->from(config('mail.from.address', 'info@ezitech.org'), 'Ezitech Learning Institute');
+            });
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Admin notification email failed: ' . $e->getMessage());
         }
+    }
 
     Session::forget(['intern_reg_step1', 'intern_reg_step2']);
     
