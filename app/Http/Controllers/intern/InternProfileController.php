@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\intern;
-
+use App\Models\InternAccount;
 use App\Http\Controllers\Controller;
 use App\Services\PortfolioService;
 use Illuminate\Http\Request;
