@@ -41,6 +41,8 @@ $earnedCount = collect($badges)->where('earned', true)->count();
 $totalBadges = count($badges);
 @endphp
 
+
+
 @extends('layouts/layoutMaster')
 
 @section('title', 'My Profile')
@@ -210,6 +212,8 @@ $totalBadges = count($badges);
 </style>
 @endsection
 
+
+
 @section('content')
 <div class="container-xxl py-4">
     
@@ -222,9 +226,9 @@ $totalBadges = count($badges);
             <div class="d-flex align-items-end justify-content-between flex-wrap gap-3">
                 <div class="d-flex align-items-end gap-3">
                     <div class="position-relative flex-shrink-0">
-                        <img src="{{ $profileImage }}" alt="Profile"
-                             class="rounded-circle border border-3 border-white shadow-sm"
-                             style="width: 120px; height: 120px; object-fit: cover; display: block;">
+<img src="{{ $profileImage }}?v={{ session('image_time', time()) }}" alt="Profile"
+     class="rounded-circle border border-3 border-white shadow-sm"
+     style="width: 120px; height: 120px; object-fit: cover; display: block;">
                         <button class="btn btn-primary btn-sm position-absolute bottom-0 end-0 rounded-circle shadow-sm p-1"
                                 data-bs-toggle="modal" data-bs-target="#uploadImageModal"
                                 style="width: 34px; height: 34px;">
@@ -441,8 +445,7 @@ $totalBadges = count($badges);
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img id="imagePreview" src="{{ $profileImage }}" class="rounded-circle mb-3 shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">
-                    <input type="file" name="profile_image" class="form-control form-control-sm rounded-pill" accept="image/*" onchange="previewImage(this)">
+<img id="imagePreview" src="{{ $profileImage }}?v={{ time() }}" class="rounded-circle mb-3 shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">                    <input type="file" name="profile_image" class="form-control form-control-sm rounded-pill" accept="image/*" onchange="previewImage(this)">
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="submit" class="btn btn-primary rounded-pill w-100">Save Changes</button>
