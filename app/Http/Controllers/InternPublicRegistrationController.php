@@ -220,6 +220,36 @@ class InternPublicRegistrationController extends Controller
         return view('pages.internship-registration.success');
     }
     
+    // ========== RESEND CONFIRMATION EMAIL ==========
+    
+    public function resendConfirmationEmail(Request $request)
+    {
+        $registrationData = Session::get('registration_success');
+        
+        if (!$registrationData) {
+            return back()->with('error', 'No registration data found. Please complete your registration first.');
+        }
+        
+        try {
+            Mail::send('mail.intern_welcome', [
+                'name' => $registrationData['name'],
+                'email' => $registrationData['email'],
+                'eti_id' => $registrationData['eti_id'],
+                'intern_id' => str_replace('ETI-', '', $registrationData['eti_id']),
+                'password' => 'default_password_' . str_replace('ETI-', '', $registrationData['eti_id']),
+            ], function($mail) use ($registrationData) {
+                $mail->to($registrationData['email'], $registrationData['name'])
+                    ->subject('Ezitech Internship Program - Confirmation Email')
+                    ->from(config('mail.from.address', 'info@ezitech.org'), 'Ezitech Learning Institute');
+            });
+            
+            return back()->with('success', 'Confirmation email has been resent to ' . $registrationData['email']);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Resend confirmation email failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to send email. Please try again later or contact support.');
+        }
+    }
+    
     // ========== HELPER METHODS ==========
     
     private function calculateSkillMatch($answers)

@@ -176,6 +176,23 @@ $customizerHidden = 'customizer-hide';
         <!-- Success Message -->
         <div class="d-flex col-12 col-xl-4 align-items-center authentication-bg p-sm-12 p-6">
             <div class="success-container w-100">
+                @if(session('success'))
+                    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; text-align: left;">
+                        <div style="color: #155724; font-size: 0.95rem;">
+                            <i class="icon-base ti tabler-check" style="color: #28a745; margin-right: 0.5rem;"></i>
+                            {{ session('success') }}
+                        </div>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; text-align: left;">
+                        <div style="color: #721c24; font-size: 0.95rem;">
+                            <i class="icon-base ti tabler-alert-circle" style="color: #dc3545; margin-right: 0.5rem;"></i>
+                            {{ session('error') }}
+                        </div>
+                    </div>
+                @endif
                 <div class="success-icon">
                     <i class="icon-base ti tabler-check"></i>
                 </div>
@@ -233,9 +250,12 @@ $customizerHidden = 'customizer-hide';
                     <a href="{{ url('/') }}" class="btn btn-primary">
                         Back to Login <i class="icon-base ti tabler-arrow-right ms-2"></i>
                     </a>
-                    <a href="javascript:void(0)" class="btn btn-outline-primary" onclick="alert('Check your email for further instructions.')">
-                        Resend Confirmation Email
-                    </a>
+                    <form action="{{ route('resend-confirmation-email') }}" method="POST" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            Resend Confirmation Email
+                        </button>
+                    </form>
                 </div>
 
                 <div class="contact-info">

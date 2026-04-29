@@ -480,6 +480,9 @@ Route::prefix('/intern-register')->group(function () {
     
     // Success page
     Route::get('/success', [InternPublicRegistrationController::class, 'success'])->name('intern.register.success');
+    
+    // Resend confirmation email
+    Route::post('/resend-confirmation-email', [InternPublicRegistrationController::class, 'resendConfirmationEmail'])->name('resend-confirmation-email');
 });
 // Public Intern Registration Routes - End
 
