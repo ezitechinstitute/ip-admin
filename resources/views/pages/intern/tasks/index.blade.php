@@ -598,11 +598,11 @@
                     @endif
 <td class="text-end">
     <div class="d-flex justify-content-end gap-2">
-        <a href="{{ route('intern.portal.tasks.show', $task->task_id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+        <a href="{{ route('intern.tasks.show', $task->task_id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
             <i class="bi bi-eye"></i> View
         </a>
         @if(in_array($task->task_status, ['pending', 'Assigned', 'Rejected', 'rejected']))
-        <form action="{{ route('intern.portal.tasks.submit', $task->task_id) }}" method="POST" style="display: inline-block;" class="submit-task-form">
+        <form action="{{ route('intern.tasks.submit', $task->task_id) }}" method="POST" style="display: inline-block;" class="submit-task-form">
             @csrf
             <button type="submit" class="btn btn-sm btn-primary rounded-pill submit-btn">
                 <i class="bi bi-cloud-upload"></i> Submit
@@ -663,9 +663,9 @@
                                 <div class="mt-1"><span class="badge bg-primary bg-opacity-10 text-primary">⭐ {{ $score }}%</span></div>
                                 @endif
                                 <div class="mt-2 d-flex justify-content-between align-items-center">
-                                    <a href="{{ route('intern.portal.tasks.show', $task->task_id) }}" class="btn btn-sm btn-outline-primary rounded-pill">View</a>
+                                    <a href="{{ route('intern.tasks.show', $task->task_id) }}" class="btn btn-sm btn-outline-primary rounded-pill">View</a>
                                     @if(in_array($task->task_status, ['pending', 'Assigned', 'Rejected', 'rejected']))
-                                    <form action="{{ route('intern.portal.tasks.submit', $task->task_id) }}" method="POST" style="display: inline-block;" class="submit-task-form">
+                                    <form action="{{ route('intern.tasks.submit', $task->task_id) }}" method="POST" style="display: inline-block;" class="submit-task-form">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-primary rounded-pill submit-btn">
                                             <i class="bi bi-cloud-upload"></i> Submit
@@ -821,7 +821,7 @@
                                 </div>
                             </div>
                             <div>
-                                <a href="{{ route('intern.portal.tasks.show', $task->task_id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                <a href="{{ route('intern.tasks.show', $task->task_id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
                                     <i class="bi bi-arrow-right"></i> Details
                                 </a>
                             </div>

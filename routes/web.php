@@ -1039,9 +1039,9 @@ Route::post('/profile/update', [InternProfileController::class, 'update'])->name
     Route::get('/projects/{id}', [InternProjectController::class, 'show'])->name('intern.projects.show');
 
     // Tasks Routes
-    Route::get('/tasks', [InternPortalTaskController::class, 'index'])->name('intern.portal.tasks');
-    Route::get('/tasks/{id}', [InternPortalTaskController::class, 'show'])->name('intern.portal.tasks.show');
-    Route::post('/tasks/{id}/submit', [InternPortalTaskController::class, 'submit'])->name('intern.portal.tasks.submit');
+    Route::get('/tasks', [InternPortalTaskController::class, 'index'])->name('intern.tasks');
+    Route::get('/tasks/{id}', [InternPortalTaskController::class, 'show'])->name('intern.tasks.show');
+    Route::post('/tasks/{id}/submit', [InternPortalTaskController::class, 'submit'])->name('intern.tasks.submit');
 
     // Leave Routes
     Route::get('/leave', [InternLeaveController::class, 'index'])->name('intern.leave');
