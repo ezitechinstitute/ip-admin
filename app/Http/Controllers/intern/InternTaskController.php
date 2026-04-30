@@ -85,7 +85,7 @@ class InternTaskController extends Controller
             $perPage,
             $page,
             [
-                'path' => route('intern.tasks'),
+                'path' => route('intern.portal.tasks'),
                 'query' => request()->query(),
             ]
         );
@@ -261,7 +261,7 @@ class InternTaskController extends Controller
         // Create notification for intern
         $this->createSubmissionNotification($task, $intern);
         
-        return redirect()->route('intern.tasks')
+        return redirect()->route('intern.portal.tasks')
             ->with('success', 'Task submitted successfully! Waiting for supervisor review.');
     }
     

@@ -298,7 +298,7 @@
                     <h5 class="fw-bold mb-0">Submit Task</h5>
                 </div>
 
-                <form action="{{ route('intern.tasks.submit', $task->task_id) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('intern.portal.tasks.submit', $task->task_id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     
                     <div class="mb-3">
