@@ -17,7 +17,7 @@ class AllInternsController extends Controller
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     // English: Using select() to only fetch required columns (massive performance boost)
-    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
+    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'intern_type', 'created_at');
 
 //remove intern from the table
       $query->where('status', '!=', 'removed');
@@ -40,6 +40,11 @@ class AllInternsController extends Controller
     if ($request->filled('status')) {
         // English: Avoid strtolower() on columns in WHERE clause to maintain index usage
         $query->where('status', $request->status);
+    }
+
+    // 📦 Package filter
+    if ($request->filled('package')) {
+        $query->where('intern_type', $request->package);
     }
 
     // English: Use orderBy('id', 'desc') instead of latest() for better index performance on large tables

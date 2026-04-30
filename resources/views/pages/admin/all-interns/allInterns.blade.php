@@ -90,6 +90,8 @@
               <!-- Keep search & status in query -->
               <input type="hidden" name="search" value="{{ request('search') }}">
               <input type="hidden" name="status" value="{{ request('status') }}">
+              <input type="hidden" name="package" value="{{ request('package') }}">
+              <input type="hidden" name="package" value="{{ request('package') }}">
             </form>
 
 
@@ -124,6 +126,20 @@
               </option>
               @endforeach
             </select>
+
+            <select name="package" id="packageFilter" class="form-select text-capitalize">
+              <option value="">Select Package</option>
+              <option value="Training Internship" {{ request('package')=='Training Internship' ? 'selected' : '' }}>
+                Training Internship
+              </option>
+              <option value="Project Practice" {{ request('package')=='Project Practice' ? 'selected' : '' }}>
+                Project Practice
+              </option>
+              <option value="Industrial Environment" {{ request('package')=='Industrial Environment' ? 'selected' : '' }}>
+                Industrial Environment
+              </option>
+            </select>
+
             {{-- <div class="btn-group"><button class="btn buttons-collection btn-label-secondary dropdown-toggle"
                 tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="dialog"
                 aria-expanded="true"><span><span class="d-flex align-items-center gap-2"><i
@@ -218,8 +234,10 @@
                 <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
                   aria-label="Join Date"><span class="dt-column-title">Technology</span><span
                     class="dt-column-order"></span></th>
-
-                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
+                <th data-dt-column="8" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
+                  aria-label="Package"><span class="dt-column-title">Package</span><span
+                    class="dt-column-order"></span></th>
+                <th data-dt-column="9" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Status"><span
                     class="dt-column-title">Status</span><span class="dt-column-order"></span></th>
 
               
@@ -275,6 +293,9 @@
                 <td><span class="text-heading text-nowrap">{{$intern->join_date}}</span></td>
                 <td><span class="text-heading text-nowrap">{{$intern->technology}}</span></td>
                 <td>
+                  <span class="badge bg-label-info text-capitalize">{{ $intern->intern_type ?? 'N/A' }}</span>
+                </td>
+                <td>
                   @php
                   // Map statuses to Bootstrap badge classes
                   $statusClasses = [
@@ -301,7 +322,7 @@
 
               @empty
               <tr>
-                <td colspan="8">
+                <td colspan="9">
                   <p class="text-center mb-0">No data available!</p>
                 </td>
               </tr>

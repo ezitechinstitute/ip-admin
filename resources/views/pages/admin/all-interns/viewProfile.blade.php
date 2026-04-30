@@ -1004,6 +1004,7 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
                                 ['label' => 'City', 'value' => $interneeDetails->city, 'icon' => 'bi-geo-alt-fill', 'color' => 'danger'],
                                 ['label' => 'Technology', 'value' => $interneeDetails->technology, 'icon' => 'bi-code-slash', 'color' => 'primary'],
                                 ['label' => 'Duration', 'value' => $interneeDetails->duration, 'icon' => 'bi-clock-fill', 'color' => 'info'],
+                                ['label' => 'Registered Package', 'value' => $interneeDetails->intern_type ?? 'N/A', 'icon' => 'bi-gift-fill', 'color' => 'warning'],
                                 ['label' => 'Status', 'value' => $interneeDetails->status, 'icon' => 'bi-flag-fill', 'color' => 'success'],
                             ];
                         @endphp
