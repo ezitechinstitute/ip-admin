@@ -290,29 +290,7 @@
     </div>
   </div>
 
-  {{-- Approval Queue Button --}}
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="inv-card card">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div>
-            <h5 class="mb-1">Invoice Approval Management</h5>
-            <p class="text-muted mb-0 small">Review and approve invoices created by managers</p>
-          </div>
-          <a href="{{ route('admin.invoices.approval-queue') }}" class="btn btn-warning rounded-3 px-4">
-            <i class="ti ti-clock me-1"></i>Pending Approvals
-            @php
-              $pendingApprovalCount = \App\Models\invoice::where('approval_status', 'pending')->count();
-            @endphp
-            @if($pendingApprovalCount > 0)
-            <span class="badge bg-danger ms-1">{{ $pendingApprovalCount }}</span>
-            @endif
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  
   {{-- Filters Card --}}
   <div class="inv-card card mb-4">
     <div class="card-body p-4">
