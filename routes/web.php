@@ -602,7 +602,7 @@ Route::get('/export-project-tasks', [ProjectTaskController::class, 'exportProjec
 
 
 // Intern Tasks
-Route::get('intern-tasks', [InternTaskController::class, 'index'])->name('intern.tasks');
+Route::get('intern-tasks', [InternTaskController::class, 'index'])->name('admin.intern.tasks');
 Route::post('update-intern-task', [InternTaskController::class, 'updateInternTask'])->name('update.intern.task.admin');
 Route::get('/export-intern-tasks', [InternTaskController::class, 'exportInternTasksCSV'])->name('admin.export-intern-tasks');
 
