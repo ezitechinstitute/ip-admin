@@ -19,6 +19,9 @@ class AllInternsController extends Controller
     // English: Using select() to only fetch required columns (massive performance boost)
     $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
 
+//remove intern from the table
+      $query->where('status', '!=', 'removed');
+
     // 🔍 Optimized Search
     if ($request->filled('search')) {
         $search = $request->search;
@@ -769,4 +772,161 @@ public function exportCSVActive(Request $request)
 
     return response()->stream($callback, 200, $headers);
 }
+
+
+
+
+/**
+ * Step 2.1: Get invoices for specific intern (AJAX call from profile page)
+ * 
+ * @param int $id - Intern ID from intern_table
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function getInternInvoices($id)
+{
+    try {
+        // Find the intern
+        $intern = Intern::findOrFail($id);
+        
+        // Get all invoices for this intern using their email
+        $invoices = \App\Models\Invoice::where('intern_email', $intern->email)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'invoices' => $invoices
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Step 2.2: Remove intern via AJAX (from profile page remove button)
+ * 
+ * @param int $id - Intern ID from intern_table
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function removeInternAjax($id)
+{
+    try {
+        $intern = Intern::findOrFail($id);
+        $intern->status = 'removed';
+        $intern->save();
+        
+        // Also update InternAccount if exists (freeze portal access)
+        $internAccount = \App\Models\InternAccount::where('email', $intern->email)->first();
+        if ($internAccount) {
+            $internAccount->portal_status = 'frozen';
+            $internAccount->save();
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Intern removed successfully'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
+
+/**
+ * Get intern payment history
+ */
+public function getInternPayments($id)
+{
+    $intern = Intern::findOrFail($id);
+    $payments = \App\Models\Invoice::where('intern_email', $intern->email)
+        ->where('received_amount', '>', 0)
+        ->orderBy('updated_at', 'desc')
+        ->get()
+        ->map(function($invoice) {
+            return [
+                'date' => $invoice->updated_at->format('Y-m-d'),
+                'inv_id' => $invoice->inv_id,
+                'amount' => $invoice->received_amount,
+                'method' => 'Cash',
+                'received_by' => $invoice->received_by
+            ];
+        });
+    
+    return response()->json(['success' => true, 'payments' => $payments]);
+}
+
+/**
+ * Get intern status (Freeze/Ongoing based on payment)
+ */
+public function getInternStatus($id)
+{
+    $intern = Intern::findOrFail($id);
+    $invoices = \App\Models\Invoice::where('intern_email', $intern->email)->get();
+    
+    $totalAmount = $invoices->sum('total_amount');
+    $totalPaid = $invoices->sum('received_amount');
+    $totalRemaining = $totalAmount - $totalPaid;
+    $overdueCount = $invoices->filter(function($inv) {
+        return $inv->due_date && now()->greaterThan($inv->due_date) && $inv->remaining_amount > 0;
+    })->count();
+    
+    // Portal Freeze Logic
+    $isFrozen = false;
+    $status = 'ongoing';
+    
+    foreach ($invoices as $invoice) {
+        // Overdue invoice = Freeze
+        if ($invoice->due_date && now()->greaterThan($invoice->due_date) && $invoice->remaining_amount > 0) {
+            $isFrozen = true;
+            $status = 'frozen';
+            break;
+        }
+        // Unpaid for >30 days
+        if ($invoice->remaining_amount > 0 && $invoice->created_at && now()->diffInDays($invoice->created_at) > 30) {
+            $isFrozen = true;
+            $status = 'frozen';
+            break;
+        }
+        // Partial payment = Limited access
+        if ($invoice->remaining_amount > 0 && $invoice->remaining_amount < $invoice->total_amount) {
+            $status = 'partial';
+        }
+    }
+    
+    if ($totalRemaining == 0 && $totalAmount > 0) {
+        $status = 'ongoing';
+        $isFrozen = false;
+    }
+    
+    // Update InternAccount portal_status
+    $internAccount = \App\Models\InternAccount::where('email', $intern->email)->first();
+    if ($internAccount) {
+        $internAccount->portal_status = $isFrozen ? 'frozen' : 'active';
+        $internAccount->save();
+    }
+    
+    $percentage = $totalAmount > 0 ? round(($totalPaid / $totalAmount) * 100) : 0;
+    
+    return response()->json([
+        'success' => true,
+        'status' => $status,
+        'is_frozen' => $isFrozen,
+        'total_amount' => $totalAmount,
+        'total_paid' => $totalPaid,
+        'total_remaining' => $totalRemaining,
+        'payment_percentage' => $percentage,
+        'overdue_invoices' => $overdueCount
+    ]);
+}  
+
+
+
+
 }

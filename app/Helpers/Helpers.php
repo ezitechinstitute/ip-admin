@@ -309,49 +309,101 @@ class Helpers
 CSS;
   }
 
-  /**
- * Get user profile image URL with fallback
- *
- * @param mixed $user The user object (should have image property)
- * @param string $default Default image path
- * @return string Image URL
- */
+//   /**
+//  * Get user profile image URL with fallback
+//  *
+//  * @param mixed $user The user object (should have image property)
+//  * @param string $default Default image path
+//  * @return string Image URL
+//  */
+// public static function getProfileImage($user, $default = null)
+// {
+//     // Set default image if not provided
+//     if (!$default) {
+//         $default = asset('assets/img/branding/ezitech.png');
+//     }
+    
+//     // If no user, return default
+//     if (!$user) {
+//         return $default;
+//     }
+    
+//     // Check if the image property exists and has a value
+//     $image = property_exists($user, 'image') ? $user->image : null;
+    
+//     // If user has no image, return default
+//     if (empty($image)) {
+//         return $default;
+//     }
+    
+//     // Check if it's already a full URL
+//     if (filter_var($image, FILTER_VALIDATE_URL)) {
+//         return $image;
+//     }
+    
+//     // Check if it's a base64 encoded image
+//     if (str_starts_with($image, 'data:image')) {
+//         return $image;
+//     }
+    
+//     // Check if it's a stored path starting with storage/
+//     if (str_starts_with($image, 'storage/')) {
+//         return asset($image);
+//     }
+    
+//     // Otherwise, treat as stored path and add asset helper
+//     return asset($image);
+// }
+
+
 public static function getProfileImage($user, $default = null)
 {
-    // Set default image if not provided
+    // Set default image
     if (!$default) {
         $default = asset('assets/img/branding/ezitech.png');
     }
     
-    // If no user, return default
-    if (!$user) {
+    // No user
+    if (!$user || !is_object($user)) {
         return $default;
     }
     
-    // Check if the image property exists and has a value
-    $image = property_exists($user, 'image') ? $user->image : null;
-    
-    // If user has no image, return default
-    if (empty($image)) {
+    // Check if image property exists
+    if (!property_exists($user, 'image')) {
         return $default;
     }
     
-    // Check if it's already a full URL
+    $image = $user->image;
+    
+    // Empty or null
+    if (empty($image) || trim($image) === '') {
+        return $default;
+    }
+    
+    // ========== PRODUCTION FIX - Block base64 images ==========
+    // Base64 images cause ERR_EMPTY_RESPONSE - block them completely
+    if (str_starts_with($image, 'data:image')) {
+        // Log for debugging
+        \Log::warning('Base64 image blocked', ['user_id' => $user->int_id ?? $user->id ?? 'unknown']);
+        return $default;
+    }
+    // ===========================================================
+    
+    // Valid URL
     if (filter_var($image, FILTER_VALIDATE_URL)) {
         return $image;
     }
     
-    // Check if it's a base64 encoded image
-    if (str_starts_with($image, 'data:image')) {
-        return $image;
-    }
-    
-    // Check if it's a stored path starting with storage/
-    if (str_starts_with($image, 'storage/')) {
+    // Storage path
+    if (str_starts_with($image, 'storage/') && file_exists(public_path($image))) {
         return asset($image);
     }
     
-    // Otherwise, treat as stored path and add asset helper
-    return asset($image);
+    // Uploads path  
+    if (str_starts_with($image, 'uploads/') && file_exists(public_path($image))) {
+        return asset($image);
+    }
+    
+    return $default;
 }
 }

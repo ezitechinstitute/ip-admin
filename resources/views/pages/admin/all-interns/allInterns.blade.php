@@ -25,7 +25,14 @@
 @endsection
 
 @section('content')
-
+<style>
+    .clickable-row {
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background-color: rgba(0, 0, 0, 0.03);
+    }
+</style>
 <!-- Users List Table -->
 <div class="col-12 mb-6">
   <h4 class="mt-6 mb-1">All Interns</h4>
@@ -215,21 +222,19 @@
                 <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
                     class="dt-column-title">Status</span><span class="dt-column-order"></span></th>
 
-                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Join Date"><span
-                    class="dt-column-title">Action</span><span class="dt-column-order"></span></th>
-
+              
 
 
               </tr>
             </thead>
             <tbody>
-              @forelse ($allInterns as $intern)
-              <tr class="">
+            @forelse ($allInterns as $intern)
+<tr class="clickable-row" data-href="{{ route('view.profile.internee.admin', $intern->id) }}" onclick="window.location.href=this.dataset.href">
 
                 <td class="">
                   <div class="d-flex justify-content-start align-items-center user-name">
                     <div class="avatar-wrapper">
-                      @if ($intern->image)
+@if ($intern->image && !str_starts_with($intern->image, 'data:image'))
                       <div class="avatar avatar-md me-4">
                         <img src="{{ 
     $intern->image 
@@ -288,52 +293,6 @@
                   <span class="badge {{ $badgeClass }} text-capitalize">{{ $status }}</span>
                 </td>
 
-                {{-- <td><span class="text-heading text-nowrap">{{$intern->intern_type}}</span></td> --}}
-                <td>
-                  <div class="d-flex align-items-center">
-
-
-
-
-                    <div class="dropdown">
-                      <a href="javascript:;"
-                        class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
-                      </a>
-
-                      <div class="dropdown-menu dropdown-menu-end m-0">
-
-                        <a href="{{route('view.profile.internee.admin', $intern->id)}}"
-                          class="dropdown-item permission-btn">
-                          View Profile
-                        </a>
-                        <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal"
-                          data-bs-target="#editInternModal" data-id="{{ $intern->id }}" data-name="{{ $intern->name }}"
-                          data-email="{{ $intern->email }}" data-technology="{{ $intern->technology }}"
-                          data-status="{{ $intern->status }}">
-                          Edit
-                        </a>
-
-                        @if (strtolower($intern->status) != 'removed')
-                        <a href="javascript:;" class="dropdown-item permission-btn delete-record"
-                          data-id="{{ $intern->id }}">
-                          Remove
-                        </a>
-                        <form id="delete-form-{{ $intern->id }}" action="{{ route('interns.destroy', $intern->id) }}"
-                          method="POST" style="display: none;">
-                          @csrf
-                          @method('DELETE')
-                        </form>
-                        @endif
-
-
-
-                      </div>
-                    </div>
-                  </div>
-
-                </td>
 
 
               </tr>
