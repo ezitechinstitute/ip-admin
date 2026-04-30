@@ -66,7 +66,7 @@ Access Portal
 <tr>
 <td style="background:#042d89; color:#fff; text-align:center; padding:15px;">
 <p style="margin:5px;">help@ezitech.org</p>
-<p style="margin:5px;">+92 345 5555396</p>
+<p style="margin:5px;">+92 337 7777860 </p>
 <p style="margin:5px; font-size:12px;">©️ 2026 Ezitech</p>
 </td>
 </tr>
