@@ -250,7 +250,7 @@ $customizerHidden = 'customizer-hide';
                     <a href="{{ url('/') }}" class="btn btn-primary">
                         Back to Login <i class="icon-base ti tabler-arrow-right ms-2"></i>
                     </a>
-                    <form action="{{ route('resend-confirmation-email') }}" method="POST" style="display: inline;">
+                    <form action="{{ route('resend-confirmation-email') }}" method="POST" style="display: inline; width: 100%;">
                         @csrf
                         <button type="submit" class="btn btn-outline-primary w-100">
                             Resend Confirmation Email

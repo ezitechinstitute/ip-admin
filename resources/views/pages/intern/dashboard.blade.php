@@ -385,7 +385,7 @@ $allowedColors = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'
                         </div>
                         <div>
                             <h5 class="mb-0 fw-bold" style="color: #1e293b;">Welcome Back, {{ $userName }}! </h5>
-                            <p class="mb-0 text-muted small">Your internship journey at ZITCH Learning</p>
+                            <p class="mb-0 text-muted small">Your internship journey at EZITCH Learning</p>
                         </div>
                     </div>
                     
