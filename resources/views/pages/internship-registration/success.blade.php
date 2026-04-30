@@ -233,9 +233,12 @@ $customizerHidden = 'customizer-hide';
                     <a href="{{ url('/') }}" class="btn btn-primary">
                         Back to Login <i class="icon-base ti tabler-arrow-right ms-2"></i>
                     </a>
-                    <a href="javascript:void(0)" class="btn btn-outline-primary" onclick="alert('Check your email for further instructions.')">
-                        Resend Confirmation Email
-                    </a>
+                    <form action="{{ route('resend-confirmation-email') }}" method="POST" style="display: inline; width: 100%;">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            Resend Confirmation Email
+                        </button>
+                    </form>
                 </div>
 
                 <div class="contact-info">
