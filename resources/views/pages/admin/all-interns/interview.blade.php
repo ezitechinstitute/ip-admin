@@ -25,7 +25,14 @@
 @endsection
 
 @section('content')
-
+<style>
+    .clickable-row {
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background-color: rgba(0, 0, 0, 0.03);
+    }
+</style>
 <!-- Users List Table -->
 <div class="col-12 mb-6">
   <h4 class="mt-6 mb-1">Interview Interns</h4>
@@ -224,7 +231,7 @@
             </thead>
             <tbody>
               @forelse ($interview as $intern)
-              <tr class="">
+<tr class="clickable-row" data-href="{{ route('view.profile.internee.admin', $intern->id) }}" onclick="window.location.href=this.dataset.href">
 
                 <td class="">
                   <div class="d-flex justify-content-start align-items-center user-name">
@@ -292,10 +299,7 @@
 
                       <div class="dropdown-menu dropdown-menu-end m-0">
 
-                        <a href="{{route('view.profile.internee.admin', $intern->id)}}"
-                          class="dropdown-item permission-btn">
-                          View Profile
-                        </a>
+                        
                         <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal"
                           data-bs-target="#editInternModal" data-id="{{ $intern->id }}" data-name="{{ $intern->name }}"
                           data-email="{{ $intern->email }}" data-technology="{{ $intern->technology }}"

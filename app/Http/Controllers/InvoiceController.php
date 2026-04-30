@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Intern;
+use App\Services\Invoices\InvoiceApprovalService;
 use App\Models\AdminSetting;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
@@ -118,54 +119,55 @@ class InvoiceController extends Controller
 
 
 
-
 public function store(Request $request)
 {
-    $request->validate([
-        'inv_id' => 'required',
-        'name' => 'required',
-        'total_amount' => 'required|numeric',
-        'received_amount' => 'required|numeric',
-        'due_date' => 'nullable|date'
-    ]);
-
-   $total = $request->total_amount;
-$paid = $request->received_amount;
-
-if($paid > $total){
-    return back()->with('error','Received amount cannot exceed total amount');
-}
-
-$remaining = $total - $paid;
-
-if($paid == 0){
-    $status = 'pending';
-}
-elseif($remaining == 0){
-    $status = 'paid';
-}
-else{
-    $status = 'partial';
-}
-
-    Invoice::create([
-        'inv_id' => $request->inv_id,
-        'name' => $request->name,
-        'contact' => $request->contact,
-        'intern_email' => $request->intern_email,
+    // Handle both form data and JSON
+    $data = $request->isJson() ? $request->json()->all() : $request->all();
+    
+    $total = $data['total_amount'];
+    $paid = $data['received_amount'] ?? 0;
+    
+    if($paid > $total){
+        if($request->isJson()) {
+            return response()->json(['success' => false, 'message' => 'Received amount cannot exceed total amount']);
+        }
+        return back()->with('error','Received amount cannot exceed total amount');
+    }
+    
+    $remaining = $total - $paid;
+    
+    if($paid == 0){
+        $status = 'pending';
+    }
+    elseif($remaining == 0){
+        $status = 'paid';
+    }
+    else{
+        $status = 'partial';
+    }
+    
+    $invoice = Invoice::create([
+        'inv_id' => $data['inv_id'],
+        'name' => $data['name'],
+        'contact' => $data['contact'] ?? null,
+        'intern_email' => $data['intern_email'],
         'total_amount' => $total,
         'received_amount' => $paid,
         'remaining_amount' => $remaining,
-        'due_date' => $remaining > 0 ? $request->due_date : null,
+        'due_date' => $remaining > 0 ? $data['due_date'] : null,
         'received_by' => auth()->user()->name ?? 'Admin',
-        'invoice_type' => $request->invoice_type,
-        'status' => $status
+        'invoice_type' => $data['invoice_type'] ?? 'Internship',
+        'status' => $status,
+        'approval_status' => 'approved',
+        'created_by_role' => 'admin',
     ]);
-
+    
+    if($request->isJson()) {
+        return response()->json(['success' => true, 'invoice' => $invoice]);
+    }
+    
     return redirect()->back()->with('success', 'Invoice Created Successfully');
 }
-
-
 
 public function addPayment(Request $request, $id)
 {
@@ -198,53 +200,144 @@ public function addPayment(Request $request, $id)
 
 
 
-// =============================================
-    // ✅ NEW METHODS HERE  )
-    // =============================================
+   
 
     /**
-     * Show pending invoice approvals
-     */
-    public function approvalQueue()
-    {
-        $pendingInvoices = invoice::where('approval_status', 'pending')
-            ->orderBy('created_at', 'asc')
-            ->paginate(15);
+ * Show create invoice form with pre-filled intern data
+ * Called from Intern Profile page when clicking "Create Invoice" button
+ */
+// public function createFromProfile(Request $request)
+// {
+//     $internEmail = $request->query('email');
+//     $internName = $request->query('name');
+    
+//     $lastInvoice = \App\Models\Invoice::latest('id')->first();
+//     $newInvId = 'INV-' . str_pad(($lastInvoice ? $lastInvoice->id + 1 : 1), 5, '0', STR_PAD_LEFT);
+    
+//     return view('pages.admin.invoice.create-from-profile', compact('internEmail', 'internName', 'newInvId'));
+// }
+
+
+public function createFromProfile(Request $request)
+{
+    $internEmail = $request->query('email');
+    $internName = $request->query('name');
+    $internPhone = $request->query('phone', '');
+    $internTechnology = $request->query('technology', '');
+    
+    $lastInvoice = \App\Models\Invoice::latest('id')->first();
+    $newInvId = 'INV-' . str_pad(($lastInvoice ? $lastInvoice->id + 1 : 1), 5, '0', STR_PAD_LEFT);
+    
+    return view('pages.admin.invoice.create-from-profile', compact('internEmail', 'internName', 'newInvId', 'internPhone', 'internTechnology'));
+}
+
+
+/**
+ * Update invoice
+ */
+public function updateInvoice(Request $request, $id)
+{
+    try {
+        $invoice = \App\Models\Invoice::findOrFail($id);
         
-        return view('pages.admin.invoice.approval-queue', compact('pendingInvoices'));
-    }
-
-    /**
-     * Approve invoice
-     */
-    public function approveInvoice($id)
-    {
-        try {
-            $invoice = invoice::findOrFail($id);
-            $invoice->approval_status = 'approved';
-            $invoice->save();
-            
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        $total = $request->total_amount;
+        $paid = $request->received_amount;
+        
+        if ($paid > $total) {
+            return response()->json(['success' => false, 'message' => 'Received amount cannot exceed total'], 422);
         }
-    }
-
-    /**
-     * Reject invoice
-     */
-    public function rejectInvoice($id)
-    {
-        try {
-            $invoice = invoice::findOrFail($id);
-            $invoice->approval_status = 'rejected';
-            $invoice->save();
-            
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        
+        $remaining = $total - $paid;
+        
+        if ($paid == 0) {
+            $status = 'unpaid';
+        } elseif ($remaining == 0) {
+            $status = 'paid';
+        } else {
+            $status = 'partial';
         }
+        
+        $invoice->update([
+            'total_amount' => $total,
+            'received_amount' => $paid,
+            'remaining_amount' => $remaining,
+            'due_date' => $remaining > 0 ? $request->due_date : null,
+            'status' => $status
+        ]);
+        
+        return response()->json(['success' => true, 'message' => 'Invoice updated successfully']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
+}
+
+/**
+ * Delete invoice
+ */
+public function deleteInvoice($id)
+{
+    try {
+        $invoice = \App\Models\Invoice::findOrFail($id);
+        $invoice->delete();
+        
+        return response()->json(['success' => true, 'message' => 'Invoice deleted successfully']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
+
+
+/**
+ * Create invoice from package selection (AJAX)
+ */
+public function createFromPackage(Request $request)
+{
+    try {
+        $request->validate([
+            'intern_email' => 'required|email',
+            'intern_name' => 'required|string',
+            'intern_phone' => 'nullable|string',
+            'intern_technology' => 'nullable|string',
+            'package_name' => 'required|string',
+            'amount' => 'required|numeric|min:1',
+            'due_days' => 'required|integer|min:1'
+        ]);
+
+        $dueDate = now()->addDays($request->due_days);
+        $invoiceId = 'INV-' . time() . rand(10, 99);
+        
+        $invoice = Invoice::create([
+            'inv_id' => $invoiceId,
+            'name' => $request->intern_name,
+            'contact' => $request->intern_phone,
+            'intern_email' => $request->intern_email,
+            'technology' => $request->intern_technology,
+            'total_amount' => $request->amount,
+            'received_amount' => 0,
+            'remaining_amount' => $request->amount,
+            'due_date' => $dueDate->format('Y-m-d'),
+            'received_by' => auth()->user()->name ?? 'Admin',
+            'invoice_type' => 'Internship',
+            'status' => 'pending',
+            'approval_status' => 'approved',
+            'created_by_role' => 'admin'
+        ]);
+        
+        return response()->json([
+            'success' => true, 
+            'message' => 'Invoice created successfully',
+            'invoice' => $invoice,
+            'amount' => $request->amount
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Package invoice creation failed: ' . $e->getMessage());
+        return response()->json([
+            'success' => false, 
+            'message' => 'Failed to create invoice: ' . $e->getMessage()
+        ], 500);
+    }
+}
 
 
 }

@@ -25,7 +25,14 @@
 @endsection
 
 @section('content')
-
+<style>
+    .clickable-row {
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background-color: rgba(0, 0, 0, 0.03);
+    }
+</style>
 <!-- Users List Table -->
 
 
@@ -224,8 +231,8 @@
               </tr>
             </thead>
             <tbody>
-              @forelse ($test as $intern)
-              <tr class="">
+             @forelse ($test as $intern)
+<tr class="clickable-row" data-href="{{ route('view.profile.internee.admin', $intern->id) }}" onclick="window.location.href=this.dataset.href">
                 <td class="control dtr-hidden" tabindex="0" style="display: none;"></td>
                 {{-- <td class="dt-select"><input aria-label="Select row" class="form-check-input" type="checkbox"></td>
                 --}}
@@ -292,10 +299,7 @@
 
                       <div class="dropdown-menu dropdown-menu-end m-0">
 
-                        <a href="{{route('view.profile.internee.admin', $intern->id)}}"
-                          class="dropdown-item permission-btn">
-                          View Profile
-                        </a>
+                       
                         <a href="javascript:;" class="dropdown-item edit-intern" data-bs-toggle="modal"
                           data-bs-target="#editInternModal" data-id="{{ $intern->id }}" data-name="{{ $intern->name }}"
                           data-email="{{ $intern->email }}" data-technology="{{ $intern->technology }}"

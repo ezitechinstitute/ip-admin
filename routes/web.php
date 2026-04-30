@@ -557,7 +557,6 @@ Route::get('/intern-projects/export-csv', [InternProjectsController::class, 'exp
 
 //Invoice routes
 Route::get('/invoice',[InvoiceController::class,'invoice'])->name('invoice-page');
-Route::get('/invoices/approval-queue',[InvoiceController::class,'approvalQueue'])->name('admin.invoices.approval-queue');
 Route::get('/export-invoices', [InvoiceController::class, 'exportInvoiceCSV'])->name('admin.export-invoices');
 
 
@@ -698,10 +697,32 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 
     
 
-    // ==================== INVOICE APPROVAL ROUTES ====================
-Route::get('/invoices/approval-queue', [App\Http\Controllers\InvoiceController::class, 'approvalQueue'])->name('admin.invoices.approval-queue');
-Route::post('/invoices/approve/{id}', [App\Http\Controllers\InvoiceController::class, 'approveInvoice'])->name('admin.invoices.approve');
-Route::post('/invoices/reject/{id}', [App\Http\Controllers\InvoiceController::class, 'rejectInvoice'])->name('admin.invoices.reject');
+
+
+
+Route::post('/invoice/store', [InvoiceController::class, 'store'])->name('admin.invoices.store');
+
+
+
+// ========== new routes ==========
+// Get invoices for specific intern (AJAX)
+Route::get('/interns/{id}/invoices', [AllInternsController::class, 'getInternInvoices'])->name('admin.interns.invoices');
+
+// Remove intern via AJAX (for profile page)
+Route::delete('/interns/{id}/remove-ajax', [AllInternsController::class, 'removeInternAjax'])->name('admin.interns.remove.ajax');
+
+// Create invoice from profile page
+Route::get('/invoices/create-from-profile', [InvoiceController::class, 'createFromProfile'])->name('admin.invoices.create-from-profile');
+
+
+
+Route::post('/invoices/create-from-package', [InvoiceController::class, 'createFromPackage'])->name('admin.invoices.create-from-package');
+
+// new routes
+Route::get('/interns/{id}/payments', [AllInternsController::class, 'getInternPayments'])->name('admin.interns.payments');
+Route::get('/interns/{id}/status', [AllInternsController::class, 'getInternStatus'])->name('admin.interns.status');
+Route::put('/invoices/{id}/update', [InvoiceController::class, 'updateInvoice'])->name('admin.invoices.update');
+Route::delete('/invoices/{id}/delete', [InvoiceController::class, 'deleteInvoice'])->name('admin.invoices.delete');
 
 });
 // Admin routes - End

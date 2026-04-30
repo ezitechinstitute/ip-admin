@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\manager_controllers;
 
+use App\Services\Invoices\InvoiceApprovalService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Invoice;
@@ -82,6 +83,9 @@ class InvoiceController extends Controller
      */
     public function store(Request $request)
     {
+
+   
+
         $manager = Auth::guard('manager')->user();
 
         if (!$manager) {
@@ -151,9 +155,10 @@ class InvoiceController extends Controller
                 'due_date' => $request->due_date,
                 'received_by' => $manager->name ?? 'Manager',
                 'status' => $paymentStatus,
-                'approval_status' => $hasAutoApproval ? 'approved' : 'pending',
+                'approval_status' => $hasAutoApproval ? 'approved' : InvoiceApprovalService::determine('manager'),
                 'invoice_type' => $request->invoice_type,
                 'screenshot' => null,
+                'created_by_role' => 'manager',
             ]);
 
             // Create transaction if received amount > 0
