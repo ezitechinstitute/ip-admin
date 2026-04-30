@@ -54,7 +54,7 @@
 
 <!-- BUTTON -->
 <div style="text-align:center; margin:20px 0;">
-<a href="{{ url('/intern/login') }}" style="background:#042d89; color:#fff; padding:12px 20px; text-decoration:none; border-radius:6px;">
+<a href="https://ezitech.org/ip-admin/public/" style="background:#042d89; color:#fff; padding:12px 20px; text-decoration:none; border-radius:6px;">
 Access Portal
 </a>
 </div>
