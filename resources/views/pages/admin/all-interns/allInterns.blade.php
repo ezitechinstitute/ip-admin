@@ -234,23 +234,18 @@
                 <td class="">
                   <div class="d-flex justify-content-start align-items-center user-name">
                     <div class="avatar-wrapper">
-@if ($intern->image && !str_starts_with($intern->image, 'data:image'))
-                      <div class="avatar avatar-md me-4">
-                        <img src="{{ 
-    $intern->image 
-        ? (str_starts_with($intern->image, 'data:image')
-            ? $intern->image
-            : asset($intern->image)) 
-        : '' 
-    }}" alt="{{ $intern->name }}" class="rounded-circle" />
-                      </div>
-                      @else
-                      <div class="avatar avatar-md me-4">
-                        <span class="avatar-initial rounded-circle bg-label-warning">
-                          {{ strtoupper(substr($intern->name, 0, 2)) }}
-                        </span>
-                      </div>
-                      @endif
+@php $imgUrl = $intern->profileImageUrl; @endphp
+@if($imgUrl)
+    <div class="avatar avatar-md me-4">
+        <img src="{{ $imgUrl }}" alt="{{ $intern->name }}" class="rounded-circle" />
+    </div>
+@else
+    <div class="avatar avatar-md me-4">
+        <span class="avatar-initial rounded-circle bg-label-warning">
+            {{ strtoupper(substr($intern->name, 0, 2)) }}
+        </span>
+    </div>
+@endif
                     </div>
 
                     <div class="d-flex flex-column"><a

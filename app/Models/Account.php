@@ -10,11 +10,12 @@ class Account extends Model
 
      public $timestamps = true;
 
-    protected $fillable = [
-        'date',
-        'credit',
-        'debit',
-        'balance',
-        'description',
-    ];
+   protected $fillable = [
+    'date',
+    'credit',
+    'debit',
+    'balance',
+    'description',
+    'bank_account_id',
+];
 }

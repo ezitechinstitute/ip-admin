@@ -176,6 +176,15 @@
   height: 100px;
   margin: 0 auto;
 }
+
+.pending-row {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.pending-row:hover {
+    background-color: rgba(43, 154, 130, 0.08);
+    transform: scale(1.01);
+}
 </style>
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -376,35 +385,72 @@
               <th>Received</th>
               <th>Remaining</th>
               <th>Status</th>
+              <th>Actions</th>
+
             </tr>
           </thead>
           <tbody>
-            @forelse($invoice as $invoices)
-            @php
-              $statusText = $invoices->status == 1 ? 'Approved' : 'Pending';
-              $statusClass = $invoices->status == 1 ? 'success' : 'warning';
-            @endphp
-            <tr>
-              <td class="fw-semibold">{{ $invoices->inv_id }}</td>
-              <td>{{ $invoices->name ?? 'N/A' }}</td>
-              <td>{{ $invoices->contact ?? 'N/A' }}</td>
-              <td>{{ $invoices->due_date ?? 'N/A' }}</td>
-              <td class="fw-semibold">PKR {{ number_format($invoices->total_amount, 2) }}</td>
-              <td class="text-success">PKR {{ number_format($invoices->received_amount, 2) }}</td>
-              <td class="text-warning">PKR {{ number_format($invoices->remaining_amount, 2) }}</td>
-              <td><span class="badge-soft-{{ $statusClass }}">{{ $statusText }}</span></td>
-            </tr>
-            @empty
-            <tr>
-              <td colspan="8" class="text-center py-5">
-                <div class="empty-ico mx-auto">
-                  <i class="ti ti-file-invoice ti-xl" style="font-size: 2rem; color: var(--inv-primary);"></i>
-                </div>
-                <h6 class="fw-bold mb-1">No invoices found</h6>
-                <p class="text-muted small mb-0">No invoice records available</p>
-              </td>
-            </tr>
-            @endforelse
+   @forelse($invoice as $invoices)
+@php
+  // Check if invoice is pending (status = 'pending')
+  $isPending = ($invoices->status == 'pending');
+  $rowClass = $isPending ? 'pending-row cursor-pointer' : '';
+@endphp
+<tr class="{{ $rowClass }}" 
+    data-id="{{ $invoices->id }}" 
+    data-inv-id="{{ $invoices->inv_id }}" 
+    data-name="{{ $invoices->name }}" 
+    data-total="{{ $invoices->total_amount }}" 
+    data-received="{{ $invoices->received_amount }}" 
+    data-remaining="{{ $invoices->remaining_amount }}" 
+    data-due="{{ $invoices->due_date }}">
+    <td class="fw-semibold">{{ $invoices->inv_id }}</td>
+    <td>{{ $invoices->name ?? 'N/A' }}</td>
+    <td>{{ $invoices->contact ?? 'N/A' }}</td>
+    <td>{{ $invoices->due_date ?? 'N/A' }}</td>
+    <td class="fw-semibold">PKR {{ number_format($invoices->total_amount, 2) }}</td>
+    <td class="text-success">PKR {{ number_format($invoices->received_amount, 2) }}</td>
+    <td class="text-warning">PKR {{ number_format($invoices->remaining_amount, 2) }}</td>
+    <td>
+        @php
+          switch($invoices->status) {
+              case 'paid':
+                  $statusText = 'Paid';
+                  $statusClass = 'success';
+                  break;
+              case 'partial':
+                  $statusText = 'Partial';
+                  $statusClass = 'warning';
+                  break;
+              case 'pending':
+                  $statusText = 'Pending';
+                  $statusClass = 'warning';
+                  break;
+              default:
+                  $statusText = ucfirst($invoices->status);
+                  $statusClass = 'secondary';
+          }
+        @endphp
+        <span class="badge-soft-{{ $statusClass }}">{{ $statusText }}</span>
+    </td>
+    <td>
+    <a href="{{ route('admin.invoice.print', $invoices->id) }}" 
+       class="btn btn-sm btn-outline-primary rounded-3" target="_blank" title="Print Invoice">
+        <i class="ti ti-printer me-1"></i> Print
+    </a>
+</td>
+</tr>
+@empty
+<tr>
+<td colspan="9" class="text-center py-5">
+          <div class="empty-ico mx-auto">
+            <i class="ti ti-file-invoice ti-xl" style="font-size: 2rem; color: var(--inv-primary);"></i>
+        </div>
+        <h6 class="fw-bold mb-1">No invoices found</h6>
+        <p class="text-muted small mb-0">No invoice records available</p>
+    </td>
+</tr>
+@endforelse
           </tbody>
         </table>
       </div>
@@ -422,6 +468,79 @@
       @endif
     </div>
   </div>
+</div>
+
+
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-credit-card me-2 text-primary"></i>Record Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    @csrf
+                    <input type="hidden" id="invoice_id" name="invoice_id">
+                    
+                    <div class="bg-light p-3 rounded-3 mb-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Invoice ID</small>
+                                <p class="fw-bold mb-0" id="display_inv_id">-</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Intern Name</small>
+                                <p class="fw-bold mb-0" id="display_name">-</p>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <small class="text-muted">Total Amount</small>
+                                <p class="fw-bold mb-0 text-primary" id="display_total">-</p>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <small class="text-muted">Remaining Amount</small>
+                                <p class="fw-bold mb-0 text-warning" id="display_remaining">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Payment Amount <span class="text-danger">*</span></label>
+                        <input type="number" name="amount" id="payment_amount" class="form-control" step="0.01" placeholder="Enter amount" required>
+                        <small class="text-muted">Max amount: <span id="max_amount">0</span></small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Payment Method <span class="text-danger">*</span></label>
+                        <select name="payment_method" id="payment_method" class="form-select" required>
+                            <option value="">Select Method</option>
+                            <option value="cash">💵 Cash</option>
+                            <option value="bank_transfer">🏦 Bank Transfer</option>
+                            <option value="credit_card">💳 Credit Card</option>
+                            <option value="cheque">📝 Cheque</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Payment Date</label>
+                        <input type="date" name="payment_date" id="payment_date" class="form-control" value="{{ date('Y-m-d') }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes <span class="text-muted">(Optional)</span></label>
+                        <textarea name="notes" id="payment_notes" class="form-control" rows="2" placeholder="Any remarks..."></textarea>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Record Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
@@ -487,6 +606,103 @@ function downloadInvoiceCSV() {
   let params = new URLSearchParams({ search: search, status: status });
   window.location.href = exportUrl + "?" + params.toString();
 }
+
+
+// Open payment modal on pending row click
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.pending-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Don't open modal if clicking on any action button inside row
+            if(e.target.closest('.btn')) return;
+            
+            const invoiceId = this.dataset.id;
+            const invId = this.dataset.invId;
+            const name = this.dataset.name;
+            const total = parseFloat(this.dataset.total);
+            const remaining = parseFloat(this.dataset.remaining);
+            
+            if (remaining <= 0) {
+                Swal.fire('Info', 'This invoice is already fully paid', 'info');
+                return;
+            }
+            
+            document.getElementById('invoice_id').value = invoiceId;
+            document.getElementById('display_inv_id').innerHTML = invId;
+            document.getElementById('display_name').innerHTML = name;
+            document.getElementById('display_total').innerHTML = `PKR ${total.toFixed(2)}`;
+            document.getElementById('display_remaining').innerHTML = `PKR ${remaining.toFixed(2)}`;
+            document.getElementById('max_amount').innerHTML = `PKR ${remaining.toFixed(2)}`;
+            document.getElementById('payment_amount').max = remaining;
+            document.getElementById('payment_amount').value = '';
+            document.getElementById('payment_method').value = '';
+            document.getElementById('payment_notes').value = '';
+            document.getElementById('payment_date').value = new Date().toISOString().split('T')[0];
+            
+            new bootstrap.Modal(document.getElementById('paymentModal')).show();
+        });
+    });
+});
+
+// Submit payment
+document.getElementById('paymentForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const invoiceId = document.getElementById('invoice_id').value;
+    const amount = document.getElementById('payment_amount').value;
+    const method = document.getElementById('payment_method').value;
+    const date = document.getElementById('payment_date').value;
+    const notes = document.getElementById('payment_notes').value;
+    
+    if (!amount || amount <= 0) {
+        Swal.fire('Error', 'Please enter valid amount', 'error');
+        return;
+    }
+    
+    if (!method) {
+        Swal.fire('Error', 'Please select payment method', 'error');
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Record Payment?',
+        html: `Amount: <strong>PKR ${parseFloat(amount).toFixed(2)}</strong><br>Method: ${method}`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Record',
+        confirmButtonColor: '#2b9a82'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/admin/invoices/add-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    invoice_id: invoiceId,
+                    amount: amount,
+                    payment_method: method,
+                    payment_date: date,
+                    notes: notes
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', 'Payment recorded successfully', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Swal.fire('Error!', data.message || 'Failed to record payment', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error!', 'Something went wrong', 'error');
+            });
+        }
+    });
+});
 </script>
 @endpush
 @endsection
