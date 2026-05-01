@@ -200,12 +200,6 @@ public function addPayment(Request $request)
 }
 
 
-
-
-
-
-   
-
     /**
  * Show create invoice form with pre-filled intern data
  * Called from Intern Profile page when clicking "Create Invoice" button

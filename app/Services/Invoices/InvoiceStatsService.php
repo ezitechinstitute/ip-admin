@@ -17,7 +17,7 @@ class InvoiceStatsService
             'overdue' => Invoice::where('due_date', '<', now())
                                 ->where('remaining_amount', '>', 0)
                                 ->count(),
-         //  'pending_approval' => Invoice::where('approval_status', 'pending')
+     'pending_approval' => Invoice::where('approval_status', 'pending')
     ->where('created_by_role', 'manager')  // ✅ Only manager invoices
     ->count(),
             'total_amount' => Invoice::sum('total_amount'),
