@@ -169,38 +169,36 @@ public function store(Request $request)
     return redirect()->back()->with('success', 'Invoice Created Successfully');
 }
 
-public function addPayment(Request $request, $id)
+public function addPayment(Request $request)
 {
-    $invoice = Invoice::findOrFail($id);
-
-    $newPayment = $request->amount;
-
-    if($newPayment > $invoice->remaining_amount){
-        return back()->with('error','Amount exceeds remaining balance');
+    try {
+        // Get invoice_id from request body (not from URL)
+        $invoice = Invoice::findOrFail($request->invoice_id);
+        $amount = $request->amount;
+        
+        if($amount > $invoice->remaining_amount){
+            return response()->json(['success' => false, 'message' => 'Amount exceeds remaining balance']);
+        }
+        
+        $invoice->received_amount += $amount;
+        $invoice->remaining_amount -= $amount;
+        
+        if($invoice->remaining_amount == 0){
+            $invoice->status = 'paid';
+            $invoice->due_date = null;
+        } else {
+            $invoice->status = 'partial';
+        }
+        
+        $invoice->save();
+        
+        return response()->json(['success' => true, 'message' => 'Payment added successfully']);
+        
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
     }
-
-    $invoice->received_amount += $newPayment;
-    $invoice->remaining_amount -= $newPayment;
-
-    if($invoice->remaining_amount == 0){
-        $invoice->status = 'paid';
-        $invoice->due_date = null;
-    } else {
-        $invoice->status = 'partial';
-    }
-
-    $invoice->save();
-
-    return back()->with('success','Payment Added Successfully');
 }
 
-
-
-
-
-
-
-   
 
     /**
  * Show create invoice form with pre-filled intern data
@@ -337,6 +335,15 @@ public function createFromPackage(Request $request)
             'message' => 'Failed to create invoice: ' . $e->getMessage()
         ], 500);
     }
+}
+
+/**
+ * Print invoice view
+ */
+public function printInvoice($id)
+{
+    $invoice = Invoice::findOrFail($id);
+    return view('pages.admin.invoice.print', compact('invoice'));
 }
 
 

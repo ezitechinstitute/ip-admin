@@ -110,12 +110,25 @@
       "icon": "menu-icon icon-base ti tabler-calendar-off",
       "slug": "admin/leave"
     },
+   {
+  "name": "Accounts",
+  "icon": "menu-icon icon-base ti tabler-building-bank",
+  "slug": "admin/accounts",
+  "url": "admin/accounts",
+  "submenu": [
     {
       "url": "admin/accounts",
       "name": "Accounts",
-      "icon": "menu-icon icon-base ti tabler-building-bank",
       "slug": "admin/accounts"
     },
+    {
+      "url": "admin/payment-accounts",
+      "name": "Payment Accounts",
+      "slug": "admin/payment-accounts"
+    }
+  ]
+},
+ 
     {
       "url": "admin/withdraw",
       "name": "Withdraw",

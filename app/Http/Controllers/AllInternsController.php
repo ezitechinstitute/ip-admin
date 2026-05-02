@@ -278,14 +278,15 @@ public function activeIntern(Request $request)
     return view('pages.admin.all-interns.activeIntern', compact('active', 'perPage', 'status'));
 }
 
-    public function viewProfileInternee($id){
-        $interneeDetails = intern::where('id', $id)->first();
-        return view('pages.admin.all-interns.viewProfile', compact('interneeDetails'));
-    }
+  public function viewProfileInternee($id){
+    $interneeDetails = intern::where('id', $id)->first();
+    $packages = \App\Services\PackageService::getAll();  // ← ADD THIS LINE
+    return view('pages.admin.all-interns.viewProfile', compact('interneeDetails', 'packages'));
+}
 
-
-    public function updateIntern(Request $request){
-        $request->validate([
+public function updateIntern(Request $request)
+{
+    $request->validate([
         'id' => 'required',
         'name' => 'required|string|max:255',
         'email' => 'required|email',
@@ -293,16 +294,28 @@ public function activeIntern(Request $request)
         'status' => 'required'
     ]);
 
-    intern::where('id', $request->id)->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'technology' => $request->technology,
-            'status' => $request->status
+    $intern = Intern::findOrFail($request->id);
+    
+    $intern->update([
+        'name' => $request->name ?? '',
+        'email' => $request->email ?? '',
+        'phone' => $request->phone ?? '',
+        'cnic' => $request->cnic ?? '',
+        'gender' => $request->gender ?? '',
+        'birth_date' => $request->birth_date ?? null,
+        'country' => $request->country ?? '',
+        'city' => $request->city ?? '',
+        'university' => $request->university ?? '',
+        'technology' => $request->technology ?? '',
+        'duration' => $request->duration ?? '',
+        'intern_type' => $request->intern_type ?? '',
+        'status' => $request->status ?? 'active',
+        'bio' => $request->bio ?? '',
     ]);
-        
-        return redirect()->back()->with('success', 'Intern updated successfully!');
-    }
-
+    
+    // Always return JSON
+    return response()->json(['success' => true, 'message' => 'Intern updated successfully']);
+}
 
 
 
@@ -859,7 +872,7 @@ public function getInternPayments($id)
                 'date' => $invoice->updated_at->format('Y-m-d'),
                 'inv_id' => $invoice->inv_id,
                 'amount' => $invoice->received_amount,
-                'method' => 'Cash',
+                'method' => $invoice->payment_method ?? 'Cash',
                 'received_by' => $invoice->received_by
             ];
         });

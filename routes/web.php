@@ -5,7 +5,7 @@ use App\Http\Controllers\AdminLeaveController;
 
 // use Illuminate\Support\Facades\Auth;
 
-
+use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\AllInternsController;
 use App\Http\Controllers\apps\AcademyCourse;
 use App\Http\Controllers\apps\AcademyCourseDetails;
@@ -563,6 +563,8 @@ Route::get('/invoice',[InvoiceController::class,'invoice'])->name('invoice-page'
 Route::get('/export-invoices', [InvoiceController::class, 'exportInvoiceCSV'])->name('admin.export-invoices');
 
 
+Route::post('/invoices/add-payment', [InvoiceController::class, 'addPayment'])->name('admin.invoices.add-payment');
+
 
 // Managers
 Route::get('managers', [ManagersController::class, 'managersData'])->name('managers');
@@ -661,6 +663,16 @@ Route::post('/accounts/add-transaction', [AccountsController::class, 'addTransac
 Route::put('/transactions/update/{id}', [AccountsController::class, 'updateTransaction'])->name('update-transaction.admin');
 
 
+     // Payment Accounts
+    Route::get('/payment-accounts', [BankAccountController::class, 'index'])->name('bank-accounts.index');
+    Route::post('/payment-accounts/store', [BankAccountController::class, 'store'])->name('bank-accounts.store');
+    Route::get('/payment-accounts/{id}/deactivate', [BankAccountController::class, 'deactivate'])->name('bank-accounts.deactivate');
+    Route::post('/fund-transfer', [BankAccountController::class, 'processTransfer'])->name('bank-accounts.transfer.process');
+    Route::get('/fund-transfer/history-data', [BankAccountController::class, 'transferHistoryData'])->name('bank-accounts.transfer.history.data');
+
+
+
+
 //withdrw routes
 Route::get('withdraw',[WithdrawAdminController::class,'index'])->name('admin.withdraw');
 Route::get('withdraw/export-csv', [WithdrawAdminController::class, 'exportWithdrawCSV'])->name('admin.withdraw.export');
@@ -705,7 +717,7 @@ Route::get('/knowledge-base/export-csv', [KnowledgeBaseController::class, 'downl
 
 Route::post('/invoice/store', [InvoiceController::class, 'store'])->name('admin.invoices.store');
 
-
+Route::get('/invoice/{id}/print', [InvoiceController::class, 'printInvoice'])->name('admin.invoice.print');
 
 // ========== new routes ==========
 // Get invoices for specific intern (AJAX)
