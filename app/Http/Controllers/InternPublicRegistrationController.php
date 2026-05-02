@@ -7,6 +7,8 @@ use App\Models\InternAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use App\Services\UnifiedNotificationService;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class InternPublicRegistrationController extends Controller
 {
@@ -110,59 +112,68 @@ class InternPublicRegistrationController extends Controller
     
     // ========== COMPLETE REGISTRATION ==========
     
+    // ========== COMPLETE REGISTRATION ==========
+    
     public function complete(Request $request)
-{
-    $request->validate([
-        'selected_plan' => 'required|in:training,practice,industrial',
-    ]);
+    {
+        $request->validate([
+            'selected_plan' => 'required|in:training,practice,industrial',
+        ]);
 
-    $step1Data = Session::get('intern_reg_step1');
-    $step2Data = Session::get('intern_reg_step2');
+        $step1Data = Session::get('intern_reg_step1');
+        $step2Data = Session::get('intern_reg_step2');
 
-    if (!$step1Data) {
-        return redirect()->route('intern.register.step1')
-            ->with('error', 'Please complete step 1 first.');
-    }
+        if (!$step1Data) {
+            return redirect()->route('intern.register.step1')
+                ->with('error', 'Please complete step 1 first.');
+        }
 
-    // Create Intern - FIXED: interview_date and interview_time ko empty string/date do
-    $intern = Intern::create([
-        'name' => $step1Data['full_name'] ?? '',
-        'email' => $step1Data['email'] ?? '',
-        'city' => $step1Data['city'] ?? '',
-        'country' => $step1Data['country'] ?? '',
-        'gender' => $step1Data['gender'] ?? '',
-        'birth_date' => $step1Data['date_of_birth'] ?? null,
-        'university' => $step1Data['university'] ?? '',
-        'technology' => $step1Data['technology'] ?? '',
-        'phone' => $step1Data['whatsapp'] ?? '',
-        'image' => $step1Data['profile_image'] ?? '',
-        'cnic' => '',
-        'interview_type' => $step1Data['interview_type'] ?? '',
-        'duration' => $step1Data['duration'] ?? '',
-        // ✅ FIX: Null nahi, empty string ya current date 
-        'interview_date' => null,  // Change this to date if column allows null
-        'interview_time' => null,  // Change this to time if column allows null
-        'status' => 'interview',
-        'intern_type' => $this->mapPlanToInternType($request->selected_plan),
-        'join_date' => now(),
-    ]);
+        // 1. Create Intern Record (Stores application and interview data)
+        $intern = \App\Models\Intern::create([
+            'name' => $step1Data['full_name'] ?? '',
+            'email' => $step1Data['email'] ?? '',
+            'city' => $step1Data['city'] ?? '',
+            'country' => $step1Data['country'] ?? '',
+            'gender' => $step1Data['gender'] ?? '',
+            'birth_date' => $step1Data['date_of_birth'] ?? null,
+            'university' => $step1Data['university'] ?? '',
+            'technology' => $step1Data['technology'] ?? '',
+            'phone' => $step1Data['whatsapp'] ?? '',
+            'image' => $step1Data['profile_image'] ?? '',
+            'cnic' => '',
+            'interview_type' => $step1Data['interview_type'] ?? '',
+            'duration' => $step1Data['duration'] ?? '',
+            'interview_date' => null, 
+            'interview_time' => null, 
+            'status' => 'interview',
+            'intern_type' => $this->mapPlanToInternType($request->selected_plan),
+            'join_date' => now(),
+        ]);
 
-    // Create Intern Account
-    InternAccount::create([
-        'int_id' => $intern->id,
-     'eti_id' => 'ETI-' . $intern->id,
-        'name' => $step1Data['full_name'] ?? '',
-        'email' => $step1Data['email'] ?? '',
-        'phone' => $step1Data['whatsapp'] ?? '',
-        // AFTER (without Hash - plain text)
-        'password' => 'default_password_' . $intern->id,
-        'int_technology' => $step1Data['technology'] ?? '',
-        'int_status' => 'active',
-        'portal_status' => 'pending_activation',
-        'start_date' => now(),
-    ]);
+        // 2. Create Unified User (Replacing the old InternAccount)
+        // This allows the intern to log in via the main 'users' table.
+        $user = \App\Models\User::create([
+            'name' => $step1Data['full_name'] ?? '',
+            'email' => $step1Data['email'] ?? '',
+            // Password must be hashed for the new User model.
+            'password' => \Illuminate\Support\Facades\Hash::make('default_password_' . $intern->id),
+            'role' => 'intern',
+            'legacy_intern_id' => $intern->id, // Keeps the link to the Intern application
+            'eti_id' => 'ETI-' . $intern->id,
+            'int_technology' => $step1Data['technology'] ?? '',
+            'portal_status' => 'pending_activation',
+            
+            // 3. Assign Default Modules
+            // These slugs allow the intern to access specific features.
+            'assigned_modules' => [
+                'intern.dashboard',
+                'intern.tasks',
+                'intern.profile',
+                'intern.invoices'
+            ],
+        ]);
 
-     // ✅ Send email to intern (AFTER data saved, BEFORE redirect)
+        // 4. Send email to intern (AFTER data saved, BEFORE redirect)
         $notificationService = app(UnifiedNotificationService::class);
         
         $notificationService->send(
@@ -179,8 +190,8 @@ class InternPublicRegistrationController extends Controller
             ['action_url' => '/intern/login']
         );
         
-        // ✅ Send email to Admin
-        $admin = AdminAccount::first();
+        // 5. Send email to Admin
+        $admin = \App\Models\AdminAccount::first();
         if ($admin) {
             $notificationService->send(
                 $admin,
@@ -195,18 +206,18 @@ class InternPublicRegistrationController extends Controller
             );
         }
 
-    Session::forget(['intern_reg_step1', 'intern_reg_step2']);
-    
-    // ✅ Store registration success data in session for success page
-    Session::put('registration_success', [
-        'name' => $step1Data['full_name'] ?? '',
-        'email' => $step1Data['email'] ?? '',
-        'eti_id' => 'ETI-' . $intern->id,
-        'selected_plan' => $request->selected_plan,
-    ]);
+        Session::forget(['intern_reg_step1', 'intern_reg_step2']);
+        
+        // Store registration success data in session for success page
+        Session::put('registration_success', [
+            'name' => $step1Data['full_name'] ?? '',
+            'email' => $step1Data['email'] ?? '',
+            'eti_id' => 'ETI-' . $intern->id,
+            'selected_plan' => $request->selected_plan,
+        ]);
 
-    return redirect()->route('intern.register.success');
-}
+        return redirect()->route('intern.register.success');
+    }
     
     public function success()
     {

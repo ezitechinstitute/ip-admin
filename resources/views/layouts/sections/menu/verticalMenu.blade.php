@@ -2,27 +2,35 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 
 $configData = Helper::appClasses();
 $currentPath = request()->path();
 $firstSegment = Request::segment(1);
 
-// ==========================================
-// FIX FOR SHARED ROUTES (Like Chat)
-// If the URL doesn't start with a role, detect it from the logged-in user
-// ==========================================
+// --- 1. IDENTIFY THE LOGGED IN USER (The fix you asked for) ---
+// We check every guard to make sure $user is not null
+$user = Auth::guard('admin')->user() 
+     ?? Auth::guard('manager')->user() 
+     ?? Auth::guard('intern')->user() 
+     ?? Auth::user();
+
+$userModules = $user->assigned_modules ?? [];
+$userRole = strtolower($user->role ?? '');
+
+// --- 2. DETECT ROLE FOR SHARED ROUTES ---
 if (!in_array($firstSegment, ['admin', 'supervisor', 'manager', 'intern'])) {
-    if (Auth::guard('admin')->check()) {
+    if ($userRole === 'admin') {
         $firstSegment = 'admin';
-    } elseif (Auth::guard('intern')->check()) {
+    } elseif ($userRole === 'intern') {
         $firstSegment = 'intern';
     } elseif (Auth::guard('manager')->check()) {
-        $userRole = trim(strtolower(Auth::guard('manager')->user()->loginas));
-        $firstSegment = ($userRole === 'supervisor') ? 'supervisor' : 'manager';
+        $loginAs = trim(strtolower($user->loginas ?? ''));
+        $firstSegment = ($loginAs === 'supervisor') ? 'supervisor' : 'manager';
     }
 }
 
-// 1. Menu file decide karein - ADDED INTERN & SUPERVISOR
+// --- 3. SELECT THE CORRECT JSON FILE ---
 if ($firstSegment == 'admin') {
     $menuPath = base_path('resources/menu/verticalMenu.json');
 } elseif ($firstSegment == 'supervisor') {
@@ -38,38 +46,9 @@ if (!file_exists($menuPath)) {
     $menuPath = base_path('resources/menu/verticalMenu.json');
 }
 
-// 2. JSON load karein
+// 4. LOAD THE DATA
 $menuJson = file_get_contents($menuPath);
 $menuData = json_decode($menuJson);
-
-// 3. --- ROLE BASED FILTERING LOGIC ---
-if (($firstSegment == 'manager' || $firstSegment == 'supervisor') && Auth::guard('manager')->check()) {
-    $manager = Auth::guard('manager')->user();
-    
-    // Permission filter function
-    $filteredMenu = array_filter($menuData->menu, function ($menu) use ($manager) {
-        if (!isset($menu->permission)) {
-            return true;
-        }
-        return Gate::forUser($manager)->allows('check-privilege', $menu->permission);
-    });
-
-    // Submenu filter logic
-    foreach ($filteredMenu as $menu) {
-        if (isset($menu->submenu)) {
-            $menu->submenu = array_filter($menu->submenu, function ($sub) use ($manager) {
-                if (!isset($sub->permission)) return true;
-                return Gate::forUser($manager)->allows('check-privilege', $sub->permission);
-            });
-            $menu->submenu = array_values($menu->submenu);
-        }
-    }
-
-    $menuData->menu = array_values($filteredMenu);
-}
-
-// Final data for loop
-$menuDataFinal = [$menuData];
 @endphp
 
 <aside id="layout-menu" class="layout-menu menu-vertical menu"
@@ -77,28 +56,23 @@ $menuDataFinal = [$menuData];
     {{ $attribute }}="{{ $value }}"
   @endforeach
 >
-
-  {{-- App Brand - Same for everyone --}}
+  {{-- App Brand --}}
   @if (!isset($navbarFull))
-  <style>
-  .logo-full { display: block; }
-  .logo-small { display: none; }
-  .layout-menu-collapsed:not(.layout-menu-hover) .logo-full { display: none !important; }
-  .layout-menu-collapsed:not(.layout-menu-hover) .logo-small { display: block !important; }
-  .layout-menu-collapsed:not(.layout-menu-hover) .layout-menu-toggle i { display: none !important; }
-</style>
+    <style>
+      .logo-full { display: block; }
+      .logo-small { display: none; }
+      .layout-menu-collapsed:not(.layout-menu-hover) .logo-full { display: none !important; }
+      .layout-menu-collapsed:not(.layout-menu-hover) .logo-small { display: block !important; }
+    </style>
     <div class="app-brand demo">
         @php
           $settings = \App\Models\AdminSetting::first();
-          $dynamicLogo = $settings && $settings->system_logo 
-                         ? asset($settings->system_logo) 
-                         : asset('assets/img/branding/logo.png');
+          $dynamicLogo = $settings && $settings->system_logo ? asset($settings->system_logo) : asset('assets/img/branding/logo.png');
         @endphp
         <span class="app-brand-logo demo">
           <img src="{{ $dynamicLogo }}" class="logo-full" style="width: 150px;">
-          <img src="{{ asset('assets/img/branding/ezitech.png') }}" class="logo-small" style="display: none; width: 35px;">
+          <img src="{{ asset('assets/img/branding/ezitech.png') }}" class="logo-small" style="width: 35px;">
         </span>
-
       <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
         <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
         <i class="icon-base ti tabler-x d-block d-xl-none"></i>
@@ -109,56 +83,69 @@ $menuDataFinal = [$menuData];
   <div class="menu-inner-shadow"></div>
 
   <ul class="menu-inner py-1">
-    @foreach ($menuDataFinal[0]->menu as $menu)
+    <p class="text-white">Total Menu Items: {{ count($menuData->menu ?? []) }}</p>
+    @foreach ($menuData->menu as $menu)
+    @php
+        if (!$user) continue;
 
-      @if (isset($menu->menuHeader))
-        <li class="menu-header small">
-          <span class="menu-header-text">{{ __($menu->menuHeader) }}</span>
-        </li>
-        @continue
-      @endif
+        // 1. ALWAYS define these variables at the start of the loop
+        $isHeader = isset($menu->menuHeader);
+        $menuSlug = isset($menu->slug) && is_array($menu->slug) ? $menu->slug[0] : ($menu->slug ?? '');
 
-      @php
-        $activeClass = '';
-        $menuSlug = ltrim($menu->slug ?? '', '/');
-        if ($menuSlug && str_starts_with($currentPath, $menuSlug)) {
-            $activeClass = 'active';
+        // 2. Define Access Logic
+        if ($userRole === 'admin') {
+            $hasAccess = true;
+        } else {
+            // Non-admins check headers or assigned modules
+            $hasAccess = $isHeader || in_array($menuSlug, $userModules);
         }
+    @endphp
 
-        if (isset($menu->submenu)) {
-            foreach ($menu->submenu as $sub) {
-                $subSlug = ltrim($sub->slug ?? '', '/');
-                if ($subSlug && str_starts_with($currentPath, $subSlug)) {
-                    $activeClass = 'active open';
-                    break;
-                }
-            }
-        }
-      @endphp
-
-      <li class="menu-item {{ $activeClass }}">
-        @isset($menu->submenu)
-          <a href="javascript:void(0);" class="menu-link menu-toggle">
-            <span onclick="event.stopPropagation(); window.location='{{ url($menu->url ?? 'javascript:void(0);') }}';" class="d-flex align-items-center flex-grow-1" style="cursor:pointer;">
-              @isset($menu->icon) <i class="{{ $menu->icon }}"></i> @endisset
-              <div>{{ __($menu->name ?? '') }}</div>
-            </span>
-            <i class="menu-toggle-icon"></i>
-          </a>
-          <ul class="menu-sub">
-            @foreach ($menu->submenu as $sub)
-              <li class="menu-item {{ str_contains($currentPath, ltrim($sub->slug ?? '', '/')) ? 'active' : '' }}">
-                <a href="{{ url($sub->url) }}" class="menu-link"><div>{{ __($sub->name) }}</div></a>
-              </li>
-            @endforeach
-          </ul>
+    @if($hasAccess)
+        @if($isHeader)
+            <li class="menu-header small">
+                <span class="menu-header-text">{{ __($menu->menuHeader) }}</span>
+            </li>
         @else
-          <a href="{{ url($menu->url) }}" class="menu-link">
-            @isset($menu->icon) <i class="{{ $menu->icon }}"></i> @endisset
-            <div>{{ __($menu->name ?? '') }}</div>
-          </a>
-        @endisset
-      </li>
-    @endforeach
+            @php
+                // Active class logic
+                $activeClass = (Route::currentRouteName() == $menuSlug || Request::is(ltrim($menuSlug, '/') . '*')) ? 'active' : '';
+                if(isset($menu->submenu)) {
+                   foreach($menu->submenu as $sub) {
+                       $subSlug = is_array($sub->slug) ? $sub->slug[0] : ($sub->slug ?? '');
+                       if (Request::is(ltrim($subSlug, '/') . '*')) { $activeClass = 'active open'; break; }
+                   }
+                }
+            @endphp
+
+            <li class="menu-item {{ $activeClass }}">
+                <a href="{{ isset($menu->url) ? url($menu->url) : 'javascript:void(0);' }}" 
+                   class="menu-link {{ isset($menu->submenu) ? 'menu-toggle' : '' }}">
+                    @isset($menu->icon) <i class="{{ $menu->icon }}"></i> @endisset
+                    <div>{{ __($menu->name ?? '') }}</div>
+                </a>
+
+                @if (isset($menu->submenu))
+                    <ul class="menu-sub">
+                        @foreach ($menu->submenu as $sub)
+                            @php
+                                $subSlug = is_array($sub->slug) ? $sub->slug[0] : ($sub->slug ?? '');
+                                // Only show sub-items if they are in the allowed modules (or admin)
+                                $hasSubAccess = ($userRole === 'admin') || in_array($subSlug, $userModules);
+                            @endphp
+                            @if($hasSubAccess)
+                                <li class="menu-item {{ Request::is(ltrim($subSlug, '/') . '*') ? 'active' : '' }}">
+                                    <a href="{{ url($sub->url) }}" class="menu-link">
+                                        <div>{{ __($sub->name) }}</div>
+                                    </a>
+                                </li>
+                            @endif
+                        @endforeach
+                    </ul>
+                @endif
+            </li>
+        @endif
+    @endif
+@endforeach
   </ul>
 </aside>

@@ -72,26 +72,45 @@ return [
     |
     */
 
-    'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
-        ],
+    // 'providers' => [
+    //     'users' => [
+    //         'driver' => 'eloquent',
+    //         'model' => env('AUTH_MODEL', App\Models\User::class),
+    //     ],
 
-        'admins' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\AdminAccount::class,
-        ],
-        'managers' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\ManagersAccount::class, 
-        ],
-        // ADD - INTERN PROVIDER
-        'interns' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\InternAccount::class,
-        ],
+    //     'admins' => [
+    //         'driver' => 'eloquent',
+    //         'model' => App\Models\AdminAccount::class,
+    //     ],
+    //     'managers' => [
+    //         'driver' => 'eloquent',
+    //         'model' => App\Models\ManagersAccount::class, 
+    //     ],
+    //     // ADD - INTERN PROVIDER
+    //     'interns' => [
+    //         'driver' => 'eloquent',
+    //         'model' => App\Models\InternAccount::class,
+    //     ],
+    // ],
+
+    'providers' => [
+    'users' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\User::class,
     ],
+    'admins' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\User::class, // Changed from AdminAccount
+    ],
+    'managers' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\User::class, // Changed from ManagersAccount[cite: 10]
+    ],
+    'interns' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\User::class, // Changed from InternAccount[cite: 10]
+    ],
+],
 
     /*
     |--------------------------------------------------------------------------

@@ -166,6 +166,23 @@
       "name": "Feedback",
       "icon": "menu-icon icon-base ti tabler-message-star",
       "slug": "admin/feedback"
-    }
+    },
+    {
+    "name": "User Management",
+    "icon": "menu-icon tf-icons ti tabler-users-group",
+    "slug": "user-management",
+    "submenu": [
+      {
+        "url": "/admin/users",
+        "name": "All Users",
+        "slug": "admin.users.index"
+      },
+      {
+        "url": "/admin/users/create",
+        "name": "Create New User",
+        "slug": "admin.users.create"
+      }
+    ]
+  }
   ]
 }

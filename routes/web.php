@@ -5,7 +5,7 @@ use App\Http\Controllers\AdminLeaveController;
 
 // use Illuminate\Support\Facades\Auth;
 
-
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\AllInternsController;
 use App\Http\Controllers\apps\AcademyCourse;
 use App\Http\Controllers\apps\AcademyCourseDetails;
@@ -508,6 +508,11 @@ Route::middleware(['auth:web,manager,intern'])->group(function () {
 
 // Admin routes - Start
 Route::prefix('/admin')->middleware(['validUser'])->group(function (){
+    // User Management Routes
+    Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
+    Route::post('/users/store', [UserController::class, 'store'])->name('admin.users.store');
+    // Add an edit route for later
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
 
 // Dashboard Rotes
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard-admin');
