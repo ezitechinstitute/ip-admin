@@ -144,7 +144,8 @@ class InternPublicRegistrationController extends Controller
         'interview_date' => null,  // Change this to date if column allows null
         'interview_time' => null,  // Change this to time if column allows null
         'status' => 'interview',
-        'intern_type' => $this->mapPlanToInternType($request->selected_plan),
+        'intern_type' => $step1Data['internship_type'] ?? '',
+        'package' => $request->selected_plan,
         'join_date' => now(),
     ]);
 

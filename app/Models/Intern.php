@@ -29,6 +29,8 @@ class Intern extends Model
         'intern_type',
         'interview_date',
         'interview_time',
+        'bio',
+        'package',
         'created_at'
 
     ];

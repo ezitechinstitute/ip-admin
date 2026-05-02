@@ -86,6 +86,7 @@
                 <option value="25" {{ $perPage==25 ? 'selected' : '' }}>25</option>
                 <option value="50" {{ $perPage==50 ? 'selected' : '' }}>50</option>
                 <option value="100" {{ $perPage==100 ? 'selected' : '' }}>100</option>
+                <option value="500" {{ $perPage==500 ? 'selected' : '' }}>500</option>
               </select>
               <!-- Keep search & status in query -->
               <input type="hidden" name="search" value="{{ request('search') }}">
@@ -129,13 +130,13 @@
 
             <select name="package" id="packageFilter" class="form-select text-capitalize">
               <option value="">Select Package</option>
-              <option value="Training Internship" {{ request('package')=='Training Internship' ? 'selected' : '' }}>
+              <option value="training" {{ request('package')=='training' ? 'selected' : '' }}>
                 Training Internship
               </option>
-              <option value="Project Practice" {{ request('package')=='Project Practice' ? 'selected' : '' }}>
+              <option value="practice" {{ request('package')=='practice' ? 'selected' : '' }}>
                 Project Practice
               </option>
-              <option value="Industrial Environment" {{ request('package')=='Industrial Environment' ? 'selected' : '' }}>
+              <option value="industrial" {{ request('package')=='industrial' ? 'selected' : '' }}>
                 Industrial Environment
               </option>
             </select>
@@ -218,21 +219,16 @@
                   aria-label="Full Name" tabindex="0"><span class="dt-column-title" role="button">Full Name</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="Email" tabindex="0"><span class="dt-column-title" role="button">Email</span><span
+                  aria-label="Phone" tabindex="0"><span class="dt-column-title" role="button">Phone</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc text-nowrap"
-                  aria-label="City" tabindex="0"><span class="dt-column-title" role="button">City</span><span
+                  aria-label="Join Date" tabindex="0"><span class="dt-column-title" role="button">Join Date</span><span
                     class="dt-column-order"></span></th>
-                {{-- <th data-dt-column="6" rowspan="1" colspan="1"
-                  class="dt-orderable-asc dt-orderable-desc text-nowrap" aria-label="Internship Duration" tabindex="0">
-                  <span class="dt-column-title" role="button">Internship
-                    Duration</span><span class="dt-column-order"></span>
-                </th> --}}
-                <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
-                  aria-label="Join Date"><span class="dt-column-title">Join Date</span><span
+                <th data-dt-column="6" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
+                  aria-label="Technology"><span class="dt-column-title">Technology</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
-                  aria-label="Join Date"><span class="dt-column-title">Technology</span><span
+                  aria-label="Type"><span class="dt-column-title">Type</span><span
                     class="dt-column-order"></span></th>
                 <th data-dt-column="8" rowspan="1" colspan="1" class="dt-orderable-none text-nowrap"
                   aria-label="Package"><span class="dt-column-title">Package</span><span
@@ -274,21 +270,27 @@
                 <td><span
                     class="text-truncate d-flex align-items-center text-heading text-nowrap">{{$intern->name}}</span>
                 </td>
-                <td><span class="text-heading text-nowrap"><span class="text-heading text-nowrap">
-                      @if ($intern->email)
-                      <i
-                        class="icon-base ti tabler-mail me-2 text-danger icon-22px"></i><small>{{$intern->email}}</small>
-                      @else
-                      -
-                      @endif
-                    </span>
-                </td>
-                <td><span class="text-heading text-nowrap">{{$intern->city}}</span></td>
-                {{-- <td><span class="text-heading text-nowrap">{{$intern->duration}}</span></td> --}}
-                <td><span class="text-heading text-nowrap">{{$intern->join_date}}</span></td>
+                <td><span class="text-heading text-nowrap"><i class="icon-base ti tabler-phone me-2 text-info icon-22px"></i><small>{{$intern->phone ?? 'N/A'}}</small></span></td>
+                <td><span class="text-heading text-nowrap">{{$intern->join_date ?? 'N/A'}}</span></td>
                 <td><span class="text-heading text-nowrap">{{$intern->technology}}</span></td>
                 <td>
-                  <span class="badge bg-label-info text-capitalize">{{ $intern->intern_type ?? 'N/A' }}</span>
+                  @php
+                  $typeClass = strtolower($intern->interview_type ?? '') === 'remote' ? 'bg-label-primary' : 'bg-label-info';
+                  $typeLabel = $intern->interview_type ?? 'N/A';
+                  @endphp
+                  <span class="badge {{ $typeClass }} text-capitalize">{{ $typeLabel }}</span>
+                </td>
+                <td>
+                  @php
+                  $packageColors = [
+                      'training internship' => 'bg-label-info',
+                      'project practice' => 'bg-label-primary',
+                      'industrial environment' => 'bg-label-success',
+                  ];
+                  $packageLabel = strtolower($intern->intern_type ?? 'N/A');
+                  $badgeClass = $packageColors[$packageLabel] ?? 'bg-label-secondary';
+                  @endphp
+                  <span class="badge {{ $badgeClass }} text-capitalize">{{ $intern->intern_type ?? 'N/A' }}</span>
                 </td>
                 <td>
                   @php
@@ -317,7 +319,7 @@
 
               @empty
               <tr>
-                <td colspan="9">
+                <td colspan="10">
                   <p class="text-center mb-0">No data available!</p>
                 </td>
               </tr>
@@ -469,6 +471,10 @@
   });
 
   document.getElementById('statusFilter').addEventListener('change', function () {
+    document.getElementById('filterForm').submit();
+  });
+
+  document.getElementById('packageFilter').addEventListener('change', function () {
     document.getElementById('filterForm').submit();
   });
 </script>
