@@ -242,7 +242,7 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
                                 <div class="detail-value">{{ $detail['value'] ?? 'N/A' }}</div>
                             </div>
                         </div>
-
+ @endforeach
                     </div>
                 </div>
                 <div class="tab-panel" id="tab-invoices" style="display: none;">
