@@ -568,36 +568,36 @@
     <div class="attendance-action-card animate-card" style="animation-delay: 0.1s;">
         <div class="row align-items-center">
             <div class="col-md-5 text-center text-md-start mb-3 mb-md-0">
-                <div class="time-display" id="liveClock">--:--:--</div>
+<div class="time-display" id="liveClock">{{ \Carbon\Carbon::now('Asia/Karachi')->format('h:i:s A') }}</div>
                 <div class="date-display mt-1">{{ now()->format('l, F j, Y') }}</div>
             </div>
             <div class="col-md-7 text-center">
                 @if($stats['internship_type'] == 'Remote')
-                    {{-- Remote Intern - Time based --}}
-                    @php
-                        $now = \Carbon\Carbon::now();
-                        $currentHour = (int) $now->format('H');
-                        $canCheckin = ($currentHour >= 9 && $currentHour < 18);
-                        $checkinMessage = '';
-                        if ($currentHour < 9) {
-                            $checkinMessage = '⏰ Working hours start at 9:00 AM';
-                        } elseif ($currentHour >= 18) {
-                            $checkinMessage = '⏰ Working hours ended at 6:00 PM';
-                        } else {
-                            $checkinMessage = '✅ You can check in now';
-                        }
-                    @endphp
+                   {{-- Remote Intern - Time based --}}
+@php
+$now = \Carbon\Carbon::now('Asia/Karachi');
+    $currentHour = (int) $now->format('H');
+    $canCheckin = ($currentHour >= 9 && $currentHour < 21);
+    $checkinMessage = '';
+    if ($currentHour < 9) {
+        $checkinMessage = '⏰ Working hours start at 9:00 AM';
+    } elseif ($currentHour >= 21) {  // ← FIX: 18 ki jagah 21
+        $checkinMessage = '⏰ Working hours ended at 9:00 PM';
+    } else {
+        $checkinMessage = '✅ You can check in now';
+    }
+@endphp
                     
                     @if(!$todayAttendance)
                         @if($canCheckin)
                             <form action="{{ route('intern.attendance.checkin') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-primary btn-punch">
-                                    <i class="bi bi-box-arrow-in-right me-2"></i> Punch In
+                                    <i class="bi bi-box-arrow-in-right me-2"></i> check In
                                 </button>
                             </form>
                             <div class="mt-2 small text-muted">
-                                <i class="bi bi-info-circle"></i> Working hours: 9:00 AM - 6:00 PM
+                               <i class="bi bi-info-circle"></i> Working hours: 9:00 AM - 9:00 PM
                             </div>
                         @else
                             <div class="warning-box">
@@ -614,7 +614,7 @@
                             <form action="{{ route('intern.attendance.checkout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-danger btn-punch">
-                                    <i class="bi bi-box-arrow-right me-2"></i> Punch Out
+                                    <i class="bi bi-box-arrow-right me-2"></i> check out
                                 </button>
                             </form>
                         </div>
@@ -634,17 +634,18 @@
                             <div id="locationDebug" class="small text-muted"></div>
                         </div>
                         
-                        <form action="{{ route('intern.attendance.checkin') }}" method="POST" id="checkinForm">
-                            @csrf
-                            <input type="hidden" name="latitude" id="latitude">
-                            <input type="hidden" name="longitude" id="longitude">
-                            <button type="submit" class="btn btn-primary btn-punch w-100" id="punchInBtn" disabled>
-                                <i class="bi bi-box-arrow-in-right me-2"></i> Getting Location...
-                            </button>
-                        </form>
+                       <form action="{{ route('intern.attendance.checkin') }}" method="POST" id="checkinForm">
+    @csrf
+    <input type="hidden" name="latitude" id="latitude">
+    <input type="hidden" name="longitude" id="longitude">
+    <input type="hidden" name="accuracy" id="accuracy">  <!-- ← ADD THIS -->
+    <button type="button" class="btn btn-primary btn-punch w-100" id="punchInBtn" onclick="getLocationAndCheckIn()">
+        <i class="bi bi-box-arrow-in-right me-2"></i> Checking Location...
+    </button>
+</form>
                         
                         <div class="mt-2 small text-muted">
-                            <i class="bi bi-geo-alt-fill me-1"></i> Office radius: 100m
+                            <i class="bi bi-geo-alt-fill me-1"></i> Office radius: 200m
                         </div>
                         
                     @elseif($todayAttendance && !$todayAttendance->end_shift)
@@ -656,14 +657,15 @@
                                     <small class="d-block text-muted">via {{ strtoupper($todayAttendance->checkin_method) }}</small>
                                 @endif
                             </div>
-                            <form action="{{ route('intern.attendance.checkout') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="latitude" id="checkout_latitude">
-                                <input type="hidden" name="longitude" id="checkout_longitude">
-                                <button type="submit" class="btn btn-danger btn-punch">
-                                    <i class="bi bi-box-arrow-right me-2"></i> Punch Out
-                                </button>
-                            </form>
+                     <form action="{{ route('intern.attendance.checkout') }}" method="POST" id="checkoutForm">
+    @csrf
+    <input type="hidden" name="latitude" id="checkout_latitude">
+    <input type="hidden" name="longitude" id="checkout_longitude">
+    <input type="hidden" name="accuracy" id="checkout_accuracy">
+    <button type="button" class="btn btn-danger btn-punch" onclick="getLocationAndCheckOut()">
+        <i class="bi bi-box-arrow-right me-2"></i> check Out
+    </button>
+</form>
                         </div>
                     @else
                         <div class="alert alert-success rounded-4 border-0 mb-0 d-inline-block">
@@ -1075,19 +1077,22 @@
 </div>
 
 <script>
+// ============================================
+// GPS CONFIGURATION
+// ============================================
+const OFFICE_LAT = 33.6037;   // Eziline Software House, Rawalpindi (Google Maps Verified)
+const OFFICE_LON = 73.0267;   // Google Maps Verified
+const OFFICE_RADIUS = 200;     // 200 meters buffer for GPS error
+const MAX_GPS_ACCURACY = 100;  // Max 100m GPS error allowed
+
+// ============================================
 // GPS Location Detection for Onsite Interns
+// ============================================
 @if($stats['internship_type'] == 'Onsite')
-let watchId = null;
-let currentLocation = null;
 
-// Eziline Software House Office Coordinates
-const OFFICE_LAT = 33.6145;   // Amna Plaza, near Radio Pakistan, Rawalpindi
-const OFFICE_LON = 73.0589;
-const OFFICE_RADIUS = 100;     // 100 meters
-
+// Haversine Distance Calculation
 function calculateOfficeDistance(lat, lon) {
     const R = 6371000; // Earth radius in meters
-    
     const dLat = (lat - OFFICE_LAT) * Math.PI / 180;
     const dLon = (lon - OFFICE_LON) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -1097,84 +1102,182 @@ function calculateOfficeDistance(lat, lon) {
     return R * c;
 }
 
-function getLocation() {
-    if ("geolocation" in navigator) {
-        document.getElementById('locationStatus').innerHTML = '<i class="bi bi-hourglass-split text-warning"></i> Getting your location...';
+// Get GPS Position with Promise
+function getGPSPosition() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error('GPS not supported on this device'));
+            return;
+        }
         
         navigator.geolocation.getCurrentPosition(
-            function(position) {
-                currentLocation = {
+            (position) => {
+                resolve({
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude,
                     accuracy: position.coords.accuracy
-                };
-                
-                document.getElementById('latitude').value = currentLocation.latitude;
-                document.getElementById('longitude').value = currentLocation.longitude;
-                
-                // Calculate distance from Eziline Software House
-                var distance = calculateOfficeDistance(currentLocation.latitude, currentLocation.longitude);
-                
-                if (distance <= OFFICE_RADIUS) {
-                    document.getElementById('locationStatus').innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Location verified - ' + distance.toFixed(0) + 'm from Eziline Office';
-                    document.getElementById('locationStatus').className = 'text-success small';
-                    document.getElementById('punchInBtn').disabled = false;
-                    document.getElementById('punchInBtn').innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i> Punch In';
-                } else {
-                    document.getElementById('locationStatus').innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> You are ' + distance.toFixed(0) + 'm away from Eziline Office (Required: within 100m)';
-                    document.getElementById('locationStatus').className = 'text-danger small';
-                    document.getElementById('punchInBtn').disabled = true;
-                    document.getElementById('punchInBtn').innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i> Out of Range';
-                }
-                
-                document.getElementById('locationDebug').innerHTML = 'Lat: ' + currentLocation.latitude.toFixed(6) + ', Lon: ' + currentLocation.longitude.toFixed(6) + ' | Distance: ' + distance.toFixed(0) + 'm';
+                });
             },
-            function(error) {
-                console.log('GPS Error:', error);
-                let errorMsg = '';
+            (error) => {
+                let message = '';
                 switch(error.code) {
                     case error.PERMISSION_DENIED:
-                        errorMsg = 'Location permission denied. Please enable GPS.';
+                        message = 'Location permission denied. Please enable GPS in settings.';
                         break;
                     case error.POSITION_UNAVAILABLE:
-                        errorMsg = 'Location unavailable. Please check GPS.';
+                        message = 'Location unavailable. Check GPS signal.';
                         break;
                     case error.TIMEOUT:
-                        errorMsg = 'Location timeout. Please try again.';
+                        message = 'Location timeout. Move near window and retry.';
                         break;
+                    default:
+                        message = 'Unknown GPS error occurred.';
                 }
-                document.getElementById('locationStatus').innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger"></i> ' + errorMsg;
-                document.getElementById('locationStatus').className = 'text-danger small';
-                document.getElementById('punchInBtn').disabled = true;
+                reject(new Error(message));
             },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
+            { 
+                enableHighAccuracy: true,  // Use GPS not WiFi
+                timeout: 15000,            // 15 seconds wait
+                maximumAge: 0              // No cached location
             }
         );
-    } else {
-        document.getElementById('locationStatus').innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger"></i> GPS not supported';
-        document.getElementById('punchInBtn').disabled = true;
+    });
+}
+
+// ============================================
+// CHECK-IN FUNCTION
+// ============================================
+async function getLocationAndCheckIn() {
+    const btn = document.getElementById('punchInBtn');
+    const statusEl = document.getElementById('locationStatus');
+    const debugEl = document.getElementById('locationDebug');
+    
+    // Disable button and show loading
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Getting GPS Location...';
+    statusEl.innerHTML = '<i class="bi bi-hourglass-split text-warning"></i> Getting your location...';
+    statusEl.className = 'text-warning small mb-2';
+    
+    try {
+        // Get GPS position
+        const pos = await getGPSPosition();
+        const distance = calculateOfficeDistance(pos.latitude, pos.longitude);
+        
+        // Set hidden form fields
+        document.getElementById('latitude').value = pos.latitude;
+        document.getElementById('longitude').value = pos.longitude;
+        document.getElementById('accuracy').value = pos.accuracy;
+        
+        // Show debug info
+        debugEl.innerHTML = 'Lat: ' + pos.latitude.toFixed(6) + ' | Lon: ' + pos.longitude.toFixed(6) + ' | Distance: ' + distance.toFixed(0) + 'm | Accuracy: ' + pos.accuracy.toFixed(0) + 'm';
+        
+        // CHECK 1: GPS Accuracy must be good
+        if (pos.accuracy > MAX_GPS_ACCURACY) {
+            statusEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-warning"></i> GPS accuracy too low: ' + pos.accuracy.toFixed(0) + 'm. Go near window for better signal.';
+            statusEl.className = 'text-warning small mb-2';
+            btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i> GPS Weak - Tap to Retry';
+            btn.disabled = false;
+            btn.onclick = getLocationAndCheckIn;
+            return;
+        }
+        
+        // CHECK 2: Must be within office radius
+        if (distance <= OFFICE_RADIUS) {
+            // SUCCESS - Within range
+            statusEl.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Location verified - ' + distance.toFixed(0) + 'm from Eziline Office ✅';
+            statusEl.className = 'text-success small mb-2';
+            btn.innerHTML = '<i class="bi bi-check-circle me-2"></i> Submitting...';
+            btn.disabled = true;
+            
+            // Submit the form
+            document.getElementById('checkinForm').submit();
+        } else {
+            // FAIL - Out of range
+            statusEl.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> You are ' + distance.toFixed(0) + 'm away from office. Required: within ' + OFFICE_RADIUS + 'm. GPS Accuracy: ' + pos.accuracy.toFixed(0) + 'm';
+            statusEl.className = 'text-danger small mb-2';
+            btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i> Out of Range - Retry';
+            btn.disabled = false;
+            btn.onclick = getLocationAndCheckIn;
+            document.getElementById('locationDebug').innerHTML = 'Lat: ' + pos.latitude.toFixed(6) + ' | Lon: ' + pos.longitude.toFixed(6) + ' | Distance: ' + distance.toFixed(0) + 'm | Accuracy: ' + pos.accuracy.toFixed(0) + 'm';
+        }
+        
+    } catch (error) {
+        // GPS Error
+        statusEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger"></i> ' + error.message;
+        statusEl.className = 'text-danger small mb-2';
+        btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i> Tap to Retry';
+        btn.disabled = false;
+        btn.onclick = getLocationAndCheckIn;
+        debugEl.innerHTML = '';
     }
 }
 
-// Start location detection when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    getLocation();
-});
+// ============================================
+// CHECK-OUT FUNCTION (FIX #1: GPS Strict)
+// ============================================
+async function getLocationAndCheckOut() {
+    const form = document.getElementById('checkoutForm');
+    const btn = form.querySelector('button[type="button"]');  // ← FIXED
+    const originalHTML = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Getting GPS for Checkout...';
+    
+    try {
+        const pos = await getGPSPosition();
+        const distance = calculateOfficeDistance(pos.latitude, pos.longitude);
+        
+        document.getElementById('checkout_latitude').value = pos.latitude;
+        document.getElementById('checkout_longitude').value = pos.longitude;
+        document.getElementById('checkout_accuracy').value = pos.accuracy;
+        
+        if (pos.accuracy > MAX_GPS_ACCURACY) {
+            alert('GPS accuracy too low: ' + pos.accuracy.toFixed(0) + 'm. Go near window for better signal.');
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+            return;
+        }
+        
+        if (distance > OFFICE_RADIUS) {
+            alert('You must be at office to check out. Current distance: ' + distance.toFixed(0) + 'm. Required: within ' + OFFICE_RADIUS + 'm.');
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+            return;
+        }
+        
+        btn.innerHTML = '<i class="bi bi-check-circle me-2"></i> Submitting...';
+        form.submit();
+        
+    } catch (error) {
+        alert(error.message);
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }
+}
 
-// Also get location for checkout if needed
-@if($todayAttendance && !$todayAttendance->end_shift)
-if (document.getElementById('checkoutForm')) {
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Start GPS for check-in
+    getLocationAndCheckIn();
+    
+    // Auto-get GPS for checkout form if present
+    @if($todayAttendance && !$todayAttendance->end_shift)
+    // Pre-fill checkout GPS silently (will be re-verified on click)
     navigator.geolocation.getCurrentPosition(function(position) {
         document.getElementById('checkout_latitude').value = position.coords.latitude;
         document.getElementById('checkout_longitude').value = position.coords.longitude;
+        document.getElementById('checkout_accuracy').value = position.coords.accuracy;
+    }, function() {
+        // Silent fail - will be caught on checkout click
     });
-}
-@endif
+    @endif
+});
 
 @endif
+// ============================================
+// END ONSITE GPS SECTION
+// ============================================
+
 
 // ============================================
 // ATTENDANCE TIMELINE FILTERS
@@ -1201,22 +1304,14 @@ function updateTimelineDisplay() {
             show = false;
         }
         
-        if (show) {
-            item.style.display = 'block';
-            visibleCount++;
-        } else {
-            item.style.display = 'none';
-        }
+        item.style.display = show ? 'block' : 'none';
+        if (show) visibleCount++;
     });
     
     // Hide empty month groups
     monthGroups.forEach(group => {
-        const visibleItems = group.querySelectorAll('.attendance-timeline-item[style="display: block;"], .attendance-timeline-item:not([style*="display: none"])');
-        if (visibleItems.length === 0) {
-            group.style.display = 'none';
-        } else {
-            group.style.display = 'block';
-        }
+        const visibleItems = group.querySelectorAll('.attendance-timeline-item[style*="display: block"], .attendance-timeline-item:not([style*="display: none"])');
+        group.style.display = visibleItems.length === 0 ? 'none' : 'block';
     });
     
     const noResults = document.getElementById('timelineNoResults');
@@ -1225,11 +1320,13 @@ function updateTimelineDisplay() {
     }
 }
 
-// Timeline filters event listeners
+// Timeline event listeners
 document.getElementById('timelineYearFilter')?.addEventListener('change', updateTimelineDisplay);
 document.getElementById('timelineStatusFilter')?.addEventListener('change', updateTimelineDisplay);
 
-// Scroll to top button
+// ============================================
+// SCROLL TO TOP BUTTON
+// ============================================
 function setupScrollToTop() {
     const container = document.getElementById('timelineContainer');
     const scrollBtn = document.getElementById('scrollToTopBtn');
@@ -1237,11 +1334,7 @@ function setupScrollToTop() {
     if (!container || !scrollBtn) return;
     
     container.addEventListener('scroll', function() {
-        if (container.scrollTop > 200) {
-            scrollBtn.style.display = 'flex';
-        } else {
-            scrollBtn.style.display = 'none';
-        }
+        scrollBtn.style.display = container.scrollTop > 200 ? 'flex' : 'none';
     });
     
     scrollBtn.addEventListener('click', function() {
@@ -1249,25 +1342,67 @@ function setupScrollToTop() {
     });
 }
 
-// Initialize timeline filters
+// ============================================
+// INITIALIZE ON PAGE LOAD
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     setupScrollToTop();
     updateTimelineDisplay();
 });
 
-// Live Clock
-function updateClock() {
-    const now = new Date();
-    const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const clockElement = document.getElementById('liveClock');
-    if (clockElement) {
-        clockElement.textContent = time;
+// ============================================
+// LIVE CLOCK - Server Time (Pakistan PKT)
+// ============================================
+(function() {
+    const clockEl = document.getElementById('liveClock');
+    if (!clockEl) return;
+    
+    // Parse initial server time
+    const initialTime = clockEl.textContent.trim();
+    const match = initialTime.match(/(\d{2}):(\d{2}):(\d{2})\s(AM|PM)/);
+    
+    if (!match) {
+        // Fallback: just show server time without ticking
+        return;
     }
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// Auto-hide alerts after 5 seconds
+    
+    let hours = parseInt(match[1]);
+    const minutes = parseInt(match[2]);
+    let seconds = parseInt(match[3]);
+    const meridiem = match[4];
+    
+    // Convert to 24-hour for calculation
+    if (meridiem === 'PM' && hours !== 12) hours += 12;
+    if (meridiem === 'AM' && hours === 12) hours = 0;
+    
+    // Create base timestamp
+    let baseTimestamp = new Date();
+    baseTimestamp.setHours(hours, minutes, seconds, 0);
+    
+    function tick() {
+        baseTimestamp.setSeconds(baseTimestamp.getSeconds() + 1);
+        
+        const h = baseTimestamp.getHours();
+        const m = baseTimestamp.getMinutes();
+        const s = baseTimestamp.getSeconds();
+        
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayHour = h % 12 || 12;
+        
+        const timeStr = 
+            String(displayHour).padStart(2, '0') + ':' +
+            String(m).padStart(2, '0') + ':' +
+            String(s).padStart(2, '0') + ' ' + ampm;
+        
+        clockEl.textContent = timeStr;
+    }
+    
+    // Start ticking every second
+    setInterval(tick, 1000);
+})();
+// ============================================
+// AUTO-HIDE ALERTS AFTER 5 SECONDS
+// ============================================
 setTimeout(function() {
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(function(alert) {

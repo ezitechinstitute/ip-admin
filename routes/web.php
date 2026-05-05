@@ -1081,6 +1081,7 @@ Route::post('/invoices', [InternInvoiceController::class, 'store'])
     // Offer Letter Routes
     Route::get('/offer-letter', [InternOfferLetterController::class, 'index'])->name('intern.offer-letter');
     Route::get('/offer-letter/download', [InternOfferLetterController::class, 'download'])->name('intern.offer-letter.download');
+    Route::post('/offer-letter/request', [InternOfferLetterController::class, 'requestOfferLetter'])->name('intern.offer-letter.request'); 
 });
 
    
