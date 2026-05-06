@@ -739,6 +739,10 @@ Route::get('/interns/{id}/status', [AllInternsController::class, 'getInternStatu
 Route::put('/invoices/{id}/update', [InvoiceController::class, 'updateInvoice'])->name('admin.invoices.update');
 Route::delete('/invoices/{id}/delete', [InvoiceController::class, 'deleteInvoice'])->name('admin.invoices.delete');
 
+
+// Bulk actions
+Route::post('/admin/interns/bulk-status', [AllInternsController::class, 'bulkStatusUpdate'])->name('admin.interns.bulk.status');
+Route::get('/admin/interns/export-selected', [AllInternsController::class, 'exportSelectedCSV'])->name('admin.interns.export.selected');
 });
 // Admin routes - End
 // Admin routes - End

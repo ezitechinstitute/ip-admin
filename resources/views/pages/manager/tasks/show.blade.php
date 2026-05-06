@@ -13,32 +13,13 @@
                 <div class="col-md-6">
                     <h6>Task Information</h6>
                     <table class="table table-bordered">
-                        <tr>
-                            <th>Task ID</th>
-                            <td>{{ $task->task_id }}</td>
-                        </tr>
-                        <tr>
-                            <th>Intern</th>
-                            <td>{{ $task->intern_name }} ({{ $task->eti_id }})</td>
-                        </tr>
-                        <tr>
-                            <th>Supervisor</th>
-                            <td>{{ $task->supervisor_name ?? 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Technology</th>
-                            <td>{{ $task->technology ?? 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Deadline</th>
-                            <td>{{ \Carbon\Carbon::parse($task->task_end)->format('d M, Y') }}</td>
-                        </tr>
-                        <tr>
-                            <th>Points</th>
-                            <td>{{ $task->task_points ?? 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Status</th>
+                        <tr><th>Task ID</th><td>{{ $task->task_id }}</td></tr>
+                        <tr><th>Intern</th><td>{{ $task->intern_name }} ({{ $task->eti_id }})</td></tr>
+                        <tr><th>Supervisor</th><td>{{ $task->supervisor_name ?? 'N/A' }}</td></tr>
+                        <tr><th>Technology</th><td>{{ $task->technology ?? 'N/A' }}</td></tr>
+                        <tr><th>Deadline</th><td>{{ \Carbon\Carbon::parse($task->task_end)->format('d M, Y') }}</td></tr>
+                        <tr><th>Points</th><td>{{ $task->task_points ?? 'N/A' }}</td></tr>
+                        <tr><th>Status</th>
                             <td>
                                 <span class="badge bg-{{ $task->task_status == 'approved' ? 'success' : ($task->task_status == 'submitted' ? 'info' : 'warning') }}">
                                     {{ ucfirst($task->task_status) }}
@@ -55,28 +36,16 @@
                     <h6 class="mt-4">Submission Details</h6>
                     <table class="table table-bordered">
                         @if($task->task_git_url)
-                        <tr>
-                            <th>GitHub URL</th>
-                            <td><a href="{{ $task->task_git_url }}" target="_blank">{{ $task->task_git_url }}</a></td>
-                        </tr>
+                        <tr><th>GitHub URL</th><td><a href="{{ $task->task_git_url }}" target="_blank">{{ $task->task_git_url }}</a></td></tr>
                         @endif
                         @if($task->task_live_url)
-                        <tr>
-                            <th>Live URL</th>
-                            <td><a href="{{ $task->task_live_url }}" target="_blank">{{ $task->task_live_url }}</a></td>
-                        </tr>
+                        <tr><th>Live URL</th><td><a href="{{ $task->task_live_url }}" target="_blank">{{ $task->task_live_url }}</a></td></tr>
                         @endif
                         @if($task->submit_description)
-                        <tr>
-                            <th>Submission Notes</th>
-                            <td>{{ $task->submit_description }}</td>
-                        </tr>
+                        <tr><th>Submission Notes</th><td>{{ $task->submit_description }}</td></tr>
                         @endif
                         @if($task->task_screenshot)
-                        <tr>
-                            <th>Screenshot</th>
-                            <td><a href="{{ asset($task->task_screenshot) }}" target="_blank" class="btn btn-sm btn-primary">View Screenshot</a></td>
-                        </tr>
+                        <tr><th>Screenshot</th><td><a href="{{ asset($task->task_screenshot) }}" target="_blank" class="btn btn-sm btn-primary">View Screenshot</a></td></tr>
                         @endif
                     </table>
                     @endif
@@ -94,7 +63,7 @@
             </div>
             <div class="mt-4">
                 <a href="{{ url('/manager/tasks') }}" class="btn btn-secondary">
-                    <i class="ti ti-arrow-left"></i> Back to Tasks
+                    <i class="icon-base ti tabler-arrow-left"></i> Back to Tasks
                 </a>
             </div>
         </div>

@@ -46,8 +46,8 @@
                             </div>
                         </div>
 
-<form id="registerForm" action="{{ route('intern.register.postStep1') }}" method="POST">
-            @csrf
+<form id="registerForm" action="{{ route('intern.register.postStep1') }}" method="POST" enctype="multipart/form-data">
+                @csrf
 
              <!-- ✅ ADD THIS - DISPLAY ALL ERRORS -->
     @if ($errors->any())
@@ -149,22 +149,16 @@
                                     </small>
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label class="form-label">University</label>
-                                    <select name="university" class="form-control form-control-lg" required>
-                                        <option value="">Select University</option>
-                                        <option>COMSATS University Islamabad</option>
-                                        <option>NUST</option>
-                                        <option>FAST-NUCES</option>
-                                        <option>University of Punjab</option>
-                                        <option>UET Lahore</option>
-                                        <option>UET Taxila</option>
-                                        <option>Bahria University</option>
-                                        <option>Air University</option>
-                                        <option>Virtual University</option>
-                                        <option>Other</option>
-                                    </select>
-                                </div>
+                              <div class="col-md-6">
+    <label class="form-label">University</label>
+    <select name="university" class="form-control form-control-lg" required>
+        <option value="">Select University</option>
+        @foreach($universities as $university)
+        <option value="{{ $university->uni_name }}">{{ $university->uni_name }}</option>
+        @endforeach
+        <option value="Other">Other</option>
+    </select>
+</div>
                             </div>
 
                             <div class="row mt-3">
@@ -177,26 +171,20 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label class="form-label">Technology</label>
-                                    <select name="technology" id="techSelect" class="form-control form-control-lg" required>
-                                        <option value="">Select Technology</option>
-                                        <option>MERN Stack</option>
-                                        <option>Front-End Development</option>
-                                        <option>Backend (Laravel/PHP)</option>
-                                        <option>AI & ML</option>
-                                        <option>Data Science</option>
-                                        <option>UI/UX</option>
-                                        <option>Cyber Security</option>
-                                        <option>DevOps</option>
-                                        <option value="other">Other</option>
-                                    </select>
-
-                                    <input type="text" name="custom_technology" id="customTech"
-                                           class="form-control form-control-lg mt-2"
-                                           placeholder="Enter Technology"
-                                           style="display:none;">
-                                </div>
+                              <div class="col-md-6">
+    <label class="form-label">Technology</label>
+    <select name="technology" id="techSelect" class="form-control form-control-lg" required>
+        <option value="">Select Technology</option>
+        @foreach($technologies as $technology)
+        <option value="{{ $technology->technology }}">{{ $technology->technology }}</option>
+        @endforeach
+        <option value="other">Other</option>
+    </select>
+    <input type="text" name="custom_technology" id="customTech"
+           class="form-control form-control-lg mt-2"
+           placeholder="Enter Technology"
+           style="display:none;">
+</div>
                             </div>
 
                             <div class="row mt-3">

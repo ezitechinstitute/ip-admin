@@ -18,7 +18,7 @@ class InternAccountsController extends Controller
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     // English: Changed 'id' to 'int_id' to match your table schema
-    $query = InternAccount::select('int_id', 'eti_id', 'name', 'email', 'int_status', 'int_technology');
+    $query = InternAccount::select('int_id', 'eti_id', 'name', 'email', 'int_status', 'int_technology','image');
 
     // 🔍 Optimized Search
     if ($request->filled('search')) {

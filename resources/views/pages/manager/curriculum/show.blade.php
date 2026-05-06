@@ -22,7 +22,7 @@ window.openAddProject = function() {
     }
     
     // Set form action for store
-    document.getElementById('projectForm').action = '{{ route("manager.curriculum.project.store") }}';
+document.getElementById('projectForm').action = '{{ route("manager.curriculum.project.store", $curriculum->curriculum_id) }}';
     document.getElementById('projectForm').method = 'POST';
     document.getElementById('projectModalLabel').textContent = 'Add Project';
     document.getElementById('project_status').value = '1';
@@ -48,7 +48,7 @@ window.editProject = function(project) {
         document.getElementById('projectModalLabel').textContent = 'Edit Project';
         
         // IMPORTANT: Set form action for update - use the correct URL
-        document.getElementById('projectForm').action = '{{ url("manager/curriculum/project") }}/' + project.cp_id;
+document.getElementById('projectForm').action = '{{ route("manager.curriculum.project.update", ["curriculum_id" => $curriculum->curriculum_id, "project_id" => "__ID__"]) }}'.replace('__ID__', project.cp_id);
         document.getElementById('projectForm').method = 'POST'; // Keep as POST but add _method=PUT
         
         // Add or update _method field to PUT
@@ -185,15 +185,16 @@ console.log('Edit functions loaded:', {
                                             </li>
 
                                             <li>
-                                                <form action="{{ route('manager.curriculum.project.destroy', $project->cp_id) }}"
-                                                    method="POST"
-                                                    onsubmit="return confirm('Delete project?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="dropdown-item text-danger">
-                                                        <i class="icon-base ti tabler-trash me-2"></i> Delete
-                                                    </button>
-                                                </form>
+                                             {{-- ✅ CORRECT - onsubmit inside <form> --}}
+<form action="{{ route('manager.curriculum.project.destroy', ['curriculum_id' => $curriculum->curriculum_id, 'project_id' => $project->cp_id]) }}" 
+      method="POST" 
+      onsubmit="return confirm('Delete project?');">
+    @csrf
+    @method('DELETE')
+    <button type="submit" class="dropdown-item text-danger">
+        <i class="icon-base ti tabler-trash me-2"></i> Delete
+    </button>
+</form>
                                             </li>
 
                                         </ul>
@@ -220,8 +221,8 @@ console.log('Edit functions loaded:', {
                 <h5 class="modal-title" id="projectModalLabel">Add Project</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="projectForm" method="POST" action="{{ route('manager.curriculum.project.store') }}">
-                @csrf
+<form id="projectForm" method="POST" action="{{ route('manager.curriculum.project.store', $curriculum->curriculum_id) }}">
+                    @csrf
                 <input type="hidden" id="project_id" name="project_id" value="">
                 <input type="hidden" name="curriculum_id" value="{{ $curriculum->curriculum_id }}">
 

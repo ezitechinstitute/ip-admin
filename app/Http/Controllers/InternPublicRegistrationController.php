@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 use App\Models\AdminAccount;
 use App\Models\Intern;
+use App\Models\Technology;    // ✅ ADD 
+use App\Models\University;    //add
 use App\Models\InternAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -13,49 +15,69 @@ class InternPublicRegistrationController extends Controller
 {
     // ========== STEP 1 ==========
     
-    public function step1()
-    {
-        Session::forget(['intern_reg_step1', 'intern_reg_step2']);
-        return view('pages.internship-registration.step1');
-    }
+   public function step1()
+{
+    Session::forget(['intern_reg_step1', 'intern_reg_step2']);
+    
+    // ✅ Technologies - status = '1' means active
+    $technologies = Technology::where('status', 1)  // ← integer, not string
+                    ->orderBy('technology')
+                    ->get();
+                        
+    // ✅ Universities - uni_status = '1' means active
+    $universities = University::where('uni_status', 1)  // ← integer, not string
+                    ->orderBy('uni_name')
+                    ->get();
+    
+    return view('pages.internship-registration.step1', compact('technologies', 'universities'));
+}
     
     // ✅ ADD THIS METHOD
     public function postStep1(Request $request)
-    {
-        $validated = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:intern_table,email',
-            'country' => 'required|string',
-            'city' => 'required|string',
-            'whatsapp' => 'required|string',
-            'gender' => 'required|string',
-            'join_date' => 'required|date',
-            'dob' => 'required|date',
-            'university' => 'required|string',
-            'interview_type' => 'required|string',
-            'technology' => 'required|string',
-            'duration' => 'required|string',
-            'internship_type' => 'required|string',
-        ]);
+{
+    $validated = $request->validate([
+        'full_name' => 'required|string|max:255',
+        'email' => 'required|email|unique:intern_table,email',
+        'country' => 'required|string',
+        'city' => 'required|string',
+        'whatsapp' => 'required|string',
+        'gender' => 'required|string',
+        'join_date' => 'required|date',
+        'dob' => 'required|date',
+        'university' => 'required|string',
+        'interview_type' => 'required|string',
+        'technology' => 'required|string',
+        'duration' => 'required|string',
+        'internship_type' => 'required|string',
+        'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:512', // ✅ ADD THIS
+    ]);
 
-        Session::put('intern_reg_step1', [
-            'full_name' => $request->full_name,
-            'email' => $request->email,
-            'country' => $request->country,
-            'city' => $request->city,
-            'whatsapp' => $request->whatsapp,
-            'gender' => $request->gender,
-            'join_date' => $request->join_date,
-            'date_of_birth' => $request->dob,
-            'university' => $request->university,
-            'interview_type' => $request->interview_type,
-            'technology' => $request->technology,
-            'duration' => $request->duration,
-            'internship_type' => $request->internship_type,
-        ]);
-
-        return redirect()->route('intern.register.step2');
+    // ✅ ADD THIS - Upload image & store LINK
+    $imageLink = null;
+    if ($request->hasFile('profile_image') && $request->file('profile_image')->isValid()) {
+        $path = $request->file('profile_image')->store('interns', 'public');
+        $imageLink = asset('storage/' . $path);
     }
+
+    Session::put('intern_reg_step1', [
+        'full_name' => $request->full_name,
+        'email' => $request->email,
+        'country' => $request->country,
+        'city' => $request->city,
+        'whatsapp' => $request->whatsapp,
+        'gender' => $request->gender,
+        'join_date' => $request->join_date,
+        'date_of_birth' => $request->dob,
+        'university' => $request->university,
+        'interview_type' => $request->interview_type,
+        'technology' => $request->technology,
+        'duration' => $request->duration,
+        'internship_type' => $request->internship_type,
+        'image' => $imageLink, // ✅ ADD THIS
+    ]);
+
+    return redirect()->route('intern.register.step2');
+}
     
     // ========== STEP 2 ==========
     
@@ -136,7 +158,7 @@ class InternPublicRegistrationController extends Controller
         'university' => $step1Data['university'] ?? '',
         'technology' => $step1Data['technology'] ?? '',
         'phone' => $step1Data['whatsapp'] ?? '',
-        'image' => $step1Data['profile_image'] ?? '',
+        'image' => $step1Data['image'] ?? '',
         'cnic' => '',
         'interview_type' => $step1Data['interview_type'] ?? '',
         'duration' => $step1Data['duration'] ?? '',

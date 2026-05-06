@@ -17,7 +17,7 @@ class AllInternsController extends Controller
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     // English: Using select() to only fetch required columns (massive performance boost)
-    $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'technology', 'status', 'intern_type', 'interview_type', 'package', 'created_at');
+    $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'technology', 'status', 'intern_type', 'interview_type', 'package', 'created_at','image');
 
 //remove intern from the table
       $query->where('status', '!=', 'removed');
@@ -80,8 +80,8 @@ class AllInternsController extends Controller
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     // English: Using select() to fetch only necessary columns for better memory management
-    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
-
+$query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 
+                        'technology', 'interview_type', 'status', 'created_at','image');
     // 🔘 Status filter with default 'interview'
     // English: We set the status early to ensure the query stays targeted
     $status = $request->input('status', 'interview');
@@ -129,8 +129,8 @@ public function contactIntern(Request $request)
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     // English: Selection of specific columns to reduce RAM usage and increase query speed
-    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
-
+$query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 
+                        'technology', 'interview_type', 'status', 'created_at','image');
     // 🔍 Optimized Search
     if ($request->filled('search')) {
         $search = $request->search;
@@ -167,8 +167,8 @@ public function testIntern(Request $request)
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     // English: Selection of specific columns only. Fetching 20+ columns for 2.7L records wastes RAM.
-    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
-
+$query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 
+                        'technology', 'interview_type', 'status', 'created_at','image');
     // 🔍 Optimized Search
     if ($request->filled('search')) {
         $search = $request->search;
@@ -207,8 +207,8 @@ public function completedIntern(Request $request)
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     // English: Selecting specific columns is crucial for 200k+ records to save RAM.
-    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
-
+$query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 
+                        'technology', 'interview_type', 'status', 'created_at','image');
     // 🔍 Optimized Search
     if ($request->filled('search')) {
         $search = $request->search;
@@ -247,8 +247,8 @@ public function activeIntern(Request $request)
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
     // English: Selecting only necessary columns to avoid loading heavy data (like images/long text) into RAM
-    $query = Intern::select('id', 'name', 'email', 'city', 'technology', 'status', 'created_at');
-
+  $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 
+                            'technology', 'interview_type', 'status', 'created_at','image');
     // 🔍 Optimized Search
     if ($request->filled('search')) {
         $search = $request->search;
@@ -945,6 +945,63 @@ public function getInternStatus($id)
 }  
 
 
+/**
+ * Bulk status update for selected interns
+ */
+public function bulkStatusUpdate(Request $request)
+{
+    try {
+        // CHANGE THIS: Accept comma-separated string, not JSON
+        $internIds = explode(',', $request->intern_ids);
+        $internIds = array_map('trim', $internIds);
+        $internIds = array_filter($internIds, 'is_numeric');
+        
+        $newStatus = $request->new_status; // CHANGE: match form field name
+        
+        if (empty($internIds)) {
+            // BETTER: Return redirect with toast for non-AJAX
+            return redirect()->back()->with('toast_error', 'No interns selected');
+        }
+        
+        $count = Intern::whereIn('id', $internIds)->update(['status' => $newStatus]);
+        
+        // BETTER: Return redirect with toast message
+        return redirect()->back()->with('toast_success', $count . ' intern(s) status changed to ' . ucfirst($newStatus));
+        
+    } catch (\Exception $e) {
+        return redirect()->back()->with('toast_error', 'Error: ' . $e->getMessage());
+    }
+}
 
+/**
+ * Export selected interns to CSV
+ */
+public function exportSelectedCSV(Request $request)
+{
+    $ids = explode(',', $request->ids);
+    $interns = Intern::whereIn('id', $ids)->get();
+    
+    $fileName = 'selected_interns_' . date('Y-m-d') . '.csv';
+    
+    $headers = [
+        "Content-type" => "text/csv",
+        "Content-Disposition" => "attachment; filename=$fileName",
+    ];
+    
+    $callback = function() use ($interns) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, ['ID', 'Name', 'Email', 'Phone', 'City', 'Technology', 'Status']);
+        foreach ($interns as $intern) {
+            fputcsv($file, [
+                $intern->id, $intern->name, $intern->email, 
+                $intern->phone ?? 'N/A', $intern->city ?? 'N/A',
+                $intern->technology, $intern->status
+            ]);
+        }
+        fclose($file);
+    };
+    
+    return response()->stream($callback, 200, $headers);
+}
 
 }

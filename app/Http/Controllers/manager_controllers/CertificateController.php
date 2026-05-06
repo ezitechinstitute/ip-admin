@@ -146,39 +146,39 @@ class CertificateController extends Controller
         return back()->with('success', 'Template removed.');
     }
 
-    public function requests(Request $request)
-    {
-        $manager = Auth::guard('manager')->user();
-        if (!$manager) return redirect()->route('manager.login');
+   public function requests(Request $request)
+{
+    $manager = Auth::guard('manager')->user();
+    if (!$manager) return redirect()->route('manager.login');
 
-        if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_manager_certificate_requests')) {
-            return redirect()->route('manager.dashboard')->withErrors(['access_denied' => 'Permission denied.']);
-        }
-
-        $pageLimitSet = AdminSetting::first();
-        $perPage = $request->get('perpage', $pageLimitSet->pagination_limit ?? 15);
-
-        // Default: show pending requests only, with optional filtering by status
-        $manager = Auth::guard('manager')->user();
-        $query = CertificateRequest::where('manager_id', $manager->manager_id)->orderBy('id', 'desc');
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('search')) {
-            $term = $request->search;
-            $query->where(function ($q) use ($term) {
-                $q->where('certificate_request_id', 'LIKE', "%{$term}%")
-                    ->orWhere('intern_name', 'LIKE', "%{$term}%")
-                    ->orWhere('email', 'LIKE', "%{$term}%");
-            });
-        }
-
-        $requests = $query->paginate($perPage)->withQueryString();
-        $certificateTemplates = CertificateTemplate::where('status', 1)->where('is_deleted', 0)->get();
-
-        return view('pages.manager.certificate-request.certificateRequest', compact('requests', 'perPage', 'certificateTemplates'));
+    if (\Illuminate\Support\Facades\Gate::forUser($manager)->denies('check-privilege', 'view_manager_certificate_requests')) {
+        return redirect()->route('manager.dashboard')->withErrors(['access_denied' => 'Permission denied.']);
     }
+
+    $pageLimitSet = AdminSetting::first();
+    $perPage = $request->get('perpage', $pageLimitSet->pagination_limit ?? 15);
+
+    // ✅ FIXED: Remove manager_id filter to see all requests
+    $query = CertificateRequest::orderBy('id', 'desc');
+    
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    if ($request->filled('search')) {
+        $term = $request->search;
+        $query->where(function ($q) use ($term) {
+            $q->where('certificate_request_id', 'LIKE', "%{$term}%")
+                ->orWhere('intern_name', 'LIKE', "%{$term}%")
+                ->orWhere('email', 'LIKE', "%{$term}%");
+        });
+    }
+
+    $requests = $query->paginate($perPage)->withQueryString();
+    $certificateTemplates = CertificateTemplate::where('status', 1)->where('is_deleted', 0)->get();
+
+    return view('pages.manager.certificate-request.certificateRequest', compact('requests', 'perPage', 'certificateTemplates'));
+}
 
     public function submitRequest(Request $request)
     {
@@ -217,70 +217,119 @@ class CertificateController extends Controller
         return back()->with('success', 'Certificate request submitted successfully. Manager notified.');
     }
 
-    public function updateRequestStatus(Request $request)
-    {
-        $request->validate([
-            'id' => 'required|integer',
-            'status' => 'required|in:approved,rejected',
-            'certificate_type' => 'required|in:internship,course_completion',
-        ]);
+   public function updateRequestStatus(Request $request)
+{
+    $request->validate([
+        'id' => 'required|integer',
+        'status' => 'required|in:approved,rejected',
+        'certificate_type' => 'required|in:internship,course_completion',
+    ]);
 
-        $certificateRequest = CertificateRequest::findOrFail($request->id);
-        $certificateRequest->status = $request->status;
-        $certificateRequest->reason = $request->reason;
-        $certificateRequest->certificate_type = $request->certificate_type;
+    $certificateRequest = CertificateRequest::findOrFail($request->id);
+    $certificateRequest->status = $request->status;
+    $certificateRequest->reason = $request->reason;
+    $certificateRequest->certificate_type = $request->certificate_type;
 
-        if ($request->status === 'approved') {
-            $template = CertificateTemplate::where('certificate_type', $request->certificate_type)
-                ->where('status', 1)
-                ->where('is_deleted', 0)
-                ->latest('id')
-                ->first();
+    if ($request->status === 'approved') {
+        $template = CertificateTemplate::where('certificate_type', $request->certificate_type)
+            ->where('status', 1)
+            ->where('is_deleted', 0)
+            ->latest('id')
+            ->first();
 
-            if (!$template) {
-                return back()->with('error', 'No active certificate template found for this certificate type.');
-            }
-
-            $content = str_replace(
-                ['{{name}}','{{email}}','{{certificate_type}}','{{date}}'],
-                [$certificateRequest->intern_name, $certificateRequest->email, ucfirst(str_replace('_',' ', $request->certificate_type)), date('d M Y')],
-                $template->content
-            );
-
-            $html = '<html><head><style>body{font-family: Arial, sans-serif;}</style></head><body>' . $content . '</body></html>';
-            $pdf = Pdf::loadHTML($html);
-            $pdf->setPaper('a4', 'portrait');
-            $pdfData = $pdf->output();
-
-            $folder = storage_path('app/certificates');
-            if (!file_exists($folder)) {
-                mkdir($folder, 0755, true);
-            }
-
-            $filename = 'certificate_' . $certificateRequest->certificate_request_id . '.pdf';
-            $path = $folder . '/' . $filename;
-            file_put_contents($path, $pdfData);
-
-            $certificateRequest->pdf_path = 'certificates/' . $filename;
-            $certificateRequest->approved_at = now();
-
-            // Email intern
-            $emailTo = $certificateRequest->email;
-            $mailBody = '<p>Dear ' . e($certificateRequest->intern_name) . ',</p>' .
-                '<p>Your ' . ucfirst(str_replace('_', ' ', $request->certificate_type)) . ' certificate has been approved. Please find attached certificate.</p>' .
-                '<p>Regards,<br>Ezline Team</p>';
-
-            Mail::html($mailBody, function ($message) use ($emailTo, $pdfData, $filename) {
-                $message->to($emailTo)
-                    ->subject('Your Certificate is Approved')
-                    ->attachData($pdfData, $filename, ['mime' => 'application/pdf']);
-            });
+        if (!$template) {
+            return back()->with('error', 'No active certificate template found for this certificate type.');
         }
 
-        $certificateRequest->save();
+        // ✅ Get intern data for start_date and end_date
+$intern = \App\Models\InternAccount::where('email', $certificateRequest->email)->first();        
+        // Format dates for display
+        $start_date = $intern->join_date ? date('d M Y', strtotime($intern->join_date)) : 'N/A';
+        $end_date = $intern->end_date ? date('d M Y', strtotime($intern->end_date)) : 'N/A';
+        $technology = $intern->technology ?? 'N/A';
 
-        return back()->with('success', 'Certificate request ' . ucfirst($request->status) . '.');
+        // ✅ Replace all placeholders including start_date and end_date
+        $content = str_replace(
+            [
+                '{{name}}',
+                '{{email}}',
+                '{{certificate_type}}',
+                '{{date}}',
+                '{{start_date}}',
+                '{{end_date}}',
+                '{{technology}}',
+                '{{certificate_id}}'
+            ],
+            [
+                $certificateRequest->intern_name,
+                $certificateRequest->email,
+                ucfirst(str_replace('_', ' ', $request->certificate_type)),
+                date('d M Y'),
+                $start_date,
+                $end_date,
+                $technology,
+                $certificateRequest->certificate_request_id
+            ],
+            $template->content
+        );
+
+        $html = '<html><head><style>
+            body{font-family: Arial, sans-serif; margin: 0; padding: 20px;}
+            .certificate-container{max-width: 800px; margin: 0 auto;}
+        </style></head><body><div class="certificate-container">' . $content . '</div></body></html>';
+        
+        $pdf = Pdf::loadHTML($html);
+        $pdf->setPaper('a4', 'portrait');
+        $pdfData = $pdf->output();
+
+        $folder = storage_path('app/certificates');
+        if (!file_exists($folder)) {
+            mkdir($folder, 0755, true);
+        }
+
+        $filename = 'certificate_' . $certificateRequest->certificate_request_id . '.pdf';
+        $path = $folder . '/' . $filename;
+        file_put_contents($path, $pdfData);
+
+        $certificateRequest->pdf_path = 'certificates/' . $filename;
+        $certificateRequest->approved_at = now();
+
+        // Email intern with certificate
+        $emailTo = $certificateRequest->email;
+        $certificateType = ucfirst(str_replace('_', ' ', $request->certificate_type));
+        $mailBody = '
+        <!DOCTYPE html>
+        <html>
+        <head><title>Certificate Approved</title></head>
+        <body style="font-family: Arial, sans-serif;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #2b9a82;">Certificate Approved!</h2>
+                <p>Dear <strong>' . e($certificateRequest->intern_name) . '</strong>,</p>
+                <p>Your <strong>' . $certificateType . '</strong> certificate has been approved and is attached to this email.</p>
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p><strong>Certificate Details:</strong></p>
+                    <p>Certificate ID: ' . $certificateRequest->certificate_request_id . '</p>
+                    <p>Issue Date: ' . date('d M Y') . '</p>
+                    <p>Technology: ' . $technology . '</p>
+                    <p>Period: ' . $start_date . ' to ' . $end_date . '</p>
+                </div>
+                <p>You can also download your certificate from the intern portal.</p>
+                <p>Best regards,<br><strong>Ezitech Team</strong></p>
+            </div>
+        </body>
+        </html>';
+
+        Mail::html($mailBody, function ($message) use ($emailTo, $pdfData, $filename) {
+            $message->to($emailTo)
+                ->subject('Your ' . $filename . ' is Approved')
+                ->attachData($pdfData, $filename, ['mime' => 'application/pdf']);
+        });
     }
+
+    $certificateRequest->save();
+
+    return back()->with('success', 'Certificate request ' . ucfirst($request->status) . '.');
+}
 
     public function downloadCertificate(Request $request, $id)
     {

@@ -9,7 +9,7 @@
         <div class="col-md-3 col-6">
             <div class="card">
                 <div class="card-body text-center">
-                    <i class="ti ti-tasks fs-1 text-primary mb-2"></i>
+                    <i class="icon-base ti tabler-tasks icon-xl text-primary mb-2"></i>
                     <h3 class="mb-0">{{ $stats['total'] }}</h3>
                     <small class="text-muted">Total Tasks</small>
                 </div>
@@ -18,7 +18,7 @@
         <div class="col-md-3 col-6">
             <div class="card">
                 <div class="card-body text-center">
-                    <i class="ti ti-clock fs-1 text-warning mb-2"></i>
+                    <i class="icon-base ti tabler-clock icon-xl text-warning mb-2"></i>
                     <h3 class="mb-0">{{ $stats['pending'] }}</h3>
                     <small class="text-muted">Pending</small>
                 </div>
@@ -27,7 +27,7 @@
         <div class="col-md-3 col-6">
             <div class="card">
                 <div class="card-body text-center">
-                    <i class="ti ti-send fs-1 text-info mb-2"></i>
+                    <i class="icon-base ti tabler-send icon-xl text-info mb-2"></i>
                     <h3 class="mb-0">{{ $stats['submitted'] }}</h3>
                     <small class="text-muted">Submitted</small>
                 </div>
@@ -36,7 +36,7 @@
         <div class="col-md-3 col-6">
             <div class="card">
                 <div class="card-body text-center">
-                    <i class="ti ti-check-circle fs-1 text-success mb-2"></i>
+                    <i class="icon-base ti tabler-circle-check icon-xl text-success mb-2"></i>
                     <h3 class="mb-0">{{ $stats['approved'] }}</h3>
                     <small class="text-muted">Approved</small>
                 </div>
@@ -111,7 +111,7 @@
                     <tbody>
                         @forelse($tasks as $task)
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $loop->iteration + ($tasks->firstItem() - 1) }}</td>
                             <td>
                                 <div class="fw-semibold">{{ $task->title }}</div>
                                 <small class="text-muted">{{ \Illuminate\Support\Str::limit($task->description ?? 'No description', 40) }}</small>
@@ -126,12 +126,7 @@
                             <td>{{ $task->points ?? '—' }}</td>
                             <td>
                                 @php
-                                    $statusColors = [
-                                        'pending' => 'warning',
-                                        'submitted' => 'info',
-                                        'approved' => 'success',
-                                        'rejected' => 'danger',
-                                    ];
+                                    $statusColors = ['pending' => 'warning','submitted' => 'info','approved' => 'success','rejected' => 'danger'];
                                 @endphp
                                 <span class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}">
                                     {{ ucfirst($task->status) }}
@@ -146,14 +141,14 @@
                             </td>
                             <td>
                                 <a href="{{ url('/manager/tasks/' . $task->id) }}" class="btn btn-sm btn-primary">
-                                    <i class="ti ti-eye"></i> View
+                                    <i class="icon-base ti tabler-eye"></i> View
                                 </a>
                             </td>
                         </tr>
                         @empty
                         <tr>
                             <td colspan="9" class="text-center py-5">
-                                <i class="ti ti-tasks-off ti-3x text-muted mb-3"></i>
+                                <i class="icon-base ti tabler-clipboard-x icon-xl text-muted mb-3"></i>
                                 <p class="text-muted mb-0">No tasks found</p>
                             </td>
                         </tr>
@@ -162,8 +157,46 @@
                 </table>
             </div>
         </div>
+        {{-- ✅ PAGINATION --}}
         <div class="card-footer">
-            {{ $tasks->links() }}
+            <div class="row mx-0 justify-content-between align-items-center">
+                <div class="col-md-auto me-auto">
+                    <small class="text-muted">
+                        Showing {{ $tasks->firstItem() ?? 0 }} to {{ $tasks->lastItem() ?? 0 }} of {{ $tasks->total() ?? 0 }} entries
+                    </small>
+                </div>
+                <div class="col-md-auto ms-auto">
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item {{ $tasks->onFirstPage() ? 'disabled' : '' }}">
+                                <a class="page-link" href="{{ $tasks->url(1) }}">
+                                    <i class="icon-base ti tabler-chevrons-left icon-18px"></i>
+                                </a>
+                            </li>
+                            <li class="page-item {{ $tasks->onFirstPage() ? 'disabled' : '' }}">
+                                <a class="page-link" href="{{ $tasks->previousPageUrl() }}">
+                                    <i class="icon-base ti tabler-chevron-left icon-18px"></i>
+                                </a>
+                            </li>
+                            @foreach ($tasks->getUrlRange(max(1, $tasks->currentPage() - 2), min($tasks->lastPage(), $tasks->currentPage() + 2)) as $page => $url)
+                            <li class="page-item {{ $page == $tasks->currentPage() ? 'active' : '' }}">
+                                <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                            </li>
+                            @endforeach
+                            <li class="page-item {{ $tasks->currentPage() == $tasks->lastPage() ? 'disabled' : '' }}">
+                                <a class="page-link" href="{{ $tasks->nextPageUrl() }}">
+                                    <i class="icon-base ti tabler-chevron-right icon-18px"></i>
+                                </a>
+                            </li>
+                            <li class="page-item {{ $tasks->currentPage() == $tasks->lastPage() ? 'disabled' : '' }}">
+                                <a class="page-link" href="{{ $tasks->url($tasks->lastPage()) }}">
+                                    <i class="icon-base ti tabler-chevrons-right icon-18px"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
         </div>
     </div>
 </div>
