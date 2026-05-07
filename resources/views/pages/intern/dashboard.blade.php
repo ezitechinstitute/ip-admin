@@ -795,7 +795,7 @@ $allowedColors = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'
     <div class="col-lg-6">
         <div class="dashboard-card p-3">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold mb-0"><i class="bi bi-calendar-week me-2"></i> Task Completion (Last 7 days)</h6>
+<h6 class="fw-bold mb-0"><i class="bi bi-calendar-month me-2"></i> Task Completion (Last 6 Months)</h6>
                 <span class="badge bg-success bg-opacity-10 text-success">+23% vs last week</span>
             </div>
             <div id="taskTrendChart" style="height: 280px;"></div>
@@ -1050,17 +1050,17 @@ $allowedColors = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'
             setTimeout(() => { ring.style.strokeDashoffset = offset; }, 100);
         });
 
-        // Charts
-        if (!taskData.length) {
-            for (let i = 0; i < 7; i++) taskData.push(0);
-        }
-        if (!taskLabels.length) {
-            for (let i = 6; i >= 0; i--) {
-                let d = new Date();
-                d.setDate(d.getDate() - i);
-                taskLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
-            }
-        }
+        // // Charts
+        // if (!taskData.length) {
+        //     for (let i = 0; i < 7; i++) taskData.push(0);
+        // }
+        // if (!taskLabels.length) {
+        //     for (let i = 6; i >= 0; i--) {
+        //         let d = new Date();
+        //         d.setDate(d.getDate() - i);
+        //         taskLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+        //     }
+        // }
 
         new ApexCharts(document.querySelector("#taskTrendChart"), {
             series: [{ name: 'Completed Tasks', data: taskData, color: '#3b82f6' }],

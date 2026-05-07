@@ -4,7 +4,6 @@ use App\Helpers\Helpers;
 use Carbon\Carbon;
 
 $intern = Auth::guard('intern')->user();
-$profileImage = Helpers::getProfileImage($intern);
 
 $startDate = Carbon::parse($intern->start_date ?? now());
 $endDate = $startDate->copy()->addMonths(6);
@@ -226,7 +225,7 @@ $totalBadges = count($badges);
             <div class="d-flex align-items-end justify-content-between flex-wrap gap-3">
                 <div class="d-flex align-items-end gap-3">
                     <div class="position-relative flex-shrink-0">
-<img src="{{ $profileImage }}?v={{ session('image_time', time()) }}" alt="Profile"
+<img src="{{ $intern->image ? asset($intern->image) : asset('assets/img/default-avatar.png') }}?v={{ time() }}" alt="Profile"
      class="rounded-circle border border-3 border-white shadow-sm"
      style="width: 120px; height: 120px; object-fit: cover; display: block;">
                         <button class="btn btn-primary btn-sm position-absolute bottom-0 end-0 rounded-circle shadow-sm p-1"
@@ -445,7 +444,8 @@ $totalBadges = count($badges);
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
-<img id="imagePreview" src="{{ $profileImage }}?v={{ time() }}" class="rounded-circle mb-3 shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">                    <input type="file" name="profile_image" class="form-control form-control-sm rounded-pill" accept="image/*" onchange="previewImage(this)">
+<img id="imagePreview" src="{{ $intern->image ? asset($intern->image) : asset('assets/img/default-avatar.png') }}?v={{ time() }}" class="rounded-circle mb-3 shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">
+         <input type="file" name="profile_image" class="form-control form-control-sm rounded-pill" accept="image/*" onchange="previewImage(this)">
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="submit" class="btn btn-primary rounded-pill w-100">Save Changes</button>

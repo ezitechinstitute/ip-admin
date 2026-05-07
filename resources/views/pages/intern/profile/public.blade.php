@@ -894,7 +894,7 @@
             <div class="hero-right">
                 <div class="hero-avatar-wrapper">
                     <div class="hero-avatar-ring"></div>
-                    <img src="{{ $profileImage }}" alt="{{ $intern->name }}" class="hero-avatar">
+<img src="{{ $intern->image ? asset($intern->image) : asset('assets/img/default-avatar.png') }}?v={{ time() }}" alt="{{ $intern->name }}" class="hero-avatar">
                     <div class="hero-status"></div>
                 </div>
             </div>

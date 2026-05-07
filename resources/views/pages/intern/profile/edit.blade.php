@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 $intern = Auth::guard('intern')->user();
-$profileImage = Helpers::getProfileImage($intern);
 
 // Get skills from controller or database
 $skillsList = [];
@@ -108,7 +107,7 @@ $skillsList = array_values(array_filter($skillsList, function($skill) {
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body text-center py-4">
                         <div class="position-relative d-inline-block mb-3">
-                            <img src="{{ $profileImage }}" alt="Profile" class="rounded-circle avatar-upload-preview shadow-sm" id="liveAvatar">
+<img src="{{ $intern->image ? asset($intern->image) : asset('assets/img/default-avatar.png') }}?v={{ time() }}" alt="Profile" class="rounded-circle avatar-upload-preview shadow-sm" id="liveAvatar">
                             <button type="button" class="btn btn-primary btn-sm position-absolute bottom-0 end-0 rounded-circle" 
                                     data-bs-toggle="modal" data-bs-target="#uploadImageModal" style="width: 32px; height: 32px; padding: 0;">
                                 <i class="bi bi-camera"></i>
@@ -239,8 +238,9 @@ $skillsList = array_values(array_filter($skillsList, function($skill) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img id="modalPreview" src="{{ $profileImage }}" class="rounded-circle mb-3 border" style="width: 80px; height: 80px; object-fit: cover;">
-                    <input type="file" name="profile_image" class="form-control form-control-sm" accept="image/*" onchange="previewModal(this)" required>
+<img id="modalPreview" src="{{ $intern->image ? asset($intern->image) : asset('assets/img/default-avatar.png') }}?v={{ time() }}" class="rounded-circle mb-3 border" style="width: 80px; height: 80px; object-fit: cover;">
+
+<input type="file" name="profile_image" class="form-control form-control-sm" accept="image/*" onchange="previewModal(this)" required>
                 </div>
                 <div class="modal-footer border-0">
                     <button type="submit" class="btn btn-primary btn-sm w-100">Upload New Photo</button>

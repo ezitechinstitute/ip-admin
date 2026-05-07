@@ -11,22 +11,9 @@ if (Auth::guard('intern')->check()) {
     $user = Auth::guard('intern')->user();
     $userName = $user->name;
     $userRole = 'Intern';
-    
-    $rawImage = \App\Helpers\Helpers::getProfileImage($user);
-    
-    if (!empty($rawImage)) {
-        // Aggressively strip newlines and spaces that break the Data URI
-        $cleanImage = preg_replace('/\s+/', '', $rawImage);
-
-        if (str_starts_with($cleanImage, 'data:image')) {
-            $userImage = $cleanImage;
-        } elseif (strlen($cleanImage) > 100) {
-            $userImage = 'data:image/jpeg;base64,' . $cleanImage;
-        } else {
-            $userImage = asset($cleanImage);
-        }
-    }
-} elseif (Auth::guard('manager')->check()) {
+    $userImage = $user->image ? asset($user->image) . '?v=' . time() : $defaultImage;
+}
+elseif (Auth::guard('manager')->check()) {
     $user = Auth::guard('manager')->user();
     $userName = $user->name;
     $userRole = $user->loginas ?? 'Manager';

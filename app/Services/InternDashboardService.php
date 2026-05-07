@@ -5,6 +5,7 @@ namespace App\Services;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class InternDashboardService
 {
@@ -130,35 +131,42 @@ class InternDashboardService
             return $event;
         });
 
-        // Chart data – ensure arrays, use actual task completion or fallback to zeros
-        $taskCompletionData = $performance['task_completion'] ?? collect();
-        $data->chartWeekLabels = [];
-        $data->chartTaskCompletion = [];
+      // ✅ LAST 6 MONTHS
+// ✅ FULL CHART SECTION
+$etiId = $intern->eti_id;
+$data->chartWeekLabels = [];
+$data->chartTaskCompletion = [];
+$data->chartPerformanceTrend = [];
 
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
-            $data->chartWeekLabels[] = $date->format('D');
-            $data->chartTaskCompletion[] = 0;
-        }
-
-        foreach ($taskCompletionData as $item) {
-            $dayName = Carbon::parse($item->date)->format('D');
-            $idx = array_search($dayName, $data->chartWeekLabels);
-            if ($idx !== false) {
-                $data->chartTaskCompletion[$idx] = (int) $item->count;
-            }
-        }
-
-        // Performance trend data
-        $data->chartPerformanceTrend = [72, 68, 74, 79, 82, 85, $data->averageScore];
-
-        // Debug (remove after confirming charts work) - 
-        // Log::info('Chart data prepared', [
-        //     'labels' => $data->chartWeekLabels,
-        //     'tasks' => $data->chartTaskCompletion,
-        //     'performance' => $data->chartPerformanceTrend
-        // ]);
-
+for ($i = 5; $i >= 0; $i--) {
+    $month = Carbon::now()->subMonths($i);
+    $data->chartWeekLabels[] = $month->format('M');
+    
+    // Task count
+    $count = DB::table('intern_tasks')
+        ->where('eti_id', $etiId)
+        ->where('task_status', 'approved')
+        ->whereMonth('task_end', $month->month)
+        ->whereYear('task_end', $month->year)
+        ->count();
+    
+    $data->chartTaskCompletion[] = (int) $count;
+    
+    // Performance = completion %
+    $monthData = DB::table('intern_tasks')
+        ->where('eti_id', $etiId)
+        ->where('task_status', 'approved')
+        ->whereMonth('task_end', $month->month)
+        ->whereYear('task_end', $month->year)
+        ->selectRaw('SUM(task_obt_points) as obtained, SUM(task_points) as total')
+        ->first();
+    
+    $perf = ($monthData && $monthData->total > 0) 
+        ? round(($monthData->obtained / $monthData->total) * 100) 
+        : ($count > 0 ? 100 : 0);
+    
+    $data->chartPerformanceTrend[] = $perf;
+}
         return $data;
     }
 }

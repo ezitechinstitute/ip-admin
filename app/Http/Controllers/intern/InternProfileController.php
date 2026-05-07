@@ -27,14 +27,17 @@ class InternProfileController extends Controller
         if (!$intern) {
             return redirect()->route('login');
         }
+
+    //    Fresh data from DB
+    $intern = InternAccount::find($intern->int_id);
         
-        $profileImage = $this->portfolioService->getProfileImage($intern);
+       // $profileImage = $this->portfolioService->getProfileImage($intern);
         $stats = $this->portfolioService->getPortfolioStats($intern);
         $skills = $this->portfolioService->getInternSkills($intern->int_id);
         
         return view('pages.intern.profile.index', compact(
             'intern', 
-            'profileImage', 
+           // 'profileImage', 
             'stats', 
             'skills'
         ));
@@ -47,12 +50,18 @@ class InternProfileController extends Controller
         if (!$intern) {
             return redirect()->route('login');
         }
+
+          // ✅ Fresh data from DB
+    $intern = InternAccount::find($intern->int_id);
+
+     // ❌ REMOVE - Service se cached image mat lo
+    // $profileImage = $this->portfolioService->getProfileImage($intern);
+    
         
-        $profileImage = $this->portfolioService->getProfileImage($intern);
         $skills = $this->portfolioService->getInternSkills($intern->int_id);
         $skillsArray = $skills->toArray();
         
-        return view('pages.intern.profile.edit', compact('intern', 'profileImage', 'skills', 'skillsArray'));
+        return view('pages.intern.profile.edit', compact('intern', 'skills', 'skillsArray'));
     }
     
     public function update(Request $request)
@@ -101,6 +110,11 @@ class InternProfileController extends Controller
         // Update skills
         $this->updateInternSkills($intern->int_id, $request->skills);
         
+
+        session()->forget('image_time');
+    session()->put('image_time', time());  
+
+    //Refresh session
         return redirect()->route('intern.profile')
             ->with('success', 'Profile updated successfully!');
     }
@@ -169,6 +183,10 @@ class InternProfileController extends Controller
             DB::table('intern_accounts')
                 ->where('int_id', $intern->int_id)
                 ->update(['image' => $imagePath]);
+
+                //Clear session cache
+                    session()->forget('image_time');
+    session()->put('image_time', time());
             
             return redirect()->back()->with('success', 'Profile image updated successfully!');
         }
@@ -192,7 +210,7 @@ class InternProfileController extends Controller
         }
         
         // Prepare portfolio data using service
-        $profileImage = $this->portfolioService->getProfileImage($intern);
+       // $profileImage = $this->portfolioService->getProfileImage($intern);
         $stats = $this->portfolioService->getPortfolioStats($intern);
         $statItems = $this->portfolioService->getStatItems($stats);
         $internshipData = $this->portfolioService->calculateInternshipProgress($intern);
@@ -205,7 +223,6 @@ class InternProfileController extends Controller
         
         return view('pages.intern.profile.public', compact(
             'intern',
-            'profileImage',
             'stats',
             'statItems',
             'internshipData',
