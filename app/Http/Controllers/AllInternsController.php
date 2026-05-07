@@ -71,6 +71,10 @@ $query->whereIn('id', function($sub) {
     $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'package',
                             'technology', 'interview_type', 'status', 'created_at', 'image');
 
+                            $query->whereIn('id', function($sub) {
+    $sub->selectRaw('MAX(id)')->from('intern_table')->groupBy('phone');
+});
+
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
@@ -113,6 +117,10 @@ public function contactIntern(Request $request)
     $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'package',
                             'technology', 'interview_type', 'status', 'created_at', 'image');
 
+                            $query->whereIn('id', function($sub) {
+    $sub->selectRaw('MAX(id)')->from('intern_table')->groupBy('phone');
+});
+
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
@@ -143,6 +151,10 @@ public function testIntern(Request $request)
 
     $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'package',
                             'technology', 'interview_type', 'status', 'created_at', 'image');
+
+                            $query->whereIn('id', function($sub) {
+    $sub->selectRaw('MAX(id)')->from('intern_table')->groupBy('phone');
+});
 
     if ($request->filled('search')) {
         $search = $request->search;
@@ -176,6 +188,10 @@ public function completedIntern(Request $request)
     $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'package',
                             'technology', 'interview_type', 'status', 'created_at', 'image');
 
+                            $query->whereIn('id', function($sub) {
+    $sub->selectRaw('MAX(id)')->from('intern_table')->groupBy('phone');
+});
+
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
@@ -207,6 +223,10 @@ public function activeIntern(Request $request)
 
     $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'package',
                             'technology', 'interview_type', 'status', 'created_at', 'image');
+
+                            $query->whereIn('id', function($sub) {
+    $sub->selectRaw('MAX(id)')->from('intern_table')->groupBy('phone');
+});
     
     if ($request->filled('search')) {
         $search = $request->search;

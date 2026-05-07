@@ -34,7 +34,7 @@ class AccountsController extends Controller
 
     // 💰 Optimized Totals (English: Calculate all 3 sums in ONE database hit)
     // English: Using clone() to preserve filters for both Sums and Pagination
-    $sums = (clone $query)->selectRaw('SUM(credit) as total_c, SUM(debit) as total_d, SUM(balance) as total_b')
+$sums = (clone $query)->selectRaw('SUM(credit) as total_c, SUM(debit) as total_d, SUM(credit) - SUM(debit) as total_b')
                          ->first();
 
     $totalCredit = $sums->total_c ?? 0;

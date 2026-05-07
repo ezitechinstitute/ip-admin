@@ -30,8 +30,7 @@
                 </div>
                 <div class="col-md-6">
                     <h6>Description</h6>
-                    <p>{{ $task->task_description ?? 'No description provided' }}</p>
-                    
+                    <p>{!! $task->task_description ?? 'No description provided' !!}</p>                    
                     @if($task->task_git_url || $task->task_live_url || $task->task_screenshot)
                     <h6 class="mt-4">Submission Details</h6>
                     <table class="table table-bordered">
