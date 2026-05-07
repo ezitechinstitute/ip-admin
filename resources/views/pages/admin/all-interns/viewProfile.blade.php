@@ -231,7 +231,7 @@
                             <div class="detail-item">
                                 <div class="detail-label"><i class="bi bi-gift-fill text-warning me-1"></i>Registered Package</div>
                                 <div class="detail-value">
-                                    <span id="displayRegisteredPackage">{{ $interneeDetails->intern_type ?? 'N/A' }}</span>
+     <span id="displayRegisteredPackage">{{ $interneeDetails->package ?: 'No Package' }}</span>
                                     <button class="inline-edit-btn" onclick="openPackageModal()" title="Change Package"><i class="bi bi-pencil-fill"></i></button>
                                 </div>
                             </div>

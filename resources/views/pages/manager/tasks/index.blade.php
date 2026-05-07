@@ -113,9 +113,8 @@
                         <tr>
                             <td>{{ $loop->iteration + ($tasks->firstItem() - 1) }}</td>
                             <td>
-                                <div class="fw-semibold">{{ $task->title }}</div>
-                                <small class="text-muted">{!! \Illuminate\Support\Str::limit($task->description ?? 'No description', 40) !!}</small>
-                            </td>
+    <div class="fw-semibold">{{ $task->title }}</div>
+</td>
                             <td>{{ $task->intern_name }}<br><small class="text-muted">{{ $task->eti_id }}</small></td>
                             <td>{{ $task->supervisor_name ?? 'N/A' }}</td>
                             <td>

@@ -287,6 +287,7 @@ public function updateIntern(Request $request)
         'technology' => $request->technology ?? '',
         'duration' => $request->duration ?? '',
         'intern_type' => $request->intern_type ?? '',
+        'package' => $request->intern_type ?? '', 
         'status' => $request->status ?? 'active',
         'bio' => $request->bio ?? '',
     ]);
