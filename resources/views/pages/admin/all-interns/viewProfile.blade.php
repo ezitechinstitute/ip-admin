@@ -1,21 +1,5 @@
 @extends('layouts/layoutMaster')
 
-{{-- 
-===========================================
-PRIMARY INVOICE CREATION WORKFLOW
-===========================================
-This is the MAIN profile page where admins:
-1. Select a package (left panel)
-2. Go to Invoices tab  
-3. Click "Create Invoice" button
-4. Invoice form auto-fills from selected package
-5. Generates invoice via AJAX (createFromPackage route)
-
-The inline form is inside #invoiceFormContainer div
-JavaScript functions: showInvoiceForm(), createInvoice(), etc.
-===========================================
---}}
-
 @section('title', 'Intern Profile')
 
 @section('page-style')
@@ -46,40 +30,25 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
     .avatar-initials { width: 140px; height: 140px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--primary-gradient); color: white; font-size: 52px; font-weight: 700; border: 5px solid white; box-shadow: 0 8px 32px rgba(0,0,0,0.15); letter-spacing: 2px; }
     .avatar-wrapper:hover .avatar-image, .avatar-wrapper:hover .avatar-initials { transform: scale(1.05); }
     .status-dot { position: absolute; bottom: 12px; right: 8px; width: 22px; height: 22px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-    .status-active { background: #10b981; animation: pulse 2s infinite; }
-    .status-interview { background: #3b82f6; }
-    .status-contact { background: #8b5cf6; }
-    .status-test { background: #f59e0b; }
-    .status-completed { background: #6b7280; }
-    .status-removed { background: #ef4444; }
-    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 50% { box-shadow: 0 0 0 8px rgba(16,185,129,0); } }
     .stat-mini-card { background: rgba(255,255,255,0.7); border-radius: 1rem; padding: 1rem 1.25rem; border: 1px solid rgba(0,0,0,0.04); transition: var(--transition-smooth); cursor: pointer; }
     .stat-mini-card:hover { background: rgba(255,255,255,0.95); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
     .contact-item { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1rem; border-radius: 0.75rem; transition: var(--transition-smooth); cursor: pointer; }
     .contact-item:hover { background: rgba(43,154,130,0.04); transform: translateX(6px); }
     .contact-icon-circle { width: 42px; height: 42px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; }
-    .package-card { background: white; border: 2px solid rgba(0,0,0,0.05); border-radius: 1rem; padding: 1.25rem; cursor: pointer; transition: var(--transition-smooth); position: relative; overflow: hidden; }
-    .package-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary-gradient); transform: scaleX(0); transform-origin: left; transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
-    .package-card:hover { border-color: rgba(43,154,130,0.3); transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.08); }
-    .package-card:hover::before { transform: scaleX(1); }
-    .package-card.selected { border-color: #2b9a82; background: rgba(43,154,130,0.03); box-shadow: 0 4px 20px rgba(43,154,130,0.1); }
-    .package-card.selected::before { transform: scaleX(1); }
-    .package-radio { width: 24px; height: 24px; border: 2px solid #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: var(--transition-smooth); flex-shrink: 0; }
-    .package-card.selected .package-radio { border-color: #2b9a82; background: #2b9a82; }
-    .package-card.selected .package-radio::after { content: '✓'; color: white; font-size: 13px; font-weight: bold; }
-    .package-price { font-size: 1.25rem; font-weight: 700; }
     .custom-tabs { display: flex; gap: 0.25rem; padding: 0.5rem; background: rgba(0,0,0,0.03); border-radius: 0.75rem; margin-bottom: 1.5rem; }
     .custom-tab { flex: 1; padding: 0.65rem 1rem; border: none; background: transparent; font-weight: 600; font-size: 0.8rem; color: #6c86a3; cursor: pointer; transition: var(--transition-smooth); border-radius: 0.6rem; white-space: nowrap; position: relative; }
     .custom-tab.active { background: white; color: #2b9a82; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
     .custom-tab:hover:not(.active) { color: #2b9a82; background: rgba(255,255,255,0.5); }
-    .detail-item { padding: 0.9rem 1rem; border-radius: 0.75rem; background: rgba(0,0,0,0.015); transition: var(--transition-smooth); }
+    .detail-item { padding: 0.9rem 1rem; border-radius: 0.75rem; background: rgba(0,0,0,0.015); transition: var(--transition-smooth); position: relative; }
     .detail-item:hover { background: rgba(43,154,130,0.03); }
+    .detail-item:hover .inline-edit-btn { opacity: 1; }
     .detail-label { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; margin-bottom: 0.3rem; }
-    .detail-value { font-weight: 600; color: #1e293b; font-size: 0.9rem; }
+    .detail-value { font-weight: 600; color: #1e293b; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+    .inline-edit-btn { opacity: 0; transition: opacity 0.2s ease; cursor: pointer; color: #3b82f6; font-size: 0.85rem; padding: 2px 6px; border-radius: 4px; background: rgba(59,130,246,0.08); border: none; }
+    .inline-edit-btn:hover { background: #3b82f6; color: white; }
     .invoice-table { width: 100%; border-collapse: separate; border-spacing: 0; }
     .invoice-table thead th { background: rgba(0,0,0,0.02); padding: 0.85rem 1rem; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6c86a3; border-bottom: 2px solid rgba(0,0,0,0.05); white-space: nowrap; }
     .invoice-table tbody td { padding: 0.9rem 1rem; vertical-align: middle; border-bottom: 1px solid rgba(0,0,0,0.04); }
-    .invoice-table tbody tr { transition: var(--transition-smooth); }
     .invoice-table tbody tr:hover { background: rgba(43,154,130,0.02); }
     .status-badge { padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
     .badge-paid { background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.2); }
@@ -95,27 +64,47 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
     .btn-primary-premium:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(43,154,130,0.4); color: white; }
     .btn-outline-danger-premium { background: transparent; color: #ef4444; border: 1.5px solid rgba(239,68,68,0.3); padding: 0.6rem 1.5rem; border-radius: 50px; font-weight: 600; font-size: 0.8rem; transition: var(--transition-smooth); cursor: pointer; }
     .btn-outline-danger-premium:hover { background: #ef4444; color: white; border-color: #ef4444; }
-    .amount-display { font-size: 1.6rem; font-weight: 800; color: #2b9a82; line-height: 1; }
-    .toast-custom { position: fixed; top: 24px; right: 24px; z-index: 99999; padding: 0.9rem 1.5rem; border-radius: 0.75rem; color: white; font-weight: 600; font-size: 0.85rem; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideInRight 0.4s cubic-bezier(0.175,0.885,0.32,1.275); display: flex; align-items: center; gap: 0.5rem; }
-    .toast-success { background: rgba(16,185,129,0.95); }
+.toast-custom { 
+    position: fixed; 
+    top: 24px; 
+    right: 24px; 
+    z-index: 999999;  /* ✅ Increased from 99999 */
+    padding: 0.9rem 1.5rem; 
+    border-radius: 0.75rem; 
+    color: white; 
+    font-weight: 600; 
+    font-size: 0.85rem; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
+    animation: slideInRight 0.4s cubic-bezier(0.175,0.885,0.32,1.275); 
+    display: flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    backdrop-filter: blur(10px); /* ✅ Add this for better visibility */
+}   
+ .toast-success { background: rgba(16,185,129,0.95); }
     .toast-error { background: rgba(239,68,68,0.95); }
     @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
     .animate-in { animation: fadeInUp 0.5s ease-out forwards; }
-    .btn-loading { pointer-events: none; opacity: 0.7; }
-    .spinner-border-xs { width: 0.9rem; height: 0.9rem; border-width: 0.12em; display: inline-block; }
-    .invoice-form-premium { background: white; border-radius: 1.25rem; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 8px 32px rgba(0,0,0,0.08); animation: slideDown 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    .form-premium-header { background: linear-gradient(135deg, #2b9a82 0%, #1e7b68 100%); padding: 1.25rem 1.5rem; }
-    .form-premium-header small { color: rgba(255,255,255,0.7)!important; }
-    .btn-close-premium { width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
-    .btn-close-premium:hover { background: rgba(255,255,255,0.35); transform: rotate(90deg); }
-    .form-premium-body { padding: 1.5rem; }
-    .form-premium-footer { padding: 1rem 1.5rem; background: rgba(0,0,0,0.02); border-top: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: flex-end; gap: 0.75rem; }
-    .info-cards-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
-    .info-card-mini { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: rgba(0,0,0,0.015); border-radius: 0.75rem; border: 1px solid rgba(0,0,0,0.04); transition: all 0.3s ease; }
-    .highlight-box { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; border-radius: 0.75rem; border: 2px solid transparent; transition: all 0.3s ease; }
+    @media (max-width: 992px) { .profile-banner { height: 180px; } .avatar-section { margin-top: -50px; } .avatar-image, .avatar-initials { width: 110px; height: 110px; } .avatar-initials { font-size: 40px; } }
+    @media (max-width: 768px) { .profile-banner { height: 150px; } .avatar-section { margin-top: -40px; flex-direction: column; align-items: center; text-align: center; } .avatar-image, .avatar-initials { width: 90px; height: 90px; } .avatar-initials { font-size: 32px; } .custom-tabs { flex-wrap: nowrap; overflow-x: auto; } .custom-tab { flex: none; } }
+    .swal2-container { z-index: 99999 !important; }
+
+    .package-card { background: white; border: 2px solid rgba(0,0,0,0.05); border-radius: 1rem; padding: 1.25rem; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; margin-bottom: 0.5rem; }
+    .package-card:hover { border-color: rgba(43,154,130,0.3); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+    .package-card.selected { border-color: #2b9a82 !important; background: rgba(43,154,130,0.03); }
+    .package-radio { width: 22px; height: 22px; border: 2px solid #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; flex-shrink: 0; }
+    .package-card.selected .package-radio { border-color: #2b9a82; background: #2b9a82; }
+    .package-card.selected .package-radio::after { content: '✓'; color: white; font-size: 12px; font-weight: bold; }
+    .package-price { font-size: 1.1rem; font-weight: 700; }
+    .package-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #2b9a82 0%, #1e7b68 100%); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+    .package-card:hover::before, .package-card.selected::before { transform: scaleX(1); }
+
+    .form-label-premium{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#6c86a3;margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem;}
+    .form-header-icon{width:44px;height:44px;border-radius:.75rem;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+    .info-card-icon{width:38px;height:38px;border-radius:.6rem;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
+    .highlight-box { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; border-radius: 0.75rem; border: 2px solid transparent; }
     .highlight-box-primary { background: rgba(43,154,130,0.04); border-color: rgba(43,154,130,0.2); }
     .highlight-box-warning { background: rgba(245,158,11,0.04); border-color: rgba(245,158,11,0.2); }
     .highlight-box-info { background: rgba(59,130,246,0.04); border-color: rgba(59,130,246,0.2); }
@@ -123,18 +112,33 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
     .highlight-box-primary .highlight-box-icon { background: rgba(43,154,130,0.1); color: #2b9a82; }
     .highlight-box-warning .highlight-box-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
     .highlight-box-info .highlight-box-icon { background: rgba(59,130,246,0.1); color: #3b82f6; }
-    .btn-generate-premium { background: linear-gradient(135deg, #2b9a82 0%, #1e7b68 100%); color: white; border: none; padding: 0.7rem 1.75rem; border-radius: 50px; font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(43,154,130,0.3); display: inline-flex; align-items: center; gap: 0.5rem; }
+    .btn-generate-premium { background: linear-gradient(135deg, #2b9a82 0%, #1e7b68 100%); color: white; border: none; padding: 0.7rem 1.75rem; border-radius: 50px; font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(43,154,130,0.3); display: inline-flex; align-items: center; gap: 0.5rem; }
     .btn-generate-premium:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(43,154,130,0.4); }
-    .btn-generate-premium:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .btn-cancel-premium { background: transparent; color: #6c86a3; border: 1.5px solid rgba(0,0,0,0.1); padding: 0.7rem 1.75rem; border-radius: 50px; font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .btn-cancel-premium { background: transparent; color: #6c86a3; border: 1.5px solid rgba(0,0,0,0.1); padding: 0.7rem 1.75rem; border-radius: 50px; font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 0.5rem; }
     .btn-cancel-premium:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.03); }
-    @media (max-width: 992px) { .profile-banner { height: 180px; } .avatar-section { margin-top: -50px; } .avatar-image, .avatar-initials { width: 110px; height: 110px; } .avatar-initials { font-size: 40px; } }
-    @media (max-width: 768px) { .profile-banner { height: 150px; } .avatar-section { margin-top: -40px; flex-direction: column; align-items: center; text-align: center; } .avatar-image, .avatar-initials { width: 90px; height: 90px; } .avatar-initials { font-size: 32px; } .custom-tabs { flex-wrap: nowrap; overflow-x: auto; } .custom-tab { flex: none; } }
-    .swal2-container { z-index: 99999 !important; }
+    .btn-close-premium { width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+    .btn-close-premium:hover { background: rgba(255,255,255,0.35); transform: rotate(90deg); }
+    .form-premium-header { background: linear-gradient(135deg, #2b9a82 0%, #1e7b68 100%); padding: 1.25rem 1.5rem; }
+    .form-premium-header small { color: rgba(255,255,255,0.7)!important; }
+    .form-premium-body { padding: 1.5rem; }
+    .form-premium-footer { padding: 1rem 1.5rem; background: rgba(0,0,0,0.02); border-top: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: flex-end; gap: 0.75rem; }
+    .invoice-form-premium { background: white; border-radius: 1.25rem; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 8px 32px rgba(0,0,0,0.08); animation: slideDown 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    .info-cards-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+    .info-card-mini { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: rgba(0,0,0,0.015); border-radius: 0.75rem; border: 1px solid rgba(0,0,0,0.04); }
+    .btn-loading { pointer-events: none; opacity: 0.7; }
+    .spinner-border-xs { width: 0.9rem; height: 0.9rem; border-width: 0.12em; display: inline-block; }
 
-    .form-label-premium{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#6c86a3;margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem;}
-.form-header-icon{width:44px;height:44px;border-radius:.75rem;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
-.info-card-icon{width:38px;height:38px;border-radius:.6rem;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
+    .status-active { background: #10b981; animation: pulse 2s infinite; }
+    .status-pending { background: #f59e0b; }
+    .status-interview { background: #3b82f6; }
+    .status-complete { background: #6b7280; }
+    .status-reject { background: #ef4444; }
+    .status-terminate { background: #ef4444; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+
+    .clickable-row { cursor: pointer; transition: all 0.2s ease; }
+.clickable-row:hover { background-color: rgba(43, 154, 130, 0.04) !important; }
 </style>
 @endsection
 
@@ -152,7 +156,7 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
                     @php $userName = $interneeDetails->name ?? 'User'; $initials = strtoupper(substr($userName, 0, 2)); $imageUrl = $interneeDetails->profileImageUrl; @endphp
                     @if($imageUrl) <img src="{{ $imageUrl }}" alt="{{ $userName }}" class="avatar-image" id="profileAvatarImage" onerror="this.style.display='none'; document.getElementById('profileAvatarInitials').style.display='flex';"><div class="avatar-initials" id="profileAvatarInitials" style="display: none;">{{ $initials }}</div>
                     @else <div class="avatar-initials" id="profileAvatarInitials">{{ $initials }}</div> @endif
-                    @php $statusClass = match(strtolower($interneeDetails->status ?? '')) { 'active' => 'status-active', 'interview' => 'status-interview', 'contact' => 'status-contact', 'test' => 'status-test', 'completed' => 'status-completed', 'removed' => 'status-removed', default => 'status-interview' }; @endphp
+                    @php $statusClass = match(strtolower($interneeDetails->status ?? '')) { 'active' => 'status-active', 'pending' => 'status-pending', 'interview' => 'status-interview', 'complete' => 'status-complete', 'reject' => 'status-reject', 'terminate' => 'status-terminate', default => 'status-interview' }; @endphp
                     <span class="status-dot {{ $statusClass }}" title="{{ ucfirst($interneeDetails->status ?? 'Unknown') }}" data-bs-toggle="tooltip"></span>
                 </div>
                 <div class="flex-grow-1 pb-2">
@@ -176,12 +180,12 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
         <div class="col-6 col-md-3 animate-in" style="animation-delay: 0.1s;"><div class="stat-mini-card text-center"><div class="fw-bold text-muted small mb-1">Intern ID</div><div class="fw-bold fs-5 text-primary">#{{ $interneeDetails->id ?? 'N/A' }}</div></div></div>
         <div class="col-6 col-md-3 animate-in" style="animation-delay: 0.15s;"><div class="stat-mini-card text-center"><div class="fw-bold text-muted small mb-1">Email</div><div class="fw-bold small text-truncate">{{ $interneeDetails->email ?? 'N/A' }}</div></div></div>
         <div class="col-6 col-md-3 animate-in" style="animation-delay: 0.2s;"><div class="stat-mini-card text-center"><div class="fw-bold text-muted small mb-1">Phone</div><div class="fw-bold small">{{ $interneeDetails->phone ?? 'N/A' }}</div></div></div>
-        <div class="col-6 col-md-3 animate-in" style="animation-delay: 0.25s;"><div class="stat-mini-card text-center"><div class="fw-bold text-muted small mb-1">University</div><div class="fw-bold small text-truncate">{{ $interneeDetails->university ?? 'N/A' }}</div></div></div>
+        <div class="col-6 col-md-3 animate-in" style="animation-delay: 0.25s;"><div class="stat-mini-card text-center"><div class="fw-bold text-muted small mb-1">CNIC</div><div class="fw-bold small text-truncate">{{ $interneeDetails->cnic ?? 'N/A' }}</div></div></div>
     </div>
 
-        <div class="row g-4">
+    <div class="row g-4">
         <div class="col-xl-4 col-lg-5">
-            <div class="premium-card p-4 mb-4 animate-in" style="animation-delay: 0.3s;">
+            <div class="premium-card p-4 animate-in" style="animation-delay: 0.3s;">
                 <h5 class="fw-bold mb-3"><i class="bi bi-person-lines-fill me-2" style="color: #2b9a82;"></i>Contact Information</h5>
                 <div class="d-flex flex-column gap-1">
                     <div class="contact-item"><div class="contact-icon-circle bg-primary bg-opacity-10 text-primary"><i class="bi bi-envelope-fill"></i></div><div class="flex-grow-1 min-width-0"><small class="text-muted d-block" style="font-size: 0.68rem;">Email Address</small><span class="fw-medium small text-truncate d-block">{{ $interneeDetails->email ?? 'N/A' }}</span></div></div>
@@ -190,17 +194,6 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
                     <div class="contact-item"><div class="contact-icon-circle bg-warning bg-opacity-10 text-warning"><i class="bi bi-building"></i></div><div class="flex-grow-1 min-width-0"><small class="text-muted d-block" style="font-size: 0.68rem;">University</small><span class="fw-medium small text-truncate d-block">{{ $interneeDetails->university ?? 'N/A' }}</span></div></div>
                     <div class="contact-item"><div class="contact-icon-circle" style="background: rgba(139,92,246,0.1); color: #8b5cf6;"><i class="bi bi-credit-card"></i></div><div><small class="text-muted d-block" style="font-size: 0.68rem;">CNIC</small><span class="fw-medium small">{{ $interneeDetails->cnic ?? 'N/A' }}</span></div></div>
                 </div>
-            </div>
-            <div class="premium-card p-4 animate-in" style="animation-delay: 0.35s;">
-                <h5 class="fw-bold mb-3"><i class="bi bi-gift-fill me-2" style="color: #2b9a82;"></i>Select Package</h5>
-                <div class="d-flex flex-column gap-2" id="packageList">
-                    @foreach($packages as $pkg)
-                    <div class="package-card package-option" data-package-id="{{ $pkg['slug'] }}" data-package-name="{{ $pkg['name'] }}" data-amount="{{ $pkg['amount'] }}" data-due-days="{{ $pkg['due_days'] }}" onclick="selectPackage(this)">
-                        <div class="d-flex justify-content-between align-items-center"><div class="d-flex align-items-center gap-3"><div class="package-radio"></div><div><div class="fw-bold small">{{ $pkg['name'] }}</div></div></div><div class="package-price" style="color: {{ $pkg['color'] }};">{{ \App\Services\PackageService::formatAmount($pkg['amount']) }}</div></div>
-                    </div>
-                    @endforeach
-                </div>
-                <div id="selectedPackageInfo" class="mt-3"></div>
             </div>
         </div>
         <div class="col-xl-8 col-lg-7">
@@ -212,40 +205,60 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
                 </div>
                 <div class="tab-panel" id="tab-details">
                     <div class="row g-2">
-
                         @php
                             $details = [
-                                ['label' => 'Full Name', 'value' => $interneeDetails->name, 'icon' => 'bi-person-fill', 'color' => 'primary'],
-                                ['label' => 'Email', 'value' => $interneeDetails->email, 'icon' => 'bi-envelope-fill', 'color' => 'info'],
-                                ['label' => 'Phone', 'value' => $interneeDetails->phone, 'icon' => 'bi-telephone-fill', 'color' => 'success'],
-                                ['label' => 'CNIC', 'value' => $interneeDetails->cnic, 'icon' => 'bi-card-text', 'color' => 'warning'],
                                 ['label' => 'Gender', 'value' => $interneeDetails->gender, 'icon' => 'bi-gender-ambiguous', 'color' => 'secondary'],
                                 ['label' => 'Date of Birth', 'value' => $interneeDetails->birth_date, 'icon' => 'bi-cake2-fill', 'color' => 'danger'],
-                                ['label' => 'Join Date', 'value' => $interneeDetails->join_date, 'icon' => 'bi-calendar-check-fill', 'color' => 'success'],
+                                ['label' => 'Join Date', 'value' => $interneeDetails->join_date ? date('Y-m-d', strtotime($interneeDetails->join_date)) : null, 'icon' => 'bi-calendar-check-fill', 'color' => 'success'],
                                 ['label' => 'University', 'value' => $interneeDetails->university, 'icon' => 'bi-building', 'color' => 'warning'],
                                 ['label' => 'Country', 'value' => $interneeDetails->country, 'icon' => 'bi-globe2', 'color' => 'info'],
                                 ['label' => 'City', 'value' => $interneeDetails->city, 'icon' => 'bi-geo-alt-fill', 'color' => 'danger'],
                                 ['label' => 'Technology', 'value' => $interneeDetails->technology, 'icon' => 'bi-code-slash', 'color' => 'primary'],
                                 ['label' => 'Duration', 'value' => $interneeDetails->duration, 'icon' => 'bi-clock-fill', 'color' => 'info'],
-                                ['label' => 'Registered Package', 'value' => $interneeDetails->intern_type ?? 'N/A', 'icon' => 'bi-gift-fill', 'color' => 'warning'],
-                                ['label' => 'Status', 'value' => $interneeDetails->status, 'icon' => 'bi-flag-fill', 'color' => 'success'],
                             ];
                         @endphp
-
                         @foreach($details as $detail)
                         <div class="col-md-6">
                             <div class="detail-item">
-                                <div class="detail-label">
-                                    <i class="bi {{ $detail['icon'] }} text-{{ $detail['color'] }} me-1"></i>
-                                    {{ $detail['label'] }}
-                                </div>
+                                <div class="detail-label"><i class="bi {{ $detail['icon'] }} text-{{ $detail['color'] }} me-1"></i>{{ $detail['label'] }}</div>
                                 <div class="detail-value">{{ $detail['value'] ?? 'N/A' }}</div>
                             </div>
                         </div>
- @endforeach
+                        @endforeach
+
+                        {{-- Registered Package --}}
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <div class="detail-label"><i class="bi bi-gift-fill text-warning me-1"></i>Registered Package</div>
+                                <div class="detail-value">
+                                    <span id="displayRegisteredPackage">{{ $interneeDetails->intern_type ?? 'N/A' }}</span>
+                                    <button class="inline-edit-btn" onclick="openPackageModal()" title="Change Package"><i class="bi bi-pencil-fill"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Status --}}
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <div class="detail-label"><i class="bi bi-flag-fill text-success me-1"></i>Status</div>
+                                <div class="detail-value">
+                                    <span id="displayStatus">{{ ucfirst($interneeDetails->status ?? 'N/A') }}</span>
+                                    <button class="inline-edit-btn" onclick="openStatusModal()" title="Change Status"><i class="bi bi-pencil-fill"></i></button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="tab-panel" id="tab-invoices" style="display: none;">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-gift-fill me-2" style="color: #2b9a82;"></i>Select Package</h6>
+                    <div class="d-flex flex-column gap-2 mb-4" id="packageList">
+                        @foreach($packages as $pkg)
+                        <div class="package-card package-option" data-package-id="{{ $pkg['slug'] }}" data-package-name="{{ $pkg['name'] }}" data-amount="{{ $pkg['amount'] }}" data-due-days="{{ $pkg['due_days'] }}" onclick="selectPackage(this)">
+                            <div class="d-flex justify-content-between align-items-center"><div class="d-flex align-items-center gap-3"><div class="package-radio"></div><div><div class="fw-bold small">{{ $pkg['name'] }}</div></div></div><div class="package-price" style="color: {{ $pkg['color'] }}; font-weight:700;">{{ \App\Services\PackageService::formatAmount($pkg['amount']) }}</div></div>
+                        </div>
+                        @endforeach
+                    </div>
+                    <div id="selectedPackageInfo" class="mb-4"></div>
+                    <hr class="my-4">
                     <div class="d-flex justify-content-between align-items-center mb-4"><h6 class="fw-bold mb-0"><i class="bi bi-file-earmark-plus me-2" style="color: #2b9a82;"></i>Invoice Management</h6><button class="btn-primary-premium btn-sm" id="showInvoiceFormBtn" onclick="showInvoiceForm()"><i class="bi bi-plus-lg me-1"></i> Create Invoice</button></div>
                     <div id="invoiceFormContainer" style="display: none;" class="invoice-form-premium mb-4">
                         <div class="form-premium-header"><div class="d-flex justify-content-between align-items-center"><div class="d-flex align-items-center gap-3"><div class="form-header-icon"><i class="bi bi-receipt-cutoff"></i></div><div><h6 class="fw-bold mb-0 text-white">Create New Invoice</h6><small class="text-white-50">Auto-filled from selected package</small></div></div><button type="button" class="btn-close-premium" onclick="hideInvoiceForm()"><i class="bi bi-x-lg"></i></button></div></div>
@@ -267,7 +280,58 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
     </div>
 </div>
 
-<!-- Edit Intern Modal -->
+{{-- Package Mini Modal --}}
+<div class="modal fade" id="packageMiniModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content premium-card">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold"><i class="bi bi-gift-fill text-warning me-2"></i>Change Package</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <select id="miniPackageSelect" class="form-select rounded-3">
+                    <option value="">Select Package</option>
+                    @foreach($packages as $pkg)
+                    <option value="{{ $pkg['name'] }}">{{ $pkg['name'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary btn-sm rounded-3 px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm rounded-3 px-4" onclick="submitPackageMiniModal()">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Status Mini Modal --}}
+<div class="modal fade" id="statusMiniModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content premium-card">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold"><i class="bi bi-flag-fill text-success me-2"></i>Change Status</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <select id="miniStatusSelect" class="form-select rounded-3">
+                    <option value="">Select Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Complete">Complete</option>
+                    <option value="Reject">Reject</option>
+                    <option value="Terminate">Terminate</option>
+                </select>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary btn-sm rounded-3 px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm rounded-3 px-4" onclick="submitStatusMiniModal()">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Edit Intern Modal --}}
 <div class="modal fade" id="editInternModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content premium-card"><div class="modal-header border-0"><h5 class="modal-title fw-bold"><i class="ti ti-edit me-2 text-primary"></i>Edit Intern</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body"><form id="editInternForm">@csrf<input type="hidden" id="edit_id" name="id">
@@ -285,13 +349,21 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
     <div class="col-12 mt-2"><h6 class="fw-bold mb-2" style="font-size:0.75rem;color:#2b9a82;"><i class="ti ti-briefcase me-1"></i>Professional Information</h6></div>
     <div class="col-md-6"><label class="form-label fw-semibold small">Technology</label><input type="text" id="edit_technology" name="technology" class="form-control rounded-3"></div>
     <div class="col-md-6"><label class="form-label fw-semibold small">Duration</label><select id="edit_duration" name="duration" class="form-select rounded-3"><option value="">Select Duration</option><option value="1 Month">1 Month</option><option value="2 Months">2 Months</option><option value="3 Months">3 Months</option><option value="6 Months">6 Months</option></select></div>
-    <div class="col-md-6"><label class="form-label fw-semibold small">Intern Type</label><select id="edit_intern_type" name="intern_type" class="form-select rounded-3"><option value="">Select Type</option><option value="Training Internship">Training Internship</option><option value="Paid Internship">Paid Internship</option><option value="Volunteer">Volunteer</option></select></div>
+<div class="col-md-6">
+    <label class="form-label fw-semibold small">Intern Type</label>
+    <select id="edit_intern_type" name="intern_type" class="form-select rounded-3">
+        <option value="">Select Type</option>
+        @foreach($packages as $pkg)
+        <option value="{{ $pkg['name'] }}">{{ $pkg['name'] }}</option>
+        @endforeach
+    </select>
+</div>
     <div class="col-md-6"><label class="form-label fw-semibold small">Status</label><select id="edit_status" name="status" class="form-select rounded-3"><option value="Active">Active</option><option value="Pending">Pending</option><option value="Interview">Interview</option><option value="Complete">Complete</option><option value="Reject">Reject</option><option value="Terminate">Terminate</option></select></div>
     <div class="col-12"><label class="form-label fw-semibold small">Bio / Notes</label><textarea id="edit_bio" name="bio" class="form-control rounded-3" rows="3" placeholder="Additional information..."></textarea></div></div>
     <div class="mt-4 text-end"><button type="button" class="btn btn-secondary me-2 rounded-3" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary-gradient">Update Intern</button></div></form></div></div></div>
 </div>
 
-<!-- Reason Modal -->
+{{-- Reason Modal --}}
 <div class="modal fade" id="reasonModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered"><div class="modal-content premium-card"><div class="modal-header border-0"><h5 class="modal-title fw-bold" id="reasonModalTitle"><i class="ti ti-alert-triangle me-2 text-warning"></i>Provide Reason</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body"><form id="reasonForm" enctype="multipart/form-data">@csrf
@@ -302,7 +374,7 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
     <div class="text-end"><button type="button" class="btn btn-secondary me-2 rounded-3" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary-gradient">Confirm & Update</button></div></form></div></div></div>
 </div>
 
-<!-- Edit Invoice Modal -->
+{{-- Edit Invoice Modal --}}
 <div class="modal fade" id="editInvoiceModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered"><div class="modal-content premium-card border-0"><div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2" style="color:#2b9a82;"></i>Edit Invoice</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
     <div class="modal-body"><form id="editInvoiceForm" onsubmit="updateInvoice(event)">@csrf @method('PUT')<input type="hidden" id="edit_invoice_id" name="id">
@@ -311,13 +383,72 @@ JavaScript functions: showInvoiceForm(), createInvoice(), etc.
     <div class="mb-3"><label class="form-label fw-semibold small">Due Date</label><input type="date" id="edit_due_date" name="due_date" class="form-control rounded-pill"></div>
     <div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn-primary-premium" id="updateInvoiceBtn"><i class="bi bi-check-lg me-1"></i>Update Invoice</button></div></form></div></div></div>
 </div>
+
+
+
+{{-- Payment Modal --}}
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content premium-card">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold"><i class="bi bi-cash-stack text-success me-2"></i>Record Payment</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm" onsubmit="event.preventDefault(); submitPayment();">
+                    @csrf
+                    <input type="hidden" id="payment_invoice_id" name="invoice_id">
+                    
+                    <div class="bg-light p-3 rounded-3 mb-4">
+                        <div class="row">
+                            <div class="col-6"><small class="text-muted">Invoice ID</small><p class="fw-bold mb-0" id="payment_display_inv_id">-</p></div>
+                            <div class="col-6"><small class="text-muted">Intern Name</small><p class="fw-bold mb-0" id="payment_display_name">-</p></div>
+                            <div class="col-6 mt-2"><small class="text-muted">Total Amount</small><p class="fw-bold mb-0 text-primary" id="payment_display_total">-</p></div>
+                            <div class="col-6 mt-2"><small class="text-muted">Remaining</small><p class="fw-bold mb-0 text-warning" id="payment_display_remaining">-</p></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Payment Amount <span class="text-danger">*</span></label>
+                        <input type="number" id="payment_amount" class="form-control rounded-3" step="0.01" placeholder="Enter amount" required>
+                        <small class="text-muted">Max: <span id="payment_max_amount">0</span></small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Payment Method <span class="text-danger">*</span></label>
+                        <select id="payment_method" class="form-select rounded-3" required>
+                            <option value="">Select Method</option>
+                            <option value="cash">Cash</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="cheque">Cheque</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Payment Date</label>
+                        <input type="date" id="payment_date" class="form-control rounded-3" value="{{ date('Y-m-d') }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Notes <span class="text-muted">(Optional)</span></label>
+                        <textarea id="payment_notes" class="form-control rounded-3" rows="2" placeholder="Any remarks..."></textarea>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary btn-sm rounded-3 px-4 me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm rounded-3 px-4" id="submitPaymentBtn">Record Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('page-script')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-@php
-$safeInternData = ['id' => $interneeDetails->id, 'name' => $interneeDetails->name, 'email' => $interneeDetails->email, 'phone' => $interneeDetails->phone ?? '', 'technology' => $interneeDetails->technology ?? ''];
-@endphp
+@php $safeInternData = ['id' => $interneeDetails->id, 'name' => $interneeDetails->name, 'email' => $interneeDetails->email, 'phone' => $interneeDetails->phone ?? '', 'technology' => $interneeDetails->technology ?? '', 'status' => $interneeDetails->status ?? '', 'intern_type' => $interneeDetails->intern_type ?? '']; @endphp
 <script>
 const internData = @json($safeInternData);
 const paymentSearchDebounce = (() => { let t; return () => { clearTimeout(t); t = setTimeout(loadPayments, 500); }; })();
@@ -337,8 +468,8 @@ function switchTab(tabName) {
 }
 
 function selectPackage(element) {
-    document.querySelectorAll('.package-option').forEach(card => card.classList.remove('selected'));
-    element.classList.add('selected');
+    document.querySelectorAll('.package-option').forEach(card => { card.classList.remove('selected'); card.style.borderColor = 'rgba(0,0,0,0.05)'; });
+    element.classList.add('selected'); element.style.borderColor = '#2b9a82';
     selectedPackageData = { id: element.dataset.packageId, name: element.dataset.packageName, amount: parseInt(element.dataset.amount), dueDays: parseInt(element.dataset.dueDays) };
     const dueDate = new Date(); dueDate.setDate(dueDate.getDate() + selectedPackageData.dueDays);
     const formattedDate = dueDate.toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
@@ -346,8 +477,89 @@ function selectPackage(element) {
     if (document.getElementById('invoiceFormContainer').style.display === 'block') updateInvoiceFormDisplay();
 }
 
+// ========== PACKAGE MINI MODAL ==========
+function openPackageModal() {
+    const currentPkg = document.getElementById('displayRegisteredPackage').textContent.trim();
+    document.getElementById('miniPackageSelect').value = currentPkg;
+    new bootstrap.Modal(document.getElementById('packageMiniModal')).show();
+}
+
+function submitPackageMiniModal() {
+    const value = document.getElementById('miniPackageSelect').value;
+    if (!value) { showToast('Please select a package', 'error'); return; }
+    bootstrap.Modal.getInstance(document.getElementById('packageMiniModal')).hide();
+    
+    document.getElementById('edit_id').value = '{{ $interneeDetails->id }}';
+    document.getElementById('edit_name').value = '{{ $interneeDetails->name }}';
+    document.getElementById('edit_email').value = '{{ $interneeDetails->email }}';
+    document.getElementById('edit_phone').value = '{{ $interneeDetails->phone ?? "" }}';
+    document.getElementById('edit_cnic').value = '{{ $interneeDetails->cnic ?? "" }}';
+    document.getElementById('edit_gender').value = '{{ $interneeDetails->gender ?? "" }}';
+    document.getElementById('edit_dob').value = '{{ $interneeDetails->birth_date ?? "" }}';
+    document.getElementById('edit_country').value = '{{ $interneeDetails->country ?? "" }}';
+    document.getElementById('edit_city').value = '{{ $interneeDetails->city ?? "" }}';
+    document.getElementById('edit_university').value = '{{ $interneeDetails->university ?? "" }}';
+    document.getElementById('edit_technology').value = '{{ $interneeDetails->technology ?? "" }}';
+    document.getElementById('edit_duration').value = '{{ $interneeDetails->duration ?? "" }}';
+    document.getElementById('edit_intern_type').value = value;
+    document.getElementById('edit_status').value = '{{ $interneeDetails->status }}';
+    document.getElementById('edit_bio').value = '{{ $interneeDetails->bio ?? "" }}';
+    
+    showToast('Updating package...', 'info');
+    document.getElementById('displayRegisteredPackage').textContent = value;
+    
+    submitEditForm('{{ $interneeDetails->id }}', '{{ $interneeDetails->name }}', '{{ $interneeDetails->email }}', '{{ $interneeDetails->technology ?? "" }}', '{{ $interneeDetails->status }}', null);
+}
+
+// ========== STATUS MINI MODAL ==========
+function openStatusModal() {
+    const currentStatus = document.getElementById('displayStatus').textContent.trim();
+    document.getElementById('miniStatusSelect').value = currentStatus;
+    new bootstrap.Modal(document.getElementById('statusMiniModal')).show();
+}
+
+function submitStatusMiniModal() {
+    const value = document.getElementById('miniStatusSelect').value;
+    if (!value) { showToast('Please select a status', 'error'); return; }
+    bootstrap.Modal.getInstance(document.getElementById('statusMiniModal')).hide();
+    
+    if (value === 'Reject' || value === 'Terminate') {
+        pendingEditData = { id: '{{ $interneeDetails->id }}', name: '{{ $interneeDetails->name }}', email: '{{ $interneeDetails->email }}', technology: '{{ $interneeDetails->technology ?? "" }}', status: value };
+        document.getElementById('reasonModalTitle').innerHTML = `<i class="ti ti-alert-triangle me-2 text-warning"></i>${value} - Reason Required`;
+        document.getElementById('reason_intern_id').value = '{{ $interneeDetails->id }}';
+        document.getElementById('reason_new_status').value = value;
+        document.getElementById('reason_intern_name').value = '{{ $interneeDetails->name }}';
+        document.getElementById('reason_intern_email').value = '{{ $interneeDetails->email }}';
+        document.getElementById('reason_intern_technology').value = '{{ $interneeDetails->technology ?? "" }}';
+        document.getElementById('reason_text').value = '';
+        new bootstrap.Modal(document.getElementById('reasonModal')).show();
+    } else {
+        document.getElementById('edit_id').value = '{{ $interneeDetails->id }}';
+        document.getElementById('edit_name').value = '{{ $interneeDetails->name }}';
+        document.getElementById('edit_email').value = '{{ $interneeDetails->email }}';
+        document.getElementById('edit_phone').value = '{{ $interneeDetails->phone ?? "" }}';
+        document.getElementById('edit_cnic').value = '{{ $interneeDetails->cnic ?? "" }}';
+        document.getElementById('edit_gender').value = '{{ $interneeDetails->gender ?? "" }}';
+        document.getElementById('edit_dob').value = '{{ $interneeDetails->birth_date ?? "" }}';
+        document.getElementById('edit_country').value = '{{ $interneeDetails->country ?? "" }}';
+        document.getElementById('edit_city').value = '{{ $interneeDetails->city ?? "" }}';
+        document.getElementById('edit_university').value = '{{ $interneeDetails->university ?? "" }}';
+        document.getElementById('edit_technology').value = '{{ $interneeDetails->technology ?? "" }}';
+        document.getElementById('edit_duration').value = '{{ $interneeDetails->duration ?? "" }}';
+        document.getElementById('edit_intern_type').value = '{{ $interneeDetails->intern_type ?? "" }}';
+        document.getElementById('edit_status').value = value;
+        document.getElementById('edit_bio').value = '{{ $interneeDetails->bio ?? "" }}';
+        
+        showToast('Updating status...', 'info');
+        document.getElementById('displayStatus').textContent = value;
+        
+        submitEditForm('{{ $interneeDetails->id }}', '{{ $interneeDetails->name }}', '{{ $interneeDetails->email }}', '{{ $interneeDetails->technology ?? "" }}', value, null);
+    }
+}
+
+// ========== EXISTING FUNCTIONS ==========
 function showInvoiceForm() {
-    if (!selectedPackageData) { Swal.fire({ title: 'Select Package', text: 'Please select a package from the left panel first.', icon: 'warning', confirmButtonColor: '#2b9a82', confirmButtonText: 'OK' }); return; }
+    if (!selectedPackageData) { Swal.fire({ title: 'Select Package', text: 'Please select a package first.', icon: 'warning', confirmButtonColor: '#2b9a82', confirmButtonText: 'OK' }); return; }
     updateInvoiceFormDisplay(); document.getElementById('invoiceFormContainer').style.display = 'block';
     document.getElementById('invoiceFormContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
@@ -359,7 +571,6 @@ function updateInvoiceFormDisplay() {
     document.getElementById('displayAmount').textContent = 'PKR ' + selectedPackageData.amount.toLocaleString();
     document.getElementById('displayDueDate').textContent = dueDate.toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
 }
-
 function createInvoice() {
     if (!selectedPackageData) { Swal.fire({ title: 'Select Package', text: 'Please select a package first.', icon: 'warning', confirmButtonColor: '#2b9a82' }); return; }
     Swal.fire({ title: 'Generate Invoice?', text: `Intern: ${internData.name}\nPackage: ${selectedPackageData.name}\nAmount: PKR ${selectedPackageData.amount.toLocaleString()}\nDue Date: ${document.getElementById('displayDueDate').textContent}`, icon: 'question', showCancelButton: true, confirmButtonText: 'Yes, Generate', confirmButtonColor: '#2b9a82', cancelButtonColor: '#6c757d' }).then((result) => {
@@ -367,30 +578,50 @@ function createInvoice() {
             const btn = document.getElementById('confirmCreateInvoiceBtn'), orig = btn.innerHTML;
             btn.disabled = true; btn.classList.add('btn-loading'); btn.innerHTML = '<span class="spinner-border spinner-border-xs me-2"></span>Generating...';
             fetch('{{ route("admin.invoices.create-from-package") }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, body: JSON.stringify({ intern_email: internData.email, intern_name: internData.name, intern_phone: internData.phone, intern_technology: internData.technology, package_name: selectedPackageData.name, amount: selectedPackageData.amount, due_days: selectedPackageData.dueDays }) })
-            .then(r => r.json()).then(data => {
-                btn.disabled = false; btn.classList.remove('btn-loading'); btn.innerHTML = orig;
-                if (data.success) { showToast('Invoice created!', 'success'); hideInvoiceForm(); document.querySelectorAll('.package-option').forEach(c => c.classList.remove('selected')); document.getElementById('selectedPackageInfo').innerHTML = ''; selectedPackageData = null; loadInvoices(); }
-                else showToast(data.message || 'Failed', 'error');
-            }).catch(e => { console.error(e); btn.disabled = false; btn.classList.remove('btn-loading'); btn.innerHTML = orig; showToast('Network error', 'error'); });
+            .then(r => r.json()).then(data => { btn.disabled = false; btn.classList.remove('btn-loading'); btn.innerHTML = orig; if (data.success) { showToast('Invoice created!', 'success'); hideInvoiceForm(); document.querySelectorAll('.package-option').forEach(c => { c.classList.remove('selected'); c.style.borderColor = 'rgba(0,0,0,0.05)'; }); document.getElementById('selectedPackageInfo').innerHTML = ''; selectedPackageData = null; loadInvoices(); } else showToast(data.message || 'Failed', 'error'); }).catch(e => { btn.disabled = false; btn.classList.remove('btn-loading'); btn.innerHTML = orig; showToast('Network error', 'error'); });
         }
     });
 }
-
 function loadInvoices() {
     const tbody = document.getElementById('invoicesTableBody'); if (!tbody) return;
     tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5"><span class="spinner-border spinner-border-xs text-primary"></span><span class="ms-2 text-muted small">Loading...</span></td></tr>`;
+    
     fetch(`/admin/interns/${internData.id}/invoices`, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => {
         if (data.success && data.invoices && data.invoices.length > 0) {
             tbody.innerHTML = data.invoices.map(inv => {
-                const remaining = parseFloat(inv.remaining_amount || (inv.total_amount - (inv.received_amount || 0))), received = parseFloat(inv.received_amount || 0), total = parseFloat(inv.total_amount || 0);
-                let sc, st; if (remaining <= 0) { sc = 'badge-paid'; st = 'Paid'; } else if (inv.due_date && new Date(inv.due_date) < new Date()) { sc = 'badge-overdue'; st = 'Overdue'; } else if (received > 0) { sc = 'badge-partial'; st = 'Partial'; } else { sc = 'badge-pending'; st = 'Pending'; }
+                const remaining = parseFloat(inv.remaining_amount || (inv.total_amount - (inv.received_amount || 0)));
+                const received = parseFloat(inv.received_amount || 0);
+                const total = parseFloat(inv.total_amount || 0);
+                
+                let sc, st;
+                if (remaining <= 0) { sc = 'badge-paid'; st = 'Paid'; }
+                else if (received > 0) { sc = 'badge-partial'; st = 'Partial'; }
+                else { sc = 'badge-pending'; st = 'Pending'; }
+                
                 const ds = inv.due_date ? new Date(inv.due_date).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'}) : 'N/A';
-                return `<tr><td><span class="fw-semibold small">${inv.inv_id || 'INV-' + inv.id}</span></td><td><span class="small">PKR ${total.toLocaleString()}</span></td><td><span class="small text-success">PKR ${received.toLocaleString()}</span></td><td><span class="small ${remaining > 0 ? 'text-danger fw-bold' : 'text-success'}">PKR ${remaining.toLocaleString()}</span></td><td><span class="status-badge ${sc}">${st}</span></td><td><span class="small">${ds}</span></td><td><button class="btn-icon-action btn-edit me-1" onclick="editInvoice(${inv.id},${total},${received},'${inv.due_date||''}')" title="Edit"><i class="bi bi-pencil-fill small"></i></button><button class="btn-icon-action btn-delete" onclick="deleteInvoice(${inv.id},'${inv.inv_id||'INV-'+inv.id}')" title="Delete"><i class="bi bi-trash-fill small"></i></button></td></tr>`;
+                
+                // All rows clickable
+                return `<tr class="clickable-row" onclick="openPaymentModal(${inv.id},'${inv.inv_id||'INV-'+inv.id}','{{ $interneeDetails->name }}',${total},${remaining})" style="cursor:pointer;">
+                    <td><span class="fw-semibold small">${inv.inv_id || 'INV-' + inv.id}</span></td>
+                    <td><span class="small">PKR ${total.toLocaleString()}</span></td>
+                    <td><span class="small text-success">PKR ${received.toLocaleString()}</span></td>
+                    <td><span class="small ${remaining > 0 ? 'text-danger fw-bold' : 'text-success'}">PKR ${remaining.toLocaleString()}</span></td>
+                    <td><span class="status-badge ${sc}">${st}</span></td>
+                    <td><span class="small">${ds}</span></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            ${remaining > 0 ? `<button class="btn-icon-action btn-edit me-1" onclick="event.stopPropagation();openPaymentModal(${inv.id},'${inv.inv_id||'INV-'+inv.id}','{{ $interneeDetails->name }}',${total},${remaining})" title="Record Payment"><i class="bi bi-cash-stack small"></i></button>` : ''}
+                            <button class="btn-icon-action btn-edit me-1" onclick="event.stopPropagation();editInvoice(${inv.id},${total},${received},'${inv.due_date||''}')" title="Edit"><i class="bi bi-pencil-fill small"></i></button>
+                            <button class="btn-icon-action btn-delete" onclick="event.stopPropagation();deleteInvoice(${inv.id},'${inv.inv_id||'INV-'+inv.id}')" title="Delete"><i class="bi bi-trash-fill small"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
             }).join('');
-        } else tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5"><i class="bi bi-receipt text-muted fs-3 d-block mb-2 opacity-50"></i><span class="text-muted small">No invoices found</span></td></tr>`;
+        } else {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5"><i class="bi bi-receipt text-muted fs-3 d-block mb-2 opacity-50"></i><span class="text-muted small">No invoices found</span></td></tr>`;
+        }
     }).catch(() => { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger small">Failed to load invoices.</td></tr>`; });
 }
-
 function loadPayments() {
     const tbody = document.getElementById('paymentsTableBody'); if (!tbody) return;
     tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5"><span class="spinner-border spinner-border-xs text-primary"></span><span class="ms-2 text-muted small">Loading...</span></td></tr>`;
@@ -398,9 +629,7 @@ function loadPayments() {
     let url = `/admin/interns/${internData.id}/payments?` + new URLSearchParams({ from_date: fd, to_date: td, search: s }).toString();
     fetch(url, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => {
         if (data.success && data.payments && data.payments.length > 0) {
-            const total = data.payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-            const tm = data.payments.filter(p => new Date(p.date).getMonth() === new Date().getMonth()).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-            const td2 = data.payments.filter(p => new Date(p.date).toDateString() === new Date().toDateString()).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+            const total = data.payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0), tm = data.payments.filter(p => new Date(p.date).getMonth() === new Date().getMonth()).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0), td2 = data.payments.filter(p => new Date(p.date).toDateString() === new Date().toDateString()).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
             document.getElementById('statTotal').textContent = 'PKR ' + total.toLocaleString();
             document.getElementById('statMonth').textContent = 'PKR ' + tm.toLocaleString();
             document.getElementById('statToday').textContent = 'PKR ' + td2.toLocaleString();
@@ -408,26 +637,17 @@ function loadPayments() {
         } else { document.getElementById('statTotal').textContent = 'PKR 0'; document.getElementById('statMonth').textContent = 'PKR 0'; document.getElementById('statToday').textContent = 'PKR 0'; tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5"><i class="bi bi-credit-card-2-front text-muted fs-3 d-block mb-2 opacity-50"></i><span class="text-muted small">No payment records found</span></td></tr>`; }
     }).catch(() => { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-danger small">Failed to load payments</td></tr>`; });
 }
-
 function editInvoice(id, total, received, dueDate) { document.getElementById('edit_invoice_id').value = id; document.getElementById('edit_total_amount').value = total; document.getElementById('edit_received_amount').value = received; document.getElementById('edit_due_date').value = dueDate; new bootstrap.Modal(document.getElementById('editInvoiceModal')).show(); }
 function updateInvoice(event) {
     event.preventDefault(); const id = document.getElementById('edit_invoice_id').value, btn = document.getElementById('updateInvoiceBtn'), orig = btn.innerHTML;
     btn.disabled = true; btn.classList.add('btn-loading'); btn.innerHTML = '<span class="spinner-border spinner-border-xs me-2"></span>Saving...';
-    fetch(`/admin/invoices/${id}/update`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ total_amount: document.getElementById('edit_total_amount').value, received_amount: document.getElementById('edit_received_amount').value, due_date: document.getElementById('edit_due_date').value }) }).then(r => r.json()).then(data => {
-        btn.disabled = false; btn.classList.remove('btn-loading'); btn.innerHTML = orig;
-        if (data.success) { showToast('Invoice updated!', 'success'); bootstrap.Modal.getInstance(document.getElementById('editInvoiceModal')).hide(); loadInvoices(); }
-        else showToast(data.message || 'Update failed', 'error');
-    }).catch(() => { btn.disabled = false; btn.classList.remove('btn-loading'); btn.innerHTML = orig; showToast('Network error', 'error'); });
+    fetch(`/admin/invoices/${id}/update`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ total_amount: document.getElementById('edit_total_amount').value, received_amount: document.getElementById('edit_received_amount').value, due_date: document.getElementById('edit_due_date').value }) }).then(r => r.json()).then(data => { btn.disabled = false; btn.classList.remove('btn-loading'); btn.innerHTML = orig; if (data.success) { showToast('Invoice updated!', 'success'); bootstrap.Modal.getInstance(document.getElementById('editInvoiceModal')).hide(); loadInvoices(); } else showToast(data.message || 'Update failed', 'error'); }).catch(() => { btn.disabled = false; btn.classList.remove('btn-loading'); btn.innerHTML = orig; showToast('Network error', 'error'); });
 }
 function deleteInvoice(id, invId) {
-    Swal.fire({ title: 'Delete Invoice?', text: `Delete ${invId}? This cannot be undone.`, icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes, delete', confirmButtonColor: '#ef4444', cancelButtonColor: '#6c757d' }).then(r => {
-        if (r.isConfirmed) fetch(`/admin/invoices/${id}/delete`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(r => r.json()).then(d => { if (d.success) { showToast('Invoice deleted!', 'success'); loadInvoices(); } else showToast(d.message || 'Failed', 'error'); }).catch(() => showToast('Network error', 'error'));
-    });
+    Swal.fire({ title: 'Delete Invoice?', text: `Delete ${invId}? This cannot be undone.`, icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes, delete', confirmButtonColor: '#ef4444', cancelButtonColor: '#6c757d' }).then(r => { if (r.isConfirmed) fetch(`/admin/invoices/${id}/delete`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(r => r.json()).then(d => { if (d.success) { showToast('Invoice deleted!', 'success'); loadInvoices(); } else showToast(d.message || 'Failed', 'error'); }).catch(() => showToast('Network error', 'error')); });
 }
 document.getElementById('removeInternBtn')?.addEventListener('click', function() {
-    Swal.fire({ title: 'Remove Intern?', text: 'This will freeze their portal access.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes, remove', confirmButtonColor: '#ef4444', cancelButtonColor: '#6c757d' }).then(r => {
-        if (r.isConfirmed) fetch(`/admin/interns/${this.dataset.id}/remove-ajax`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(r => r.json()).then(d => { if (d.success) { showToast('Removed!', 'success'); setTimeout(() => { window.location.href = '{{ route("all-interns-admin") }}'; }, 1500); } else showToast(d.message || 'Failed', 'error'); }).catch(() => showToast('Network error', 'error'));
-    });
+    Swal.fire({ title: 'Remove Intern?', text: 'This will freeze their portal access.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes, remove', confirmButtonColor: '#ef4444', cancelButtonColor: '#6c757d' }).then(r => { if (r.isConfirmed) fetch(`/admin/interns/${this.dataset.id}/remove-ajax`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(r => r.json()).then(d => { if (d.success) { showToast('Removed!', 'success'); setTimeout(() => { window.location.href = '{{ route("all-interns-admin") }}'; }, 1500); } else showToast(d.message || 'Failed', 'error'); }).catch(() => showToast('Network error', 'error')); });
 });
 function showToast(message, type = 'success') {
     document.querySelectorAll('.toast-custom').forEach(t => { t.style.animation = 'slideOutRight 0.3s ease forwards'; setTimeout(() => t.remove(), 300); });
@@ -439,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() { document.querySelecto
 let pendingEditData = null;
 document.getElementById('editInternForm')?.addEventListener('submit', function(e) {
     e.preventDefault(); const st = document.getElementById('edit_status').value, id = document.getElementById('edit_id').value, nm = document.getElementById('edit_name').value, em = document.getElementById('edit_email').value, tech = document.getElementById('edit_technology').value;
-    if (st === 'Reject' || st === 'Terminate') { pendingEditData = { id, name: nm, email: em, technology: tech, status: st }; const rm = new bootstrap.Modal(document.getElementById('reasonModal')); document.getElementById('reasonModalTitle').innerHTML = `<i class="ti ti-alert-triangle me-2 text-warning"></i>${st} Reason Required`; document.getElementById('reason_intern_id').value = id; document.getElementById('reason_new_status').value = st; document.getElementById('reason_intern_name').value = nm; document.getElementById('reason_intern_email').value = em; document.getElementById('reason_intern_technology').value = tech; document.getElementById('reason_text').value = ''; rm.show(); return false; }
+    if (st === 'Reject' || st === 'Terminate') { pendingEditData = { id, name: nm, email: em, technology: tech, status: st }; document.getElementById('reasonModalTitle').innerHTML = `<i class="ti ti-alert-triangle me-2 text-warning"></i>${st} Reason Required`; document.getElementById('reason_intern_id').value = id; document.getElementById('reason_new_status').value = st; document.getElementById('reason_intern_name').value = nm; document.getElementById('reason_intern_email').value = em; document.getElementById('reason_intern_technology').value = tech; document.getElementById('reason_text').value = ''; new bootstrap.Modal(document.getElementById('reasonModal')).show(); return false; }
     submitEditForm(id, nm, em, tech, st, null);
 });
 function submitEditForm(id, name, email, technology, status, reason) {
@@ -456,6 +676,74 @@ function submitEditForm(id, name, email, technology, status, reason) {
 }
 document.getElementById('reasonForm')?.addEventListener('submit', function(e) { e.preventDefault(); const r = document.getElementById('reason_text').value.trim(); if (!r) { Swal.fire({ title: 'Reason Required', text: 'Please provide a reason', icon: 'warning', confirmButtonColor: '#2b9a82' }); return; } if (pendingEditData) { submitEditForm(pendingEditData.id, pendingEditData.name, pendingEditData.email, pendingEditData.technology, pendingEditData.status, r); bootstrap.Modal.getInstance(document.getElementById('reasonModal')).hide(); pendingEditData = null; } });
 document.getElementById('editInternBtn')?.addEventListener('click', function() { document.getElementById('edit_id').value = this.dataset.id; document.getElementById('edit_name').value = this.dataset.name; document.getElementById('edit_email').value = this.dataset.email; document.getElementById('edit_phone').value = this.dataset.phone || ''; document.getElementById('edit_cnic').value = this.dataset.cnic || ''; document.getElementById('edit_gender').value = this.dataset.gender || ''; document.getElementById('edit_dob').value = this.dataset.dob || ''; document.getElementById('edit_country').value = this.dataset.country || ''; document.getElementById('edit_city').value = this.dataset.city || ''; document.getElementById('edit_university').value = this.dataset.university || ''; document.getElementById('edit_technology').value = this.dataset.technology || ''; document.getElementById('edit_duration').value = this.dataset.duration || ''; document.getElementById('edit_intern_type').value = this.dataset.internType || ''; document.getElementById('edit_status').value = this.dataset.status || ''; document.getElementById('edit_bio').value = this.dataset.bio || ''; });
+
 document.addEventListener('hidden.bs.modal', function() { document.querySelectorAll('.modal-backdrop').forEach(el => el.remove()); document.body.classList.remove('modal-open'); document.body.style.overflow = ''; document.body.style.paddingRight = ''; });
+
+
+// ========== PAYMENT MODAL FUNCTIONS ==========
+function openPaymentModal(invoiceId, invId, name, total, remaining) {
+    if (remaining <= 0) {
+        Swal.fire('Info', 'This invoice is already fully paid', 'info');
+        return;
+    }
+    
+    document.getElementById('payment_invoice_id').value = invoiceId;
+    document.getElementById('payment_display_inv_id').textContent = invId;
+    document.getElementById('payment_display_name').textContent = name;
+    document.getElementById('payment_display_total').textContent = 'PKR ' + parseFloat(total).toLocaleString();
+    document.getElementById('payment_display_remaining').textContent = 'PKR ' + parseFloat(remaining).toLocaleString();
+    document.getElementById('payment_max_amount').textContent = 'PKR ' + parseFloat(remaining).toLocaleString();
+    document.getElementById('payment_amount').max = remaining;
+    document.getElementById('payment_amount').value = '';
+    document.getElementById('payment_method').value = '';
+    document.getElementById('payment_notes').value = '';
+    document.getElementById('payment_date').value = new Date().toISOString().split('T')[0];
+    
+    new bootstrap.Modal(document.getElementById('paymentModal')).show();
+}
+
+function submitPayment() {
+    const invoiceId = document.getElementById('payment_invoice_id').value;
+    const amount = document.getElementById('payment_amount').value;
+    const method = document.getElementById('payment_method').value;
+    const date = document.getElementById('payment_date').value;
+    const notes = document.getElementById('payment_notes').value;
+    
+    if (!amount || amount <= 0) { showToast('Please enter valid amount', 'error'); return; }
+    if (!method) { showToast('Please select payment method', 'error'); return; }
+    
+    Swal.fire({
+        title: 'Record Payment?',
+        html: `Amount: <strong>PKR ${parseFloat(amount).toFixed(2)}</strong><br>Method: ${method}`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Record',
+        confirmButtonColor: '#2b9a82',
+        cancelButtonColor: '#6c757d'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const btn = document.getElementById('submitPaymentBtn');
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-xs me-2"></span>Processing...';
+            
+            fetch('{{ route("admin.invoices.add-payment") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                body: JSON.stringify({ invoice_id: invoiceId, amount: amount, payment_method: method, payment_date: date, notes: notes })
+            })
+            .then(r => r.json()).then(data => {
+                btn.disabled = false; btn.innerHTML = orig;
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+                    showToast('Payment recorded!', 'success');
+                    loadInvoices();
+                } else {
+                    showToast(data.message || 'Failed', 'error');
+                }
+            }).catch(() => { btn.disabled = false; btn.innerHTML = orig; showToast('Network error', 'error'); });
+        }
+    });
+}
 </script>
 @endsection

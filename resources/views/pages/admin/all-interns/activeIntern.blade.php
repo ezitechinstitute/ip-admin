@@ -55,8 +55,7 @@
 <script>
     setTimeout(function() {
         document.querySelectorAll('.alert').forEach(alert => {
-            alert.classList.remove('show');
-            alert.classList.add('hide');
+            alert.classList.remove('show'); alert.classList.add('hide');
             setTimeout(() => alert.remove(), 500);
         });
     }, 5000);
@@ -66,7 +65,6 @@
     <div class="card-datatable">
         <div id="DataTables_Table_0_wrapper" class="dt-container dt-bootstrap5 dt-empty-footer">
             
-            {{-- ========== TOP CONTROLS ========== --}}
             <div class="row m-3 my-0 justify-content-between">
                 <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
                     <div class="dt-length mb-md-6 mb-0 d-flex">
@@ -79,6 +77,7 @@
                                 <option value="100" {{ $perPage==100 ? 'selected' : '' }}>100</option>
                             </select>
                             <input type="hidden" name="search" value="{{ request('search') }}">
+                            <input type="hidden" name="status" id="hiddenStatus" value="{{ request('status') }}">
                         </form>
                     </div>
                 </div>
@@ -93,6 +92,17 @@
                                 -webkit-appearance: none; appearance: none;
                             }
                         </style>
+
+                        {{-- ✅ Status Filter (without name, JS handles it) --}}
+                        <select id="statusFilter" class="form-select text-capitalize">
+                            <option value="">Select Status</option>
+                            @foreach (['Interview','Contact','Test','Completed','Active','Removed'] as $s)
+                            @php $slug = strtolower($s); @endphp
+                            <option value="{{ $slug }}" {{ request('status')==$slug ? 'selected' : '' }}>{{ $s }}</option>
+                            @endforeach
+                        </select>
+                        {{-- Hidden input for actual form submission --}}
+                        <input type="hidden" name="status" id="statusInput" value="{{ request('status') }}">
                     </form>
 
                     {{-- Change Selected Status --}}
@@ -139,7 +149,7 @@
                 </div>
             </div>
 
-            {{-- ========== TABLE ========== --}}
+            {{-- TABLE --}}
             <div class="justify-content-between dt-layout-table">
                 <div class="table-responsive table-responsive-overflow">
                     <table class="datatables-users table dataTable dtr-column" style="width: 100%;">
@@ -152,6 +162,7 @@
                                 <th class="text-nowrap">Join Date</th>
                                 <th class="text-nowrap">Technology</th>
                                 <th class="text-nowrap">Type</th>
+                                <th class="text-nowrap">Package</th>
                                 <th class="text-nowrap">Status</th>
                                 <th class="text-nowrap">City</th>
                             </tr>
@@ -162,24 +173,22 @@
                                 <td class="checkbox-cell">
                                     <input type="checkbox" class="form-check-input intern-checkbox" value="{{ $intern->id }}" />
                                 </td>
-                             <td class="clickable-cell">
-    <div class="d-flex justify-content-start align-items-center user-name">
-        <div class="avatar-wrapper">
-            @if(!empty($intern->image) && $intern->image !== '')
-            <div class="avatar avatar-md me-4">
-                <img src="{{ str_starts_with($intern->image, 'data:image') ? $intern->image : asset($intern->image) }}" 
-                     alt="{{ $intern->name }}" class="rounded-circle" />
-            </div>
-            @else
-            <div class="avatar avatar-md me-4">
-                <span class="avatar-initial rounded-circle bg-label-warning">
-                    {{ strtoupper(substr($intern->name, 0, 2)) }}
-                </span>
-            </div>
-            @endif
-        </div>
-    </div>
-</td>
+                                <td class="clickable-cell">
+                                    <div class="d-flex justify-content-start align-items-center user-name">
+                                        <div class="avatar-wrapper">
+                                            @if(!empty($intern->image) && $intern->image !== '')
+                                            <div class="avatar avatar-md me-4">
+                                                <img src="{{ str_starts_with($intern->image, 'data:image') ? $intern->image : asset($intern->image) }}" 
+                                                     alt="{{ $intern->name }}" class="rounded-circle" />
+                                            </div>
+                                            @else
+                                            <div class="avatar avatar-md me-4">
+                                                <span class="avatar-initial rounded-circle bg-label-warning">{{ strtoupper(substr($intern->name, 0, 2)) }}</span>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
                                 <td class="clickable-cell"><span class="text-heading text-nowrap">{{$intern->name}}</span></td>
                                 <td class="clickable-cell"><span class="text-heading text-nowrap"><i class="icon-base ti tabler-phone me-2 text-info icon-22px"></i><small>{{$intern->phone ?? 'N/A'}}</small></span></td>
                                 <td class="clickable-cell"><span class="text-heading text-nowrap">{{$intern->join_date ?? 'N/A'}}</span></td>
@@ -187,6 +196,16 @@
                                 <td class="clickable-cell">
                                     @php $typeClass = strtolower($intern->interview_type ?? '') === 'remote' ? 'bg-label-primary' : 'bg-label-info'; @endphp
                                     <span class="badge {{ $typeClass }} text-capitalize">{{ $intern->interview_type ?? 'N/A' }}</span>
+                                </td>
+                                <td class="clickable-cell">
+                                    @php
+                                    $packageLabels = ['training' => 'Training','practice' => 'Practice','industrial' => 'Industrial'];
+                                    $packageColors = ['training' => 'bg-label-info','practice' => 'bg-label-primary','industrial' => 'bg-label-success'];
+                                    $pkg = strtolower($intern->package ?? '');
+                                    $badgeClass = $packageColors[$pkg] ?? 'bg-label-secondary';
+                                    $label = $packageLabels[$pkg] ?? ($intern->package ?? 'N/A');
+                                    @endphp
+                                    <span class="badge {{ $badgeClass }} text-capitalize">{{ $label }}</span>
                                 </td>
                                 <td class="clickable-cell">
                                     @php
@@ -198,48 +217,36 @@
                                 <td class="clickable-cell"><span class="text-heading text-nowrap">{{ $intern->city ?? 'N/A' }}</span></td>
                             </tr>
                             @empty
-                            <tr><td colspan="9"><p class="text-center mb-0">No data available!</p></td></tr>
+                            <tr><td colspan="10"><p class="text-center mb-0">No data available!</p></td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {{-- ========== PAGINATION ========== --}}
+            {{-- PAGINATION --}}
             <div class="row mx-3 justify-content-between">
                 <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto">
-                    <div class="dt-info">
-                        Showing {{ $active->firstItem() ?? 0 }} to {{ $active->lastItem() ?? 0 }} of {{ $active->total() ?? 0 }} entries
-                    </div>
+                    <div class="dt-info">Showing {{ $active->firstItem() ?? 0 }} to {{ $active->lastItem() ?? 0 }} of {{ $active->total() ?? 0 }} entries</div>
                 </div>
                 <div class="d-md-flex align-items-center dt-layout-end col-md-auto ms-auto d-flex gap-2 flex-wrap">
                     <div class="dt-paging">
                         <nav aria-label="pagination">
                             <ul class="pagination">
                                 <li class="page-item {{ $active->onFirstPage() ? 'disabled' : '' }}">
-                                    <a class="page-link" href="{{ $active->url(1) }}" aria-label="First">
-                                        <i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>
-                                    </a>
+                                    <a class="page-link" href="{{ $active->url(1) }}"><i class="icon-base ti tabler-chevrons-left icon-18px"></i></a>
                                 </li>
                                 <li class="page-item {{ $active->onFirstPage() ? 'disabled' : '' }}">
-                                    <a class="page-link" href="{{ $active->previousPageUrl() }}" aria-label="Previous">
-                                        <i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>
-                                    </a>
+                                    <a class="page-link" href="{{ $active->previousPageUrl() }}"><i class="icon-base ti tabler-chevron-left icon-18px"></i></a>
                                 </li>
                                 @foreach ($active->getUrlRange(max(1, $active->currentPage() - 2), min($active->lastPage(), $active->currentPage() + 2)) as $page => $url)
-                                <li class="page-item {{ $page == $active->currentPage() ? 'active' : '' }}">
-                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
-                                </li>
+                                <li class="page-item {{ $page == $active->currentPage() ? 'active' : '' }}"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
                                 @endforeach
                                 <li class="page-item {{ $active->currentPage() == $active->lastPage() ? 'disabled' : '' }}">
-                                    <a class="page-link" href="{{ $active->nextPageUrl() }}" aria-label="Next">
-                                        <i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>
-                                    </a>
+                                    <a class="page-link" href="{{ $active->nextPageUrl() }}"><i class="icon-base ti tabler-chevron-right icon-18px"></i></a>
                                 </li>
                                 <li class="page-item {{ $active->currentPage() == $active->lastPage() ? 'disabled' : '' }}">
-                                    <a class="page-link" href="{{ $active->url($active->lastPage()) }}" aria-label="Last">
-                                        <i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>
-                                    </a>
+                                    <a class="page-link" href="{{ $active->url($active->lastPage()) }}"><i class="icon-base ti tabler-chevrons-right icon-18px"></i></a>
                                 </li>
                             </ul>
                         </nav>
@@ -262,8 +269,18 @@
 <script>
     let timer;
     document.getElementById('searchInput').addEventListener('keyup', function () {
-        clearTimeout(timer);
-        timer = setTimeout(() => document.getElementById('filterForm').submit(), 500);
+        clearTimeout(timer); timer = setTimeout(() => document.getElementById('filterForm').submit(), 500);
+    });
+
+    // ✅ Fixed: Only submit if a status is selected, else clear it
+    document.getElementById('statusFilter').addEventListener('change', function () {
+        const statusInput = document.getElementById('statusInput');
+        if (this.value === '') {
+            statusInput.value = '';
+        } else {
+            statusInput.value = this.value;
+        }
+        document.getElementById('filterForm').submit();
     });
 
     document.querySelectorAll('.clickable-cell').forEach(cell => {
@@ -298,18 +315,14 @@
         if (eb) { eb.style.display = count > 0 ? 'inline-block' : 'none'; if (count > 0) eb.textContent = count; }
     }
 
-    function getSelectedIds() {
-        return Array.from(document.querySelectorAll('.intern-checkbox:checked')).map(cb => cb.value);
-    }
+    function getSelectedIds() { return Array.from(document.querySelectorAll('.intern-checkbox:checked')).map(cb => cb.value); }
 
     document.querySelectorAll('.bulk-status-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault(); e.stopPropagation();
-            const status = this.dataset.status;
-            const ids = getSelectedIds();
+            const status = this.dataset.status; const ids = getSelectedIds();
             if (!ids.length) {
-                Swal.fire({ icon: 'warning', title: 'No interns selected', text: 'Please select at least one intern.', position: 'center', confirmButtonText: 'OK', customClass: { confirmButton: 'btn btn-primary' } });
-                return;
+                Swal.fire({ icon: 'warning', title: 'No interns selected', text: 'Please select at least one intern.', position: 'center', confirmButtonText: 'OK', customClass: { confirmButton: 'btn btn-primary' } }); return;
             }
             Swal.fire({
                 title: 'Change Status?', html: `Move <b>${ids.length}</b> selected intern(s) to <b class="text-capitalize">${status}</b>?`,
@@ -327,10 +340,7 @@
 
     function exportSelectedCSV() {
         const ids = getSelectedIds();
-        if (!ids.length) {
-            Swal.fire({ icon: 'warning', title: 'No interns selected', text: 'Please select at least one intern to export.', position: 'center', confirmButtonText: 'OK', customClass: { confirmButton: 'btn btn-primary' } });
-            return;
-        }
+        if (!ids.length) { Swal.fire({ icon: 'warning', title: 'No interns selected', text: 'Please select at least one intern to export.', position: 'center', confirmButtonText: 'OK', customClass: { confirmButton: 'btn btn-primary' } }); return; }
         Swal.fire({
             title: 'Export Selected?', text: `Export ${ids.length} selected intern(s)?`,
             icon: 'question', position: 'center', showCancelButton: true, confirmButtonText: 'Yes, export!', cancelButtonText: 'Cancel',

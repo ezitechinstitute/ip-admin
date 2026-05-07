@@ -58,42 +58,17 @@ class AllInternsController extends Controller
     return view('pages.admin.all-interns.allInterns', compact('allInterns', 'perPage'));
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public function interviewIntern(Request $request)
+   public function interviewIntern(Request $request)
 {
-    // English: Fetch pagination limit from settings
     $pageLimitSet = AdminSetting::first();
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    // English: Using select() to fetch only necessary columns for better memory management
-$query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 
-                        'technology', 'interview_type', 'status', 'created_at','image');
-    // 🔘 Status filter with default 'interview'
-    // English: We set the status early to ensure the query stays targeted
-    $status = $request->input('status', 'interview');
-    $query->where('status', $status);
+    $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'package',
+                            'technology', 'interview_type', 'status', 'created_at', 'image');
 
-    // 🔍 Optimized Search
     if ($request->filled('search')) {
         $search = $request->search;
-
         $query->where(function ($q) use ($search) {
-            // English: Using prefix search ("search%") instead of double wildcard ("%search%") 
-            // is much faster as it can utilize B-Tree indexes.
             $q->where('name', 'like', "{$search}%")
               ->orWhere('email', 'like', "{$search}%")
               ->orWhere('city', 'like', "{$search}%")
@@ -101,14 +76,17 @@ $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date',
         });
     }
 
-    // English: Use orderBy('id', 'desc') instead of latest() for primary key performance
+    // ✅ Fixed status filter
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    } else {
+        $query->where('status', 'interview');
+    }
+
     $query->orderBy('id', 'desc');
-    
-    // 🔢 Pagination
-    // English: paginate() is suitable here, but simplePaginate() would be faster for massive datasets.
     $interview = $query->paginate($perPage)->withQueryString();
 
-    return view('pages.admin.all-interns.interview', compact('interview', 'perPage', 'status'));
+    return view('pages.admin.all-interns.interview', compact('interview', 'perPage'));
 }
 
 
@@ -124,20 +102,15 @@ public function removeIntern($id)
 
 public function contactIntern(Request $request)
 {
-    // English: Fetch pagination limit from settings
     $pageLimitSet = AdminSetting::first();
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    // English: Selection of specific columns to reduce RAM usage and increase query speed
-$query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 
-                        'technology', 'interview_type', 'status', 'created_at','image');
-    // 🔍 Optimized Search
+    $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'package',
+                            'technology', 'interview_type', 'status', 'created_at', 'image');
+
     if ($request->filled('search')) {
         $search = $request->search;
-
         $query->where(function ($q) use ($search) {
-            // English: Using prefix search ("search%") instead of double wildcard ("%search%") 
-            // is significantly faster on large datasets with indexes.
             $q->where('name', 'like', "{$search}%")
               ->orWhere('email', 'like', "{$search}%")
               ->orWhere('city', 'like', "{$search}%")
@@ -145,37 +118,30 @@ $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date',
         });
     }
 
-    // 🔘 Status filter
-    $status = $request->input('status', 'contact');
-    
-    // English: Direct match is faster than using strtolower() inside the query
-    $query->where('status', $status);
+    // ✅ Fixed status filter
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    } else {
+        $query->where('status', 'contact');
+    }
 
-    // English: Use orderBy('id', 'desc') instead of latest() for better primary key performance
     $query->orderBy('id', 'desc');
-
-    // 🔢 Pagination
     $contact = $query->paginate($perPage)->withQueryString();
 
-    return view('pages.admin.all-interns.contactIntern', compact('contact', 'perPage', 'status'));
+    return view('pages.admin.all-interns.contactIntern', compact('contact', 'perPage'));
 }
 
 public function testIntern(Request $request)
 {
-    // English: Fetch pagination limit from settings
     $pageLimitSet = AdminSetting::first();
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    // English: Selection of specific columns only. Fetching 20+ columns for 2.7L records wastes RAM.
-$query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 
-                        'technology', 'interview_type', 'status', 'created_at','image');
-    // 🔍 Optimized Search
+    $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'package',
+                            'technology', 'interview_type', 'status', 'created_at', 'image');
+
     if ($request->filled('search')) {
         $search = $request->search;
-
         $query->where(function ($q) use ($search) {
-            // English: Using prefix search ("search%") instead of double wildcard ("%search%") 
-            // is exponentially faster on large indexed tables.
             $q->where('name', 'like', "{$search}%")
               ->orWhere('email', 'like', "{$search}%")
               ->orWhere('city', 'like', "{$search}%")
@@ -183,39 +149,31 @@ $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date',
         });
     }
 
-    // 🔘 Status filter
-    $status = $request->input('status', 'test');
-    
-    // English: Exact match is faster than using strtolower() inside the SQL engine
-    $query->where('status', $status);
+    // ✅ Fixed status filter
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    } else {
+        $query->where('status', 'test');
+    }
 
-    // English: Use orderBy('id', 'desc') instead of latest() to leverage the primary key index
     $query->orderBy('id', 'desc');
-
-    // 🔢 Pagination
     $test = $query->paginate($perPage)->withQueryString();
 
-    return view('pages.admin.all-interns.testIntern', compact('test', 'perPage', 'status'));
+    return view('pages.admin.all-interns.testIntern', compact('test', 'perPage'));
 }
-
 
 
 public function completedIntern(Request $request)
 {
-    // English: Fetch pagination limit from settings
     $pageLimitSet = AdminSetting::first();
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    // English: Selecting specific columns is crucial for 200k+ records to save RAM.
-$query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 
-                        'technology', 'interview_type', 'status', 'created_at','image');
-    // 🔍 Optimized Search
+    $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'package',
+                            'technology', 'interview_type', 'status', 'created_at', 'image');
+
     if ($request->filled('search')) {
         $search = $request->search;
-
         $query->where(function ($q) use ($search) {
-            // English: Using prefix search ("search%") instead of double wildcard ("%search%") 
-            // is exponentially faster on large indexed tables.
             $q->where('name', 'like', "{$search}%")
               ->orWhere('email', 'like', "{$search}%")
               ->orWhere('city', 'like', "{$search}%")
@@ -223,39 +181,31 @@ $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date',
         });
     }
 
-    // 🔘 Status filter
-    $status = $request->input('status', 'completed');
-    
-    // English: Matching exact case is faster than applying functions like strtolower() in SQL
-    $query->where('status', $status);
+    // ✅ Fixed status filter
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    } else {
+        $query->where('status', 'completed');
+    }
 
-    // English: Using orderBy('id', 'desc') leverages the Primary Key index for faster sorting
     $query->orderBy('id', 'desc');
-
-    // 🔢 Pagination
     $completed = $query->paginate($perPage)->withQueryString();
 
-    return view('pages.admin.all-interns.completedIntern', compact('completed', 'perPage', 'status'));
+    return view('pages.admin.all-interns.completedIntern', compact('completed', 'perPage'));
 }
-
 
 
 public function activeIntern(Request $request)
 {
-    // English: Fetch pagination limit from settings
     $pageLimitSet = AdminSetting::first();
     $perPage = $request->input('per_page', $pageLimitSet->pagination_limit ?? 15);
 
-    // English: Selecting only necessary columns to avoid loading heavy data (like images/long text) into RAM
-  $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 
-                            'technology', 'interview_type', 'status', 'created_at','image');
-    // 🔍 Optimized Search
+    $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'package',
+                            'technology', 'interview_type', 'status', 'created_at', 'image');
+    
     if ($request->filled('search')) {
         $search = $request->search;
-
         $query->where(function ($q) use ($search) {
-            // English: Changed "%search%" to "search%" where possible. 
-            // Leading wildcards (%) prevent the database from using indexes, causing slow full table scans.
             $q->where('name', 'like', "{$search}%")
               ->orWhere('email', 'like', "{$search}%")
               ->orWhere('city', 'like', "{$search}%")
@@ -263,19 +213,17 @@ public function activeIntern(Request $request)
         });
     }
 
-    // 🔘 Status filter
-    $status = $request->input('status', 'active');
     
-    // English: Matching exact case is faster than applying strtolower() on every row in the database
-    $query->where('status', $status);
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    } else {
+        $query->where('status', 'active');
+    }
 
-    // English: Using orderBy('id', 'desc') instead of latest() to leverage the Primary Key index for speed
     $query->orderBy('id', 'desc');
-
-    // 🔢 Pagination
     $active = $query->paginate($perPage)->withQueryString();
 
-    return view('pages.admin.all-interns.activeIntern', compact('active', 'perPage', 'status'));
+    return view('pages.admin.all-interns.activeIntern', compact('active', 'perPage'));
 }
 
   public function viewProfileInternee($id){

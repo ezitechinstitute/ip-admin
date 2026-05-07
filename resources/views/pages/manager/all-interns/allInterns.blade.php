@@ -281,16 +281,18 @@ $manager = auth()->guard('manager')->user();
               <tr class="">
                 <td class="">
                   <div class="d-flex justify-content-start align-items-center user-name">
-                   {{-- Replace the avatar-wrapper content with this --}}
+                   {{-- fix avatar-wrappar --}}
 <div class="avatar-wrapper">
-    @if (isset($intern->image) && $intern->image)
-        <div class="avatar avatar-md me-4">
+    @if (!empty($intern->image) && $intern->image !== '')
+        <div class="avatar avatar-md me-4" style="width: 40px; height: 40px; overflow: hidden; border-radius: 50%;">
             <img src="{{ str_starts_with($intern->image, 'data:image') ? $intern->image : asset($intern->image) }}" 
-                 alt="{{ $intern->name }}" class="rounded-circle" />
+                 alt="{{ $intern->name }}" 
+                 style="width: 100%; height: 100%; object-fit: cover;" />
         </div>
     @else
-        <div class="avatar avatar-md me-4">
-            <span class="avatar-initial rounded-circle bg-label-warning">
+        <div class="avatar avatar-md me-4" style="width: 40px; height: 40px;">
+            <span class="avatar-initial rounded-circle bg-label-warning d-flex align-items-center justify-content-center" 
+                  style="width: 40px; height: 40px; font-size: 14px;">
                 {{ strtoupper(substr($intern->name ?? 'U', 0, 2)) }}
             </span>
         </div>

@@ -100,6 +100,16 @@
                             }
                         </style>
 
+                         {{-- ✅ Status Filter --}}
+        <select id="statusFilter" class="form-select text-capitalize">
+            <option value="">Select Status</option>
+            @foreach (['Interview','Contact','Test','Completed','Active','Removed'] as $s)
+            @php $slug = strtolower($s); @endphp
+            <option value="{{ $slug }}" {{ request('status')==$slug ? 'selected' : '' }}>{{ $s }}</option>
+            @endforeach
+        </select>
+        <input type="hidden" name="status" id="statusInput" value="{{ request('status') }}">
+
                         {{-- Package Filter --}}
                         <select name="package" id="packageFilter" class="form-select text-capitalize">
                             <option value="">All Packages</option>
@@ -238,13 +248,16 @@
                                     <span class="badge {{ $typeClass }} text-capitalize">{{ $intern->interview_type ?? 'N/A' }}</span>
                                 </td>
                                 {{-- Package --}}
-                                <td class="clickable-cell">
-                                    @php
-                                    $packageColors = ['training internship' => 'bg-label-info','project practice' => 'bg-label-primary','industrial environment' => 'bg-label-success'];
-                                    $badgeClass = $packageColors[strtolower($intern->intern_type ?? '')] ?? 'bg-label-secondary';
-                                    @endphp
-                                    <span class="badge {{ $badgeClass }} text-capitalize">{{ $intern->intern_type ?? 'N/A' }}</span>
-                                </td>
+<td class="clickable-cell">
+    @php
+    $packageLabels = ['training' => 'Training','practice' => 'Practice','industrial' => 'Industrial'];
+    $packageColors = ['training' => 'bg-label-info','practice' => 'bg-label-primary','industrial' => 'bg-label-success'];
+    $pkg = strtolower($intern->package ?? '');
+    $badgeClass = $packageColors[$pkg] ?? 'bg-label-secondary';
+    $label = $packageLabels[$pkg] ?? ($intern->package ?? 'N/A');
+    @endphp
+    <span class="badge {{ $badgeClass }} text-capitalize">{{ $label }}</span>
+</td>
                                 {{-- Status --}}
                                 <td class="clickable-cell">
                                     @php
@@ -331,6 +344,14 @@
         clearTimeout(timer);
         timer = setTimeout(() => document.getElementById('filterForm').submit(), 500);
     });
+
+    // ========== STATUS FILTER ==========
+document.getElementById('statusFilter').addEventListener('change', function () {
+    const statusInput = document.getElementById('statusInput');
+    statusInput.value = this.value;
+    document.getElementById('filterForm').submit();
+});
+
 
     // ========== PACKAGE FILTER ==========
     document.getElementById('packageFilter').addEventListener('change', function () {
