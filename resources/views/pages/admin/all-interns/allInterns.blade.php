@@ -78,7 +78,6 @@
                                 <option value="25" {{ $perPage==25 ? 'selected' : '' }}>25</option>
                                 <option value="50" {{ $perPage==50 ? 'selected' : '' }}>50</option>
                                 <option value="100" {{ $perPage==100 ? 'selected' : '' }}>100</option>
-                                <option value="500" {{ $perPage==500 ? 'selected' : '' }}>500</option>
                             </select>
                             <input type="hidden" name="search" value="{{ request('search') }}">
                             <input type="hidden" name="package" value="{{ request('package') }}">
@@ -254,7 +253,7 @@
     $packageColors = ['training' => 'bg-label-info','practice' => 'bg-label-primary','industrial' => 'bg-label-success'];
     $pkg = strtolower($intern->package ?? '');
     $badgeClass = $packageColors[$pkg] ?? 'bg-label-secondary';
-    $label = $packageLabels[$pkg] ?? ($intern->package ?? 'N/A');
+    $label = $packageLabels[$pkg] ?? ($intern->package ?: 'Training');
     @endphp
     <span class="badge {{ $badgeClass }} text-capitalize">{{ $label }}</span>
 </td>

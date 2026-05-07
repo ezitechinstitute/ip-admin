@@ -202,8 +202,7 @@
                                     $packageColors = ['training' => 'bg-label-info','practice' => 'bg-label-primary','industrial' => 'bg-label-success'];
                                     $pkg = strtolower($intern->package ?? '');
                                     $badgeClass = $packageColors[$pkg] ?? 'bg-label-secondary';
-                                    $label = $packageLabels[$pkg] ?? ($intern->package ?? 'N/A');
-                                    @endphp
+                                    $label = $packageLabels[$pkg] ?? ($intern->package ?: 'Training');                                    @endphp
                                     <span class="badge {{ $badgeClass }} text-capitalize">{{ $label }}</span>
                                 </td>
                                 <td class="clickable-cell">

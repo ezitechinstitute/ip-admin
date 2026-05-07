@@ -19,6 +19,11 @@ class AllInternsController extends Controller
     // English: Using select() to only fetch required columns (massive performance boost)
     $query = Intern::select('id', 'name', 'email', 'city', 'phone', 'join_date', 'technology', 'status', 'intern_type', 'interview_type', 'package', 'created_at','image');
 
+    // Hide duplicate phone numbers, sirf latest ID show karo
+$query->whereIn('id', function($sub) {
+    $sub->selectRaw('MAX(id)')->from('intern_table')->groupBy('phone');
+});
+
 //remove intern from the table
       $query->where('status', '!=', 'removed');
 
@@ -228,6 +233,11 @@ public function activeIntern(Request $request)
 
   public function viewProfileInternee($id){
     $interneeDetails = intern::where('id', $id)->first();
+
+    // Agar package null ya empty hai to 'Training' set karo
+    if(empty($interneeDetails->package)) {
+    $interneeDetails->package = 'Training';
+    }
     $packages = \App\Services\PackageService::getAll();  // ← ADD THIS LINE
     return view('pages.admin.all-interns.viewProfile', compact('interneeDetails', 'packages'));
 }

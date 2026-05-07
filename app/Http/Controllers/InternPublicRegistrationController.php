@@ -40,7 +40,7 @@ class InternPublicRegistrationController extends Controller
         'email' => 'required|email|unique:intern_table,email',
         'country' => 'required|string',
         'city' => 'required|string',
-        'whatsapp' => 'required|string',
+        'whatsapp' => 'required|string|unique:intern_table,phone',
         'gender' => 'required|string',
         'join_date' => 'required|date',
         'dob' => 'required|date',
@@ -50,6 +50,11 @@ class InternPublicRegistrationController extends Controller
         'duration' => 'required|string',
         'internship_type' => 'required|string',
         'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:512', // ✅ ADD THIS
+    
+
+    ], [
+        'whatsapp.unique' => 'This phone number is already registered.',
+        'email.unique' => 'This email is already registered.',
     ]);
 
     // ✅ ADD THIS - Upload image & store LINK
